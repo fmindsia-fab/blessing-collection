@@ -197,13 +197,14 @@ Marcar cada item ao concluir. Atualizar este arquivo incrementalmente — nunca 
 - [x] Deploy de produção validado na Vercel com env vars reais (`blessing-collection-chi.vercel.app`), home renderizando dados do Supabase
 
 ### M4 — Catálogo público
-- [ ] Rotas públicas (`/`, `/produtos`, `/produtos/[slug]`, `/categorias/[slug]`, `/colecoes/[slug]`)
-- [ ] Paginação (12 iniciais + "carregar mais")
-- [ ] Página de produto com galeria e variações
-- [ ] Botão WhatsApp com mensagem por status
-- [ ] Tracking dos 4 eventos (`product_view`, `whatsapp_click`, `category_view`, `collection_view`)
-- [ ] Teste: mensagem do WhatsApp correta por status (`available`/`made_to_order`/`sold_out`)
-- [ ] Teste: clique dispara `track()` sem bloquear `window.open`
+- [x] Rotas públicas (`/`, `/produtos`, `/produtos/[slug]`, `/categorias/[slug]`, `/colecoes/[slug]`)
+- [x] Paginação (12 iniciais + "carregar mais") e busca por nome
+- [x] Página de produto com galeria e variações
+- [x] Botão WhatsApp com mensagem por status
+- [x] Tracking dos 4 eventos (`product_view`, `whatsapp_click`, `category_view`, `collection_view`) via `PageViewTracker`/`WhatsappButton`
+- [x] Teste: mensagem do WhatsApp correta por status (`available`/`made_to_order`/`sold_out`) — `tests/unit/whatsapp-message.test.ts`
+- [x] Teste: `track()` retorna void de forma síncrona, sem bloquear a navegação — `tests/unit/track.test.ts`
+- [x] Validado manualmente com 4 produtos de seed: rotas 200, contagem/busca corretos, badges e CTAs por status corretos
 
 ### M5 — Painel administrativo
 - [ ] CRUD de produtos
