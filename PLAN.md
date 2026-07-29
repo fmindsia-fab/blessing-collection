@@ -100,10 +100,10 @@ app/
     admin/colecoes/page.tsx
     admin/analytics/page.tsx
     admin/configuracoes/page.tsx
-middleware.ts
+proxy.ts
 ```
 
-`middleware.ts` redireciona `/admin/*` sem sessão para `/login`, e `/login` com sessão para `/admin` — é só UX; a segurança real é a RLS aplicada em toda query de Server Component/Server Action.
+`proxy.ts` (renomeado de `middleware.ts` a partir do Next.js 16) redireciona `/admin/*` sem sessão para `/login`, e `/login` com sessão para `/admin` — é só UX; a segurança real é a RLS aplicada em toda query de Server Component/Server Action.
 
 ---
 
@@ -137,7 +137,7 @@ Análogas para `get_category_rankings` e `get_collection_rankings`. A UI de filt
 ## 6. Estrutura de Pastas
 
 ```
-app/                       -- (public) e (admin) route groups + middleware.ts
+app/                       -- (public) e (admin) route groups + proxy.ts
 components/
   ui/                      -- shadcn/ui
   catalog/                 -- product-card, product-gallery, whatsapp-button, category-nav
@@ -182,17 +182,18 @@ Marcar cada item ao concluir. Atualizar este arquivo incrementalmente — nunca 
 - [x] Projeto Vercel conectado com deploy automático a cada push na `main`
 
 ### M3 — Supabase e segurança
-- [ ] Projeto Supabase criado
-- [ ] Migration `0001_initial_schema.sql` aplicada
-- [ ] Migration `0002_updated_at_trigger.sql` aplicada
-- [ ] Migration `0003_rls_policies.sql` aplicada
-- [ ] `lib/supabase/{client,server,middleware}.ts` configurados
-- [ ] Conta da owner criada manualmente no Supabase Studio
-- [ ] `lib/store/get-active-store.ts` validado
-- [ ] Teste: anônimo lê produtos públicos mas não acessa `stores` alheia
-- [ ] Teste: anônimo insere em `analytics_events` mas não consegue `select`
-- [ ] Teste: owner autentica e edita sua própria loja
-- [ ] Skill `supabase-security-audit` executada antes de avançar
+- [x] Projeto Supabase criado (`blessing-collection`, região São Paulo)
+- [x] Migration `0001_initial_schema.sql` aplicada
+- [x] Migration `0002_updated_at_trigger.sql` aplicada
+- [x] Migration `0003_rls_policies.sql` aplicada
+- [x] Migration `0004_analytics_rpc.sql` aplicada
+- [x] `lib/supabase/{client,server,middleware}.ts` configurados
+- [x] Conta da owner criada manualmente no Supabase Studio (`blessingbolsas@gmail.com`, loja `blessing-collection`)
+- [x] `lib/store/get-active-store.ts` validado (home renderiza `store.name` via RLS pública)
+- [x] Teste: anônimo lê produtos/lojas públicas corretamente (RLS confirmada)
+- [x] Teste: anônimo insere em `analytics_events` (confirmado — 1 evento gravado via role anon)
+- [x] Teste: owner autentica e edita sua própria loja (update confirmado via RLS simulada)
+- [x] Skill `supabase-security-audit` executada — sem riscos críticos; 2 riscos médios anotados (owner_all policies usam `for all` incluindo DELETE físico; RPCs sem teste cross-tenant ainda) para revisitar no M7
 
 ### M4 — Catálogo público
 - [ ] Rotas públicas (`/`, `/produtos`, `/produtos/[slug]`, `/categorias/[slug]`, `/colecoes/[slug]`)

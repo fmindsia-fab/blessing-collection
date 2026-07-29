@@ -33,6 +33,6 @@ Next.js (App Router, TypeScript estrito) + Tailwind CSS + shadcn/ui + React Hook
 ## Referência rápida
 
 - Modelo de dados e RLS: `PLAN.md` seções 2-3.
-- Rotas: `PLAN.md` seção 4 (públicas em `app/(public)/`, admin em `app/(admin)/`, protegidas por `middleware.ts` + RLS).
+- Rotas: `PLAN.md` seção 4 (públicas em `app/(public)/`, admin em `app/(admin)/`, protegidas por `proxy.ts` + RLS).
 - Estratégia de analytics (rankings via RPC, sem N+1): `PLAN.md` seção 5.
 - Riscos conhecidos a vigiar em code review: `PLAN.md` seção 9.
