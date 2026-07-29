@@ -194,6 +194,7 @@ Marcar cada item ao concluir. Atualizar este arquivo incrementalmente — nunca 
 - [x] Teste: anônimo insere em `analytics_events` (confirmado — 1 evento gravado via role anon)
 - [x] Teste: owner autentica e edita sua própria loja (update confirmado via RLS simulada)
 - [x] Skill `supabase-security-audit` executada — sem riscos críticos; 2 riscos médios anotados (owner_all policies usam `for all` incluindo DELETE físico; RPCs sem teste cross-tenant ainda) para revisitar no M7
+- [x] Deploy de produção validado na Vercel com env vars reais (`blessing-collection-chi.vercel.app`), home renderizando dados do Supabase
 
 ### M4 — Catálogo público
 - [ ] Rotas públicas (`/`, `/produtos`, `/produtos/[slug]`, `/categorias/[slug]`, `/colecoes/[slug]`)
