@@ -178,6 +178,8 @@ Marcar cada item ao concluir. Atualizar este arquivo incrementalmente — nunca 
 - [x] Layouts vazios `(public)` e `(admin)`
 - [x] `.env.example` definido
 - [x] Teste: build verde / smoke test da rota `/`
+- [x] Repositório GitHub criado (`fmindsia-fab/blessing-collection`, branch `main`)
+- [x] Projeto Vercel conectado com deploy automático a cada push na `main`
 
 ### M3 — Supabase e segurança
 - [ ] Projeto Supabase criado
