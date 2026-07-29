@@ -12,6 +12,18 @@ export async function listCollections(storeId: string) {
   return data ?? [];
 }
 
+// Inclui coleções arquivadas — uso exclusivo do painel administrativo.
+export async function listAllCollectionsForAdmin(storeId: string) {
+  const supabase = await createServerSupabaseClient();
+  const { data } = await supabase
+    .from("collections")
+    .select("id, name, slug, description, status")
+    .eq("store_id", storeId)
+    .order("sort_order", { ascending: true });
+
+  return data ?? [];
+}
+
 export async function getCollectionBySlug(storeId: string, slug: string) {
   const supabase = await createServerSupabaseClient();
   const { data } = await supabase

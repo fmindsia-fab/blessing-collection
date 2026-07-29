@@ -10,6 +10,13 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  experimental: {
+    serverActions: {
+      // Acima do limite de 5MB do PRD para imagens de produto (seção 13.1),
+      // com folga para o overhead do multipart/form-data.
+      bodySizeLimit: "6mb",
+    },
+  },
 };
 
 export default nextConfig;
