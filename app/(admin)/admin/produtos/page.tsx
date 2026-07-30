@@ -37,8 +37,14 @@ export default async function AdminProductsPage() {
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {products.map((product) => (
-            <ProductRow key={product.id} product={product} statusLabel={STATUS_LABEL[product.status]} />
+          {products.map((product, index) => (
+            <ProductRow
+              key={product.id}
+              product={product}
+              statusLabel={STATUS_LABEL[product.status]}
+              isFirst={index === 0}
+              isLast={index === products.length - 1}
+            />
           ))}
         </div>
       )}

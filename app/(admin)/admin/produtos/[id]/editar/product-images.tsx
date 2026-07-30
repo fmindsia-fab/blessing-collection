@@ -7,9 +7,11 @@ import {
   setCoverImage,
   deleteProductImage,
   updateImageAltText,
+  moveProductImage,
   type ImageUploadState,
 } from "@/lib/products/image-actions";
 import { Button } from "@/components/ui/button";
+import { ReorderButtons } from "@/components/admin/reorder-buttons";
 
 type ProductImagesProps = {
   productId: string;
@@ -34,7 +36,7 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
 
       {images.length > 0 ? (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {images.map((image) => (
+          {images.map((image, index) => (
             <div key={image.id} className="flex flex-col gap-2">
               <div className="relative aspect-square overflow-hidden rounded-[var(--radius)] bg-secondary shadow-sm">
                 <Image
@@ -48,6 +50,22 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
                   <span className="absolute left-2 top-2 rounded-full bg-background/92 px-2.5 py-1 text-[0.625rem] uppercase tracking-wider shadow-sm backdrop-blur-sm">
                     Capa
                   </span>
+                ) : null}
+
+                {/* Ordem das fotos na galeria pública (PRD 3.7). */}
+                {images.length > 1 ? (
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-background/92 p-1 shadow-sm backdrop-blur-sm">
+                    <ReorderButtons
+                      orientation="horizontal"
+                      label={`imagem ${index + 1}`}
+                      isFirst={index === 0}
+                      isLast={index === images.length - 1}
+                      disabled={isPending}
+                      onMove={(direction) =>
+                        startTransition(() => moveProductImage(productId, image.id, direction))
+                      }
+                    />
+                  </div>
                 ) : null}
               </div>
 

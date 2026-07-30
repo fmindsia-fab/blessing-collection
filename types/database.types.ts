@@ -183,6 +183,11 @@ export interface Database {
           price: number;
           materials: string | null;
           measurements: string | null;
+          /** Peso e dimensões (migration 0012). Nulo = não informado. */
+          weight_kg: number | null;
+          length_cm: number | null;
+          width_cm: number | null;
+          height_cm: number | null;
           status: ProductStatus;
           is_featured: boolean;
           is_new_arrival: boolean;
@@ -205,6 +210,10 @@ export interface Database {
           price: number;
           materials?: string | null;
           measurements?: string | null;
+          weight_kg?: number | null;
+          length_cm?: number | null;
+          width_cm?: number | null;
+          height_cm?: number | null;
           status?: ProductStatus;
           is_featured?: boolean;
           is_new_arrival?: boolean;

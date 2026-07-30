@@ -5,6 +5,7 @@ import { getActiveStore } from "@/lib/store/get-active-store";
 import { getProductBySlug, getRelatedProducts } from "@/lib/products/queries";
 import { ProductCard } from "@/components/catalog/product-card";
 import { SectionHeading } from "@/components/catalog/section-heading";
+import { ProductDetails } from "@/components/catalog/product-details";
 import { WhatsappButton } from "@/components/catalog/whatsapp-button";
 import { SelectionToggleButton } from "@/components/catalog/selection-toggle-button";
 import { PageViewTracker } from "@/components/shared/page-view-tracker";
@@ -148,6 +149,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               ) : null}
             </dl>
           ) : null}
+
+          <ProductDetails
+            weightKg={product.weight_kg}
+            lengthCm={product.length_cm}
+            widthCm={product.width_cm}
+            heightCm={product.height_cm}
+          />
 
           {variants.length > 0 ? (
             <div className="flex flex-col gap-3">

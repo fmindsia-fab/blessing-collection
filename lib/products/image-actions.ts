@@ -118,6 +118,47 @@ export async function updateImageAltText(productId: string, imageId: string, alt
   revalidatePath(`/admin/produtos/${productId}/editar`);
 }
 
+/**
+ * Move uma imagem uma posição para trás ou para frente (PRD 3.7).
+ *
+ * Botões em vez de arrastar: funciona no toque, é operável por teclado e não
+ * exige biblioteca de drag-and-drop. Reescreve o `sort_order` de todas as
+ * imagens do produto para manter a sequência 0..n densa — sem isso, exclusões
+ * deixariam buracos que quebram a troca por índice.
+ */
+export async function moveProductImage(productId: string, imageId: string, direction: "up" | "down") {
+  const supabase = await createServerSupabaseClient();
+  if (!(await assertProductBelongsToStore(supabase, productId))) return;
+
+  const { data: images } = await supabase
+    .from("product_images")
+    .select("id, sort_order")
+    .eq("product_id", productId)
+    .order("sort_order", { ascending: true });
+
+  if (!images || images.length < 2) return;
+
+  const index = images.findIndex((img) => img.id === imageId);
+  const target = direction === "up" ? index - 1 : index + 1;
+  if (index === -1 || target < 0 || target >= images.length) return;
+
+  const reordered = [...images];
+  [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
+
+  await Promise.all(
+    reordered.map((img, position) =>
+      supabase
+        .from("product_images")
+        .update({ sort_order: position })
+        .eq("id", img.id)
+        .eq("product_id", productId),
+    ),
+  );
+
+  revalidatePath(`/admin/produtos/${productId}/editar`);
+  revalidatePath("/produtos");
+}
+
 export async function setCoverImage(productId: string, imageId: string) {
   const supabase = await createServerSupabaseClient();
   if (!(await assertProductBelongsToStore(supabase, productId))) return;

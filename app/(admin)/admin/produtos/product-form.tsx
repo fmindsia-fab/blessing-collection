@@ -20,6 +20,10 @@ type ProductFormProps = {
     price: number;
     materials: string | null;
     measurements: string | null;
+    weight_kg: number | null;
+    length_cm: number | null;
+    width_cm: number | null;
+    height_cm: number | null;
     status: ProductStatus;
     category_id: string | null;
     collection_id: string | null;
@@ -82,10 +86,79 @@ export function ProductForm({ categories, collections, models, product }: Produc
           <Input id="materials" name="materials" defaultValue={product?.materials ?? ""} />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="measurements">Medidas</Label>
-          <Input id="measurements" name="measurements" defaultValue={product?.measurements ?? ""} />
+          <Label htmlFor="measurements">Medidas (texto livre)</Label>
+          <Input
+            id="measurements"
+            name="measurements"
+            placeholder="30cm x 22cm x 10cm"
+            defaultValue={product?.measurements ?? ""}
+          />
         </div>
       </div>
+
+      {/* Peso e dimensões numéricos: aparecem em "Mais detalhes" na página da
+          peça e servem de base para estimar frete no futuro. O campo de
+          medidas acima segue como texto livre para exibição. */}
+      <fieldset className="flex flex-col gap-4 rounded-[var(--radius-image)] border border-border bg-card p-5">
+        <legend className="sr-only">Peso e dimensões</legend>
+        <div className="flex flex-col gap-1">
+          <span className="text-sm font-medium">Peso e dimensões</span>
+          <span className="text-xs leading-relaxed text-muted-foreground">
+            Opcional. Aparece na página da peça em &quot;Mais detalhes&quot; e ajuda a calcular o envio.
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="weightKg">Peso (kg)</Label>
+            <Input
+              id="weightKg"
+              name="weightKg"
+              type="number"
+              step="0.001"
+              min="0"
+              placeholder="0,428"
+              defaultValue={product?.weight_kg ?? ""}
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="lengthCm">Comprimento (cm)</Label>
+            <Input
+              id="lengthCm"
+              name="lengthCm"
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="28"
+              defaultValue={product?.length_cm ?? ""}
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="widthCm">Largura (cm)</Label>
+            <Input
+              id="widthCm"
+              name="widthCm"
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="10"
+              defaultValue={product?.width_cm ?? ""}
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="heightCm">Altura (cm)</Label>
+            <Input
+              id="heightCm"
+              name="heightCm"
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="25"
+              defaultValue={product?.height_cm ?? ""}
+            />
+          </div>
+        </div>
+      </fieldset>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
