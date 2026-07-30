@@ -2,7 +2,7 @@
 
 # Blessing Collection — Guia para Claude Code
 
-Catálogo digital (bolsas/acessórios artesanais) com painel administrativo e analytics simples. Ver `PLAN.md` para arquitetura completa e milestones. O PRD original (fornecido pelo usuário) é a fonte oficial de requisitos — este arquivo só resume regras operacionais permanentes.
+Catálogo digital (bolsas/acessórios artesanais) com painel administrativo e analytics simples. Ver `PLAN.md` para arquitetura completa e milestones. O **`PRD.md` na raiz é a fonte oficial de requisitos** — este arquivo só resume regras operacionais permanentes.
 
 ## Stack
 

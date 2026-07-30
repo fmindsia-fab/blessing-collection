@@ -250,7 +250,46 @@ commit da seleção múltipla, a resolver no M7.
 - [x] `code-reviewer` geral — 2 divergências de comportamento anotadas abaixo (seleção múltipla), aguardando decisão
 - [x] Revisão do `PLAN.md` item a item contra o código real — 2 itens do M5 estavam marcados como
       concluídos sem implementação (identidade visual e upload de logo); ambos implementados nesta rodada
-- [ ] Checklist da seção 16 do PRD conferido — **bloqueado**: o PRD não está no repositório
+- [x] Checklist da seção 16 do PRD conferido — PRD salvo em `PRD.md` (antes fora do repositório).
+      20 dos 22 critérios verificados; 2 dependem de conferência manual sua (ver abaixo)
+
+**Checklist da seção 16 do PRD — resultado:**
+
+| Critério | Status |
+|---|---|
+| Catálogo em celular/tablet/desktop | ✅ classes responsivas em todas as rotas |
+| Visitantes acessam sem conta | ✅ E2E |
+| Busca funciona | ⚠️ busca por nome OK; **filtros por cor/modelo/disponibilidade não existem** (PRD 3.2) |
+| Cada produto tem URL própria | ✅ `/produtos/[slug]` |
+| Produtos aceitam várias imagens | ✅ até 8, validado no servidor |
+| Produtos inativos não aparecem | ✅ confirmado via API anon: 3 `inactive` ocultos |
+| Produtos esgotados identificados | ✅ badge + CTA "Consultar disponibilidade" |
+| Botão do WhatsApp abre mensagem correta | ✅ E2E + teste unitário por status |
+| Proprietária consegue login | ✅ `/login` + Supabase Auth |
+| Proprietária administra o catálogo | ✅ CRUD completo no painel |
+| Não autenticados não acessam o painel | ✅ E2E (307 → `/login`) |
+| Uma loja não acessa dados de outra | ✅ RLS + filtro `store_id` nas actions |
+| RLS bloqueia acessos indevidos | ✅ auditoria M7 |
+| Credenciais privadas fora do frontend | ✅ nenhuma `service_role_key`; `.env*` ignorado |
+| Visualizações registradas | ✅ dashboard com dados reais |
+| Cliques no WhatsApp registrados | ✅ dashboard com dados reais |
+| Dashboard apresenta totais corretos | ✅ conferido pelo usuário (8 cliques / 17 views / 47,06%) |
+| Rankings respeitam o período | ✅ teste unitário da janela `p_days` |
+| Taxa de interesse correta | ✅ teste com fixture conhecido |
+| Relatório não exibe dados pessoais | ✅ `analytics_events` sem IP/UA/identificador |
+| Falhas no analytics não bloqueiam | ✅ `track()` fire-and-forget, teste unitário |
+| Sem erros críticos no build | ✅ `next build` verde |
+
+**Correção de acessibilidade aplicada:** `app/layout.tsx` declarava `lang="en"` num site todo em
+português — leitores de tela usariam fonética inglesa. Corrigido para `pt-BR` (PRD seção 15).
+
+**Lacuna de escopo encontrada no checklist:** o PRD seção 3.2 pede filtros por **categoria, coleção,
+modelo, cor e disponibilidade** na listagem. Hoje existe busca por nome e navegação por categoria/coleção
+via rota própria, mas não há filtros por cor, modelo ou disponibilidade — e "modelo" nem existe como
+entidade no schema. Fora do que foi implementado; requer decisão de escopo.
+
+**Pendente de conferência manual sua** (não consigo verificar por código): responsividade real em
+dispositivo físico e navegação completa por teclado.
 
 **Achados do code review (aguardando decisão do usuário):**
 
