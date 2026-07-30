@@ -3,14 +3,29 @@ import { test, expect } from "@playwright/test";
 // Fluxo principal do PLAN.md (M7): home -> produto -> clique no WhatsApp,
 // conferindo que o link wa.me sai com número e mensagem pré-formatada.
 
+// Card de produto: link para o detalhe que contém o <h3> com o nome.
+// Filtrar por has: h3 exclui "Voltar", paginação e outros links /produtos/*.
+function productCards(page: import("@playwright/test").Page) {
+  return page.locator('a[href^="/produtos/"]').filter({ has: page.locator("h3") });
+}
+
+async function openFirstProduct(page: import("@playwright/test").Page) {
+  const card = productCards(page).first();
+  await expect(card).toBeVisible();
+
+  const name = (await card.locator("h3").textContent())?.trim();
+  const href = await card.getAttribute("href");
+
+  // Espera a navegação concluir em vez de assumir que o clique já mudou a URL.
+  await Promise.all([page.waitForURL(`**${href}`), card.click()]);
+
+  return name;
+}
+
 test("home lista produtos e navega para o detalhe", async ({ page }) => {
   await page.goto("/");
 
-  const firstProduct = page.locator('a[href^="/produtos/"]').first();
-  await expect(firstProduct).toBeVisible();
-
-  const productName = (await firstProduct.locator("h3").textContent())?.trim();
-  await firstProduct.click();
+  const productName = await openFirstProduct(page);
 
   await expect(page).toHaveURL(/\/produtos\/[^/]+$/);
   if (productName) {
@@ -21,7 +36,7 @@ test("home lista produtos e navega para o detalhe", async ({ page }) => {
 test("botão do WhatsApp aponta para wa.me com mensagem pré-formatada", async ({ page }) => {
   await page.goto("/produtos");
 
-  await page.locator('a[href^="/produtos/"]').first().click();
+  await openFirstProduct(page);
   await expect(page).toHaveURL(/\/produtos\/[^/]+$/);
 
   const whatsappLink = page.locator('a[href^="https://wa.me/"]').first();
@@ -50,7 +65,7 @@ test("botão do WhatsApp aponta para wa.me com mensagem pré-formatada", async (
 
 test("o CTA do WhatsApp corresponde ao status do produto", async ({ page }) => {
   await page.goto("/produtos");
-  await page.locator('a[href^="/produtos/"]').first().click();
+  await openFirstProduct(page);
 
   const whatsappLink = page.locator('a[href^="https://wa.me/"]').first();
   const label = (await whatsappLink.textContent())?.trim();
