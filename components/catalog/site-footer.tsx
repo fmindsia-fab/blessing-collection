@@ -1,6 +1,5 @@
-import Link from "next/link";
-import { LockIcon } from "lucide-react";
 import { ShareButton } from "@/components/shared/share-button";
+import { OwnerAccess } from "./owner-access";
 import { InstagramGlyph, WhatsappGlyph } from "@/components/shared/social-icons";
 import { buildWhatsappLink } from "@/lib/whatsapp/build-message";
 
@@ -59,7 +58,11 @@ export function SiteFooter({ storeName, instagramUrl, whatsappNumber, siteUrl }:
       <div className="mx-auto flex max-w-4xl flex-col items-center gap-10 text-center">
         <div className="flex flex-col items-center gap-2">
           <span className="font-[family-name:var(--font-brand)] text-2xl leading-none">{storeName}</span>
-          <span aria-hidden className="mt-1 h-px w-12 rounded-full bg-[var(--gold)]" />
+          {/* O fio é decorativo para o visitante e atalho para o painel a
+              quem conhece o gesto (5 cliques). */}
+          <span className="mt-1">
+            <OwnerAccess />
+          </span>
           <span className="pt-1 text-[0.6875rem] uppercase tracking-[0.18em] text-muted-foreground">
             Bolsas e acessórios artesanais
           </span>
@@ -88,20 +91,10 @@ export function SiteFooter({ storeName, instagramUrl, whatsappNumber, siteUrl }:
           />
         </div>
 
-        <div className="flex w-full flex-col items-center gap-4 border-t border-border pt-8 sm:flex-row sm:justify-between">
+        <div className="flex w-full justify-center border-t border-border pt-8">
           <span className="text-[0.6875rem] text-muted-foreground">
             © {year} {storeName}. Todos os direitos reservados.
           </span>
-
-          {/* Acesso da proprietária: discreto, não compete com o catálogo.
-              Não é controle de segurança — a proteção real é a RLS. */}
-          <Link
-            href="/admin"
-            className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[0.6875rem] uppercase tracking-[0.14em] text-muted-foreground/70 outline-none transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
-          >
-            <LockIcon className="size-3" />
-            Área da proprietária
-          </Link>
         </div>
       </div>
     </footer>

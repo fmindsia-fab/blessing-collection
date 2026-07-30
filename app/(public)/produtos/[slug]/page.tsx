@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { getActiveStore } from "@/lib/store/get-active-store";
-import { getProductBySlug } from "@/lib/products/queries";
+import { getProductBySlug, getRelatedProducts } from "@/lib/products/queries";
+import { ProductCard } from "@/components/catalog/product-card";
+import { SectionHeading } from "@/components/catalog/section-heading";
 import { WhatsappButton } from "@/components/catalog/whatsapp-button";
 import { SelectionToggleButton } from "@/components/catalog/selection-toggle-button";
 import { PageViewTracker } from "@/components/shared/page-view-tracker";
@@ -55,6 +57,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   if (!result) notFound();
 
   const { product, images, variants } = result;
+
+  const related = await getRelatedProducts(store.id, product);
 
   const coverImage = images.find((img) => img.is_cover) ?? images[0] ?? null;
   const otherImages = images.filter((img) => img.id !== coverImage?.id);
@@ -190,6 +194,25 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </div>
         </div>
       </div>
+
+      {related.length > 0 ? (
+        <section className="flex flex-col gap-8 border-t border-border pt-16">
+          <SectionHeading kicker="Talvez você goste" title="Outras peças" href="/produtos" />
+          <div className="grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] lg:gap-x-8">
+            {related.map((item, index) => (
+              <ProductCard
+                key={item.id}
+                index={index}
+                slug={item.slug}
+                name={item.name}
+                price={item.price}
+                status={item.status as typeof product.status}
+                coverImageUrl={item.cover_image_url}
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
     </main>
   );
 }

@@ -98,6 +98,26 @@ export async function uploadProductImage(
   return {};
 }
 
+/**
+ * Texto alternativo da imagem (PRD seção 15: "imagens com texto alternativo").
+ * Sem ele o catálogo depende do nome do produto como alt, que descreve a peça
+ * mas não a foto — leitores de tela anunciam a mesma coisa em todas as fotos.
+ */
+export async function updateImageAltText(productId: string, imageId: string, altText: string) {
+  const supabase = await createServerSupabaseClient();
+  if (!(await assertProductBelongsToStore(supabase, productId))) return;
+
+  const trimmed = altText.trim().slice(0, 200);
+
+  await supabase
+    .from("product_images")
+    .update({ alt_text: trimmed || null })
+    .eq("id", imageId)
+    .eq("product_id", productId);
+
+  revalidatePath(`/admin/produtos/${productId}/editar`);
+}
+
 export async function setCoverImage(productId: string, imageId: string) {
   const supabase = await createServerSupabaseClient();
   if (!(await assertProductBelongsToStore(supabase, productId))) return;

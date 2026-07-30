@@ -165,6 +165,58 @@ export async function getNewArrivals(storeId: string) {
   return products.map((p) => ({ ...p, cover_image_url: coverByProduct.get(p.id) ?? null }));
 }
 
+/**
+ * Peças relacionadas para a página de produto (PRD 3.4).
+ *
+ * Relevância por proximidade: mesma categoria primeiro, depois mesma coleção,
+ * e o restante do catálogo completa se ainda faltar. Sempre exclui o próprio
+ * produto. Uma loja pequena raramente tem 4 peças na mesma categoria, então
+ * sem o preenchimento a seção apareceria quase sempre vazia.
+ */
+export async function getRelatedProducts(
+  storeId: string,
+  product: { id: string; category_id: string | null; collection_id: string | null },
+  limit = 4,
+) {
+  const supabase = await createServerSupabaseClient();
+  const selected = new Map<string, { id: string; name: string; slug: string; price: number; status: string }>();
+
+  const fetchBatch = async (filter: (q: ReturnType<typeof buildBase>) => typeof q) => {
+    if (selected.size >= limit) return;
+
+    const { data } = await filter(buildBase());
+    for (const row of data ?? []) {
+      if (row.id !== product.id && !selected.has(row.id)) selected.set(row.id, row);
+      if (selected.size >= limit) break;
+    }
+  };
+
+  function buildBase() {
+    return supabase
+      .from("products")
+      .select("id, name, slug, price, status")
+      .eq("store_id", storeId)
+      .in("status", PUBLIC_STATUSES)
+      .neq("id", product.id)
+      .order("sort_order", { ascending: true })
+      .limit(limit + 1);
+  }
+
+  if (product.category_id) {
+    await fetchBatch((q) => q.eq("category_id", product.category_id!));
+  }
+  if (product.collection_id) {
+    await fetchBatch((q) => q.eq("collection_id", product.collection_id!));
+  }
+  await fetchBatch((q) => q);
+
+  const products = [...selected.values()].slice(0, limit);
+  if (products.length === 0) return [];
+
+  const coverByProduct = await withCoverImages(supabase, products);
+  return products.map((p) => ({ ...p, cover_image_url: coverByProduct.get(p.id) ?? null }));
+}
+
 // cache() deduplica a chamada entre generateMetadata e o componente da página.
 export const getProductBySlug = cache(async (storeId: string, slug: string) => {
   const supabase = await createServerSupabaseClient();
