@@ -6,6 +6,7 @@ import { XIcon } from "lucide-react";
 import { useSelection } from "@/lib/selection/selection-context";
 import { track } from "@/lib/analytics/track";
 import { buildSelectionWhatsappMessage, buildWhatsappLink } from "@/lib/whatsapp/build-message";
+import { ActionButton, ActionLink } from "@/components/ui/action";
 
 type SelectionReviewProps = {
   storeId: string;
@@ -29,12 +30,9 @@ export function SelectionReview({ storeId, storeName, storeWhatsapp, siteUrl }: 
         <p className="font-[family-name:var(--font-brand)] text-xl text-muted-foreground">
           Você ainda não escolheu nenhuma peça.
         </p>
-        <Link
-          href="/produtos"
-          className="border border-foreground px-8 py-3 text-xs uppercase tracking-[0.18em] transition-colors hover:bg-foreground hover:text-background"
-        >
+        <ActionLink href="/produtos" variant="outline">
           Ver o catálogo
-        </Link>
+        </ActionLink>
       </div>
     );
   }
@@ -114,22 +112,12 @@ export function SelectionReview({ storeId, storeName, storeWhatsapp, siteUrl }: 
       </div>
 
       <div className="flex flex-wrap items-center gap-5">
-        <a
-          href={whatsappHref}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={handleSend}
-          className="inline-flex h-12 items-center justify-center bg-foreground px-8 text-xs uppercase tracking-[0.18em] text-background transition-colors hover:bg-[var(--gold)]"
-        >
+        <ActionLink href={whatsappHref} external variant="solid" onClick={handleSend}>
           Enviar seleção pelo WhatsApp
-        </a>
-        <button
-          type="button"
-          onClick={clear}
-          className="text-xs uppercase tracking-[0.16em] text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
-        >
+        </ActionLink>
+        <ActionButton type="button" variant="ghost" onClick={clear}>
           Limpar seleção
-        </button>
+        </ActionButton>
       </div>
     </div>
   );

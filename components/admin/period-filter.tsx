@@ -12,7 +12,7 @@ export function PeriodFilter({ basePath, active }: { basePath: string; active: A
           href={`${basePath}?periodo=${period}`}
           aria-current={period === active ? "true" : undefined}
           className={cn(
-            "border px-4 py-1.5 text-[0.6875rem] uppercase tracking-[0.12em] transition-colors",
+            "border px-4 py-2 text-[0.6875rem] uppercase tracking-[0.12em] outline-none transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-background",
             period === active
               ? "border-foreground bg-foreground text-background"
               : "border-border text-muted-foreground hover:border-foreground hover:text-foreground",

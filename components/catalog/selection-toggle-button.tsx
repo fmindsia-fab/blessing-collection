@@ -19,10 +19,12 @@ export function SelectionToggleButton({ item, className }: SelectionToggleButton
       onClick={() => toggle(item)}
       aria-pressed={selected}
       className={cn(
-        "inline-flex h-12 items-center justify-center gap-2 border px-6 text-xs uppercase tracking-[0.18em] transition-colors",
+        // Mesma métrica do actionVariants "outline", mas com estado selecionado
+        // próprio — por isso não reusa a variante diretamente.
+        "group inline-flex h-12 items-center justify-center gap-2.5 border px-8 text-[0.6875rem] uppercase tracking-[0.18em] outline-none transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-4 focus-visible:ring-offset-background",
         selected
-          ? "border-[var(--gold)] bg-[var(--gold)]/10 text-foreground"
-          : "border-foreground/25 text-foreground hover:border-foreground",
+          ? "border-[var(--gold)] bg-[var(--gold)]/12 text-foreground"
+          : "border-foreground/30 text-foreground hover:border-foreground hover:bg-foreground hover:text-background",
         className,
       )}
     >

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { ActionLink } from "@/components/ui/action";
 
 type SectionHeadingProps = {
   kicker?: string;
@@ -19,15 +19,9 @@ export function SectionHeading({ kicker, title, href, linkLabel }: SectionHeadin
       </div>
 
       {href ? (
-        <Link
-          href={href}
-          className="group hidden shrink-0 items-center gap-2 pb-3 text-xs uppercase tracking-[0.16em] text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
-        >
+        <ActionLink href={href} variant="ghost" arrow className="hidden shrink-0 pb-3 sm:inline-flex">
           {linkLabel ?? "Ver tudo"}
-          <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">
-            →
-          </span>
-        </Link>
+        </ActionLink>
       ) : null}
     </div>
   );

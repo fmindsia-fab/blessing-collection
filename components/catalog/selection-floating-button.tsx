@@ -15,7 +15,7 @@ export function SelectionFloatingButton() {
   return (
     <Link
       href="/selecao"
-      className="reveal fixed bottom-6 right-6 z-50 inline-flex items-center gap-2.5 bg-foreground px-6 py-4 text-xs uppercase tracking-[0.16em] text-background shadow-[0_8px_30px_-8px_rgba(0,0,0,0.35)] transition-colors hover:bg-[var(--gold)]"
+      className="reveal group fixed bottom-6 right-6 z-50 inline-flex items-center gap-2.5 bg-foreground px-6 py-4 text-[0.6875rem] uppercase tracking-[0.16em] text-background shadow-[0_10px_34px_-10px_oklch(0.25_0.02_45/0.45)] outline-none transition-colors duration-300 hover:bg-[var(--gold)] focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-4 focus-visible:ring-offset-background"
     >
       <ShoppingBagIcon className="size-4" />
       Minha seleção ({items.length})

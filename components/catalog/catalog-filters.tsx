@@ -45,7 +45,7 @@ function FilterChip({
       href={href}
       aria-current={active ? "true" : undefined}
       className={cn(
-        "border px-3.5 py-1.5 text-xs tracking-wide transition-colors",
+        "border px-4 py-2 text-xs tracking-wide outline-none transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         active
           ? "border-foreground bg-foreground text-background"
           : "border-border text-muted-foreground hover:border-foreground hover:text-foreground",
@@ -117,7 +117,7 @@ export function CatalogFilters({
       {hasActiveFilter ? (
         <Link
           href={buildHref(basePath, { busca: search })}
-          className="self-start text-xs uppercase tracking-[0.16em] text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
+          className="self-start text-[0.6875rem] uppercase tracking-[0.16em] text-muted-foreground underline underline-offset-4 outline-none transition-colors hover:text-foreground focus-visible:text-foreground"
         >
           Limpar filtros
         </Link>

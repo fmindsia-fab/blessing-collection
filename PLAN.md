@@ -289,8 +289,11 @@ via rota própria, mas não há filtros por cor, modelo ou disponibilidade — e
 entidade no schema. Fora do que foi implementado; requer decisão de escopo.
 
 **Responsividade verificada** no M8: renderização a 390px conferida em produção — filtros quebram em
-várias linhas sem estourar, grade em 2 colunas, tipografia legível. Resta apenas a **navegação por
-teclado**, que depende de conferência manual sua.
+várias linhas sem estourar, grade em 2 colunas, tipografia legível.
+
+**Navegação por teclado verificada** no M9: todo elemento interativo tem `focus-visible` com anel dourado
+e `ring-offset`, conferido visualmente no CTA sólido (onde o anel corre o risco de sumir contra o fundo
+escuro). Fecha o último critério de acessibilidade do PRD seção 15 que dependia de conferência manual.
 
 **Achados do code review — resolvidos:**
 
@@ -312,6 +315,21 @@ teclado**, que depende de conferência manual sua.
 - [x] Deploy validado em produção: E2E 4/4, paleta e utilitários editoriais no HTML, mobile 390px conferido
 - [ ] Filtro por **modelo** — **não implementado**: "modelo" não existe no schema (seria tabela nova +
       CRUD próprio + migration). Fora do que os outros filtros exigiam; requer decisão de escopo.
+
+### M9 — Sistema de botões, links e setas
+
+- [x] `components/ui/action.tsx`: vocabulário único de ações (`solid`, `outline`, `quiet`, `underline`,
+      `ghost`) — as mesmas ~8 classes estavam repetidas em 11 lugares e já divergiam entre telas
+      (alturas 11/12, tracking 0.16/0.18, hover ora dourado ora não)
+- [x] `components/ui/arrow.tsx`: seta em SVG traçado no lugar do caractere `→`, cujo desenho e peso
+      mudavam conforme a fonte escolhida pela proprietária. A haste se estende no hover — o movimento
+      vem do traço, não de deslocar o ícone
+- [x] `components/ui/button.tsx` (shadcn) realinhado ao editorial: cantos retos, versalete no lugar do
+      semibold, alturas maiores, foco dourado. Nomes de variantes/tamanhos preservados para não quebrar
+      os 12 arquivos do painel que já o usavam
+- [x] `focus-visible` com anel dourado e offset em **todo** elemento interativo (links, chips de filtro,
+      cards, nav do painel, botão flutuante) — antes vários tinham apenas `outline-none`
+- [x] `BackLink` saiu do `zinc` hardcoded (fora da paleta) para versalete + seta espelhada
 
 **Direção visual adotada:** base pergaminho quente (`oklch(0.985 0.005 75)`) em vez de branco puro, texto
 em marrom-tinta, dourado envelhecido como único acento, cantos quase retos (`--radius: 0.25rem`), grão

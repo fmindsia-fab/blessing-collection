@@ -38,7 +38,7 @@ export function ProductCard({
   return (
     <Link
       href={`/produtos/${slug}`}
-      className="group reveal flex flex-col"
+      className="group reveal flex flex-col outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-4 focus-visible:ring-offset-background"
       style={{ animationDelay: `${Math.min(index, 8) * 60}ms` }}
     >
       <div className="relative aspect-[4/5] w-full overflow-hidden bg-secondary">
@@ -65,7 +65,7 @@ export function ProductCard({
         {/* Fio dourado que cresce no hover — o detalhe que assina o card. */}
         <span
           aria-hidden
-          className="absolute bottom-0 left-0 h-px w-0 bg-[var(--gold)] transition-all duration-500 ease-out group-hover:w-full"
+          className="absolute bottom-0 left-0 h-px w-0 bg-[var(--gold)] transition-all duration-500 ease-out group-hover:w-full group-focus-visible:w-full"
         />
       </div>
 

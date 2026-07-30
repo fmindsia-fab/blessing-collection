@@ -36,7 +36,7 @@ export default function AdminAreaLayout({ children }: { children: React.ReactNod
           <div className="flex items-center gap-4">
             <Link
               href="/"
-              className="hidden text-[0.6875rem] uppercase tracking-[0.14em] text-muted-foreground transition-colors hover:text-foreground sm:inline"
+              className="hidden text-[0.6875rem] uppercase tracking-[0.14em] text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:text-foreground focus-visible:underline focus-visible:underline-offset-4 sm:inline"
             >
               Ver catálogo ↗
             </Link>

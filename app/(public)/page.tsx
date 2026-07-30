@@ -6,6 +6,7 @@ import { listCategories } from "@/lib/categories/queries";
 import { listCollections } from "@/lib/collections/queries";
 import { ProductCard } from "@/components/catalog/product-card";
 import { SectionHeading } from "@/components/catalog/section-heading";
+import { ActionLink } from "@/components/ui/action";
 
 export default async function HomePage() {
   const store = await getActiveStore();
@@ -40,15 +41,9 @@ export default async function HomePage() {
             <p className="max-w-md text-[0.9375rem] leading-relaxed text-muted-foreground">{store.description}</p>
           ) : null}
 
-          <Link
-            href="/produtos"
-            className="group mt-2 inline-flex items-center gap-3 border-b border-foreground pb-1.5 text-xs uppercase tracking-[0.18em] transition-colors hover:border-[var(--gold)] hover:text-[var(--gold)]"
-          >
+          <ActionLink href="/produtos" variant="underline" arrow className="mt-2">
             Explorar o catálogo
-            <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">
-              →
-            </span>
-          </Link>
+          </ActionLink>
         </div>
 
         {heroProduct?.cover_image_url ? (
@@ -126,10 +121,10 @@ export default async function HomePage() {
                 <Link
                   key={category.id}
                   href={`/categorias/${category.slug}`}
-                  className="group font-[family-name:var(--font-brand)] text-xl text-muted-foreground transition-colors hover:text-foreground sm:text-2xl"
+                  className="group font-[family-name:var(--font-brand)] text-xl text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:text-foreground sm:text-2xl"
                 >
                   {category.name}
-                  <span className="mt-0.5 block h-px w-0 bg-[var(--gold)] transition-all duration-400 ease-out group-hover:w-full" />
+                  <span className="mt-1 block h-px w-0 bg-[var(--gold)] transition-all duration-500 ease-out group-hover:w-full group-focus-visible:w-full" />
                 </Link>
               ))}
             </div>
@@ -144,10 +139,10 @@ export default async function HomePage() {
                 <Link
                   key={collection.id}
                   href={`/colecoes/${collection.slug}`}
-                  className="group font-[family-name:var(--font-brand)] text-xl text-muted-foreground transition-colors hover:text-foreground sm:text-2xl"
+                  className="group font-[family-name:var(--font-brand)] text-xl text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:text-foreground sm:text-2xl"
                 >
                   {collection.name}
-                  <span className="mt-0.5 block h-px w-0 bg-[var(--gold)] transition-all duration-400 ease-out group-hover:w-full" />
+                  <span className="mt-1 block h-px w-0 bg-[var(--gold)] transition-all duration-500 ease-out group-hover:w-full group-focus-visible:w-full" />
                 </Link>
               ))}
             </div>
@@ -155,15 +150,9 @@ export default async function HomePage() {
         ) : null}
 
         <div className="flex justify-center border-t border-border pt-14">
-          <Link
-            href="/produtos"
-            className="group inline-flex items-center gap-3 border-b border-foreground pb-1.5 text-xs uppercase tracking-[0.18em] transition-colors hover:border-[var(--gold)] hover:text-[var(--gold)]"
-          >
+          <ActionLink href="/produtos" variant="underline" arrow>
             Ver todas as peças
-            <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">
-              →
-            </span>
-          </Link>
+          </ActionLink>
         </div>
       </div>
     </main>

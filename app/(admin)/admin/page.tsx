@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { listAllProductsForAdmin } from "@/lib/products/admin-queries";
 import {
@@ -9,6 +8,7 @@ import {
 } from "@/lib/analytics/queries";
 import { PeriodFilter } from "@/components/admin/period-filter";
 import { PageHeading } from "@/components/admin/page-heading";
+import { ActionLink } from "@/components/ui/action";
 import { RankingTable } from "@/components/admin/ranking-table";
 import { StatCard } from "@/components/admin/stat-card";
 
@@ -67,15 +67,9 @@ export default async function AdminDashboardPage({
         ]}
       />
 
-      <Link
-        href={`/admin/analytics?periodo=${period}`}
-        className="group inline-flex w-fit items-center gap-2 text-[0.6875rem] uppercase tracking-[0.14em] text-muted-foreground transition-colors hover:text-foreground"
-      >
+      <ActionLink href={`/admin/analytics?periodo=${period}`} variant="ghost" arrow className="w-fit">
         Ver analytics completo
-        <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">
-          →
-        </span>
-      </Link>
+      </ActionLink>
     </div>
   );
 }

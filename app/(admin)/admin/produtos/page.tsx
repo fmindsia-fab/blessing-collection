@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { listAllProductsForAdmin } from "@/lib/products/admin-queries";
 import { PageHeading } from "@/components/admin/page-heading";
+import { ActionLink } from "@/components/ui/action";
 import { ProductRow } from "./product-row";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -22,12 +22,9 @@ export default async function AdminProductsPage() {
         title="Produtos"
         description={`${products.length} ${products.length === 1 ? "peça cadastrada" : "peças cadastradas"}`}
         action={
-          <Link
-            href="/admin/produtos/novo"
-            className="inline-flex items-center bg-foreground px-6 py-3 text-[0.6875rem] uppercase tracking-[0.14em] text-background transition-colors hover:bg-[var(--gold)]"
-          >
+          <ActionLink href="/admin/produtos/novo" variant="solid" className="h-11 px-6">
             Nova peça
-          </Link>
+          </ActionLink>
         }
       />
 

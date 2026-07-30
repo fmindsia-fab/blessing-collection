@@ -22,15 +22,20 @@ export function AdminNavLink({
       href={href}
       aria-current={isActive ? "page" : undefined}
       className={cn(
-        "relative pb-0.5 text-[0.6875rem] uppercase tracking-[0.14em] transition-colors",
+        "group relative pb-1 text-[0.6875rem] uppercase tracking-[0.14em] outline-none transition-colors duration-300 focus-visible:text-foreground",
         isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground",
         className,
       )}
     >
       {label}
-      {isActive ? (
-        <span aria-hidden className="absolute -bottom-0.5 left-0 h-px w-full bg-[var(--gold)]" />
-      ) : null}
+      {/* Fio dourado: fixo no item ativo, cresce no hover dos demais. */}
+      <span
+        aria-hidden
+        className={cn(
+          "absolute bottom-0 left-0 h-px bg-[var(--gold)] transition-all duration-400 ease-out",
+          isActive ? "w-full" : "w-0 group-hover:w-full group-focus-visible:w-full",
+        )}
+      />
     </Link>
   );
 }

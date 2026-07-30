@@ -1,9 +1,9 @@
-import Link from "next/link";
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { listAvailableColors, listProducts } from "@/lib/products/queries";
 import { ProductCard } from "@/components/catalog/product-card";
 import { CatalogFilters } from "@/components/catalog/catalog-filters";
 import { BackLink } from "@/components/shared/back-link";
+import { ActionLink } from "@/components/ui/action";
 
 export default async function ProductsPage({
   searchParams,
@@ -80,12 +80,9 @@ export default async function ProductsPage({
           <p className="font-[family-name:var(--font-brand)] text-xl text-muted-foreground">
             Nenhuma peça encontrada{busca ? ` para "${busca}"` : ""}.
           </p>
-          <Link
-            href="/produtos"
-            className="text-xs uppercase tracking-[0.16em] underline underline-offset-4 transition-colors hover:text-[var(--gold)]"
-          >
+          <ActionLink href="/produtos" variant="underline">
             Ver todas as peças
-          </Link>
+          </ActionLink>
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] lg:gap-x-8">
@@ -105,12 +102,9 @@ export default async function ProductsPage({
 
       {hasMore ? (
         <div className="flex justify-center pt-6">
-          <Link
-            href={`/produtos?${nextPageQuery.toString()}`}
-            className="border border-foreground px-8 py-3 text-xs uppercase tracking-[0.18em] transition-colors hover:bg-foreground hover:text-background"
-          >
+          <ActionLink href={`/produtos?${nextPageQuery.toString()}`} variant="outline">
             Carregar mais
-          </Link>
+          </ActionLink>
         </div>
       ) : null}
     </main>
