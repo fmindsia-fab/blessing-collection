@@ -12,6 +12,24 @@ export type ImageUploadState = {
   error?: string;
 };
 
+// supabase.storage.from(bucket) cria uma nova instância a cada chamada,
+// herdando os headers fixados na construção do client (sem o token da
+// sessão, já que @supabase/ssr usa skipAutoInitialize). Sem reaplicar o
+// Authorization nessa instância específica, o Storage vê o upload como
+// anon e a RLS de storage.objects (auth.uid() = owner) rejeita com 403.
+async function getAuthenticatedBucket(supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>) {
+  const bucket = supabase.storage.from("product-images");
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (session?.access_token) {
+    bucket.setHeader("Authorization", `Bearer ${session.access_token}`);
+  }
+
+  return bucket;
+}
+
 export async function uploadProductImage(
   productId: string,
   _prevState: ImageUploadState,
@@ -29,6 +47,7 @@ export async function uploadProductImage(
 
   const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
+  const bucket = await getAuthenticatedBucket(supabase);
 
   const { count } = await supabase
     .from("product_images")
@@ -42,7 +61,7 @@ export async function uploadProductImage(
   const extension = file.name.split(".").pop() ?? "jpg";
   const path = `${store.id}/${productId}/${crypto.randomUUID()}.${extension}`;
 
-  const { error: uploadError } = await supabase.storage.from("product-images").upload(path, file, {
+  const { error: uploadError } = await bucket.upload(path, file, {
     contentType: file.type,
     upsert: false,
   });
@@ -54,7 +73,7 @@ export async function uploadProductImage(
 
   const {
     data: { publicUrl },
-  } = supabase.storage.from("product-images").getPublicUrl(path);
+  } = bucket.getPublicUrl(path);
 
   const isFirstImage = (count ?? 0) === 0;
 
@@ -82,10 +101,11 @@ export async function setCoverImage(productId: string, imageId: string) {
 
 export async function deleteProductImage(productId: string, imageId: string, url: string) {
   const supabase = await createServerSupabaseClient();
+  const bucket = await getAuthenticatedBucket(supabase);
 
   const path = url.split("/product-images/")[1];
   if (path) {
-    await supabase.storage.from("product-images").remove([path]);
+    await bucket.remove([path]);
   }
 
   await supabase.from("product_images").delete().eq("id", imageId);
