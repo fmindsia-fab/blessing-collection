@@ -13,6 +13,24 @@ export type ImageUploadState = {
   error?: string;
 };
 
+// O productId vem do formulário: confirma que pertence à loja ativa antes de
+// gravar no Storage ou no banco. A RLS já bloquearia, mas a checagem explícita
+// é a defesa da aplicação (regra do CLAUDE.md).
+async function assertProductBelongsToStore(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  productId: string,
+) {
+  const store = await getActiveStore();
+  const { data } = await supabase
+    .from("products")
+    .select("id")
+    .eq("id", productId)
+    .eq("store_id", store.id)
+    .maybeSingle();
+
+  return data !== null;
+}
+
 export async function uploadProductImage(
   productId: string,
   _prevState: ImageUploadState,
@@ -30,6 +48,11 @@ export async function uploadProductImage(
 
   const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
+
+  if (!(await assertProductBelongsToStore(supabase, productId))) {
+    return { error: "Produto não encontrado." };
+  }
+
   const bucket = supabase.storage.from(BUCKET);
 
   const { count } = await supabase
@@ -75,15 +98,21 @@ export async function uploadProductImage(
 
 export async function setCoverImage(productId: string, imageId: string) {
   const supabase = await createServerSupabaseClient();
+  if (!(await assertProductBelongsToStore(supabase, productId))) return;
 
   await supabase.from("product_images").update({ is_cover: false }).eq("product_id", productId);
-  await supabase.from("product_images").update({ is_cover: true }).eq("id", imageId);
+  await supabase.from("product_images").update({ is_cover: true }).eq("id", imageId).eq("product_id", productId);
 
   revalidatePath(`/admin/produtos/${productId}/editar`);
 }
 
+// Exceção consciente ao "sem exclusão definitiva": a imagem é um arquivo no
+// Storage, não um registro de negócio com histórico. Manter linhas órfãs
+// apontando para arquivos removidos só quebraria a galeria.
 export async function deleteProductImage(productId: string, imageId: string, url: string) {
   const supabase = await createServerSupabaseClient();
+  if (!(await assertProductBelongsToStore(supabase, productId))) return;
+
   const bucket = supabase.storage.from(BUCKET);
 
   const path = url.split(`/${BUCKET}/`)[1];
@@ -91,7 +120,7 @@ export async function deleteProductImage(productId: string, imageId: string, url
     await bucket.remove([path]);
   }
 
-  await supabase.from("product_images").delete().eq("id", imageId);
+  await supabase.from("product_images").delete().eq("id", imageId).eq("product_id", productId);
 
   revalidatePath(`/admin/produtos/${productId}/editar`);
 }

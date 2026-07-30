@@ -236,12 +236,41 @@ Marcar cada item ao concluir. Atualizar este arquivo incrementalmente — nunca 
 commit da seleção múltipla, a resolver no M7.
 
 ### M7 — Qualidade e publicação
-- [ ] Segunda rodada de `supabase-security-audit` (auditoria final)
-- [ ] Revisão de performance de queries (`supabase-postgres-best-practices`)
+- [x] Segunda rodada de `supabase-security-audit` (auditoria final) — 0 riscos críticos; 3 médios tratados (ver abaixo)
+- [x] Revisão de performance de queries (`supabase-postgres-best-practices`)
+- [x] Teste E2E (Playwright): home → produto → clique WhatsApp → link `wa.me` correto — `tests/e2e/catalog-whatsapp.spec.ts`, 4 testes passando **contra produção**
+- [x] Lint pendente de `selection-context.tsx` resolvido (`useSyncExternalStore` + init preguiçosa, sem setState em efeito)
+- [ ] Migrations `0007` e `0008` aplicadas no Supabase (**pendente — exige acesso ao SQL Editor**)
 - [ ] `code-reviewer` geral
 - [ ] Deploy Vercel com env vars de produção
 - [ ] Checklist da seção 16 do PRD conferido
-- [ ] Teste E2E (Playwright): home → produto → clique WhatsApp → link `wa.me` correto
+
+**Correções aplicadas na auditoria final:**
+
+1. **Server Actions confiavam em IDs vindos do formulário.** `updateProduct`, `deactivateProduct`,
+   `restoreProduct`, as actions de categoria/coleção e as de imagem/variante filtravam só por `.eq("id", …)`.
+   A RLS já bloqueava o abuso, mas era a única camada. Agora todas filtram também por `store_id`
+   (regra do CLAUDE.md), e as de imagem/variante validam que o produto pertence à loja ativa antes de
+   qualquer escrita. `updateStoreSettings` deixou de receber `storeId` do client — resolve pelo `STORE_SLUG`.
+2. **`deleteVariant` fazia DELETE físico** (risco 5 do PLAN.md). Migration `0007` adiciona `'archived'` ao
+   check de `product_variants.status`; a action virou `archiveVariant` (UPDATE), e a policy pública de
+   SELECT passou a excluir variantes arquivadas.
+3. **Policies chamavam `auth.uid()` por linha.** Migration `0008` envolve todas em `(select auth.uid())`,
+   avaliado uma única vez pelo planner. Nenhuma regra de acesso muda — o predicado é logicamente idêntico.
+   A mesma migration adiciona `idx_products_store_status_sort` para a listagem pública ler já ordenada.
+
+**Exceção consciente registrada:** `deleteProductImage` continua fazendo DELETE físico. A imagem é um
+arquivo no Storage, não um registro de negócio com histórico — manter a linha órfã apontando para um
+arquivo removido só quebraria a galeria.
+
+**Verificado e sem ressalvas:** RLS ativa nas 8 tabelas, sem policy com `true`; `analytics_events` só
+aceita INSERT de `anon` (sem SELECT/UPDATE/DELETE) e não guarda dado pessoal; nenhuma `service_role_key`
+no código; `.env*` ignorado e nenhum `.env` rastreado no git; uploads revalidados no servidor
+(tipo/tamanho/limite de 8); sem N+1 nas listagens (capas resolvidas em um único `.in()`).
+
+**Não auditável daqui:** o estado real do banco em produção — o Supabase CLI não está autenticado nesta
+máquina (`supabase login` é interativo). Confirmar no Studio que as migrations `0001`–`0008` estão
+aplicadas e que o bucket `product-images` é público de propósito (é: as imagens do catálogo precisam disso).
 
 ---
 

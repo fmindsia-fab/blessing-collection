@@ -61,11 +61,13 @@ export async function updateCollection(
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
   const { error } = await supabase
     .from("collections")
     .update({ name: parsed.data.name, description: parsed.data.description || null })
-    .eq("id", id);
+    .eq("id", id)
+    .eq("store_id", store.id);
 
   if (error) return { error: "Não foi possível salvar as alterações." };
 
@@ -74,13 +76,15 @@ export async function updateCollection(
 }
 
 export async function archiveCollection(id: string) {
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
-  await supabase.from("collections").update({ status: "archived" }).eq("id", id);
+  await supabase.from("collections").update({ status: "archived" }).eq("id", id).eq("store_id", store.id);
   revalidatePath("/admin/colecoes");
 }
 
 export async function restoreCollection(id: string) {
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
-  await supabase.from("collections").update({ status: "active" }).eq("id", id);
+  await supabase.from("collections").update({ status: "active" }).eq("id", id).eq("store_id", store.id);
   revalidatePath("/admin/colecoes");
 }

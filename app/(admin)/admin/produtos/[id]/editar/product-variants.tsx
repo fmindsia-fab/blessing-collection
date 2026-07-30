@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useTransition } from "react";
-import { createVariant, toggleVariantStatus, deleteVariant, type VariantFormState } from "@/lib/products/variant-actions";
+import { createVariant, toggleVariantStatus, archiveVariant, type VariantFormState } from "@/lib/products/variant-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -63,7 +63,7 @@ export function ProductVariants({ productId, variants }: ProductVariantsProps) {
                   variant="outline"
                   size="xs"
                   disabled={isToggling}
-                  onClick={() => startTransition(() => deleteVariant(productId, variant.id))}
+                  onClick={() => startTransition(() => archiveVariant(productId, variant.id))}
                 >
                   Remover
                 </Button>

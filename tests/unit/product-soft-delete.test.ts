@@ -3,10 +3,24 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 // Regra inegociável do PRD: "excluir" no painel é UPDATE status, nunca DELETE.
 type ProductUpdate = { status: string; archived_at: string | null };
 
-const updateSpy = vi.fn((payload: ProductUpdate) => ({
-  eq: () => Promise.resolve({ error: null, payload }),
-}));
-const deleteSpy = vi.fn(() => ({ eq: () => Promise.resolve({ error: null }) }));
+// `.eq()` precisa ser encadeável: as actions filtram por id E por store_id.
+const eqSpy = vi.fn<(column: string, value: string) => EqChain>();
+
+type EqChain = { eq: typeof eqSpy } & Promise<{ error: null }>;
+
+function makeChain(): EqChain {
+  const chain = Promise.resolve({ error: null }) as EqChain;
+  chain.eq = eqSpy;
+  return chain;
+}
+
+eqSpy.mockImplementation(() => makeChain());
+
+const updateSpy = vi.fn((payload: ProductUpdate) => {
+  void payload; // capturado por mock.calls; a chain é o que a action encadeia
+  return makeChain();
+});
+const deleteSpy = vi.fn(() => makeChain());
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
@@ -26,6 +40,7 @@ import { deactivateProduct, restoreProduct } from "@/lib/products/actions";
 beforeEach(() => {
   updateSpy.mockClear();
   deleteSpy.mockClear();
+  eqSpy.mockClear();
 });
 
 describe("deactivateProduct", () => {
@@ -38,6 +53,15 @@ describe("deactivateProduct", () => {
     const payload = updateSpy.mock.calls[0][0];
     expect(payload.status).toBe("inactive");
     expect(payload.archived_at).toBeTypeOf("string");
+  });
+
+  it("filtra também por store_id, não só pelo id vindo do client", async () => {
+    await deactivateProduct("product-1");
+
+    expect(eqSpy.mock.calls).toEqual([
+      ["id", "product-1"],
+      ["store_id", "store-1"],
+    ]);
   });
 });
 

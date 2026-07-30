@@ -19,8 +19,7 @@ type StoreSettingsFormProps = {
 const initialState: StoreSettingsFormState = {};
 
 export function StoreSettingsForm({ store }: StoreSettingsFormProps) {
-  const action = updateStoreSettings.bind(null, store.id);
-  const [state, formAction, isPending] = useActionState(action, initialState);
+  const [state, formAction, isPending] = useActionState(updateStoreSettings, initialState);
 
   return (
     <form action={formAction} className="flex flex-col gap-4">

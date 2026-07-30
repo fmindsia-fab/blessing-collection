@@ -1,8 +1,20 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 const STORAGE_KEY = "blessing:selection";
+
+// A seleção não muda por evento externo — só precisamos do contraste entre o
+// snapshot do servidor e o do cliente para detectar a hidratação.
+const subscribeToNothing = () => () => {};
 
 export type SelectedItem = {
   productId: string;
@@ -35,15 +47,21 @@ function readStoredItems(): SelectedItem[] {
 }
 
 export function SelectionProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<SelectedItem[]>([]);
-  // A leitura do localStorage só acontece no cliente; até lá o botão
-  // flutuante não renderiza, evitando divergência com o HTML do servidor.
-  const [isHydrated, setIsHydrated] = useState(false);
+  // `useSyncExternalStore` devolve o snapshot do servidor (false) no HTML e
+  // no primeiro render do cliente, virando true logo após a hidratação —
+  // sem setState em efeito, que dispara render em cascata.
+  const isHydrated = useSyncExternalStore(
+    subscribeToNothing,
+    () => true,
+    () => false,
+  );
 
-  useEffect(() => {
-    setItems(readStoredItems());
-    setIsHydrated(true);
-  }, []);
+  // Inicialização preguiçosa: lê o localStorage uma única vez, já no primeiro
+  // render do cliente. Até a hidratação terminar o botão flutuante não
+  // renderiza, então não há divergência com o HTML do servidor.
+  const [items, setItems] = useState<SelectedItem[]>(() =>
+    typeof window === "undefined" ? [] : readStoredItems(),
+  );
 
   useEffect(() => {
     if (!isHydrated) return;

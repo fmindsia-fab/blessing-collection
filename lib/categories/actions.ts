@@ -58,11 +58,13 @@ export async function updateCategory(
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
   const { error } = await supabase
     .from("categories")
     .update({ name: parsed.data.name, description: parsed.data.description || null })
-    .eq("id", id);
+    .eq("id", id)
+    .eq("store_id", store.id);
 
   if (error) return { error: "Não foi possível salvar as alterações." };
 
@@ -71,13 +73,15 @@ export async function updateCategory(
 }
 
 export async function archiveCategory(id: string) {
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
-  await supabase.from("categories").update({ status: "archived" }).eq("id", id);
+  await supabase.from("categories").update({ status: "archived" }).eq("id", id).eq("store_id", store.id);
   revalidatePath("/admin/categorias");
 }
 
 export async function restoreCategory(id: string) {
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
-  await supabase.from("categories").update({ status: "active" }).eq("id", id);
+  await supabase.from("categories").update({ status: "active" }).eq("id", id).eq("store_id", store.id);
   revalidatePath("/admin/categorias");
 }

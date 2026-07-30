@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { getActiveStore } from "@/lib/store/get-active-store";
 
 const storeSettingsSchema = z.object({
   whatsappNumber: z.string().min(8, "Informe um número de WhatsApp válido"),
@@ -15,8 +16,9 @@ export type StoreSettingsFormState = {
   success?: boolean;
 };
 
+// A loja é resolvida no servidor via STORE_SLUG — nunca a partir de um id
+// enviado pelo formulário, que o client poderia forjar.
 export async function updateStoreSettings(
-  storeId: string,
   _prevState: StoreSettingsFormState,
   formData: FormData,
 ): Promise<StoreSettingsFormState> {
@@ -27,6 +29,7 @@ export async function updateStoreSettings(
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
   const { error } = await supabase
     .from("stores")
@@ -35,7 +38,7 @@ export async function updateStoreSettings(
       instagram_url: parsed.data.instagramUrl || null,
       description: parsed.data.description || null,
     })
-    .eq("id", storeId);
+    .eq("id", store.id);
 
   if (error) return { error: "Não foi possível salvar as configurações." };
 

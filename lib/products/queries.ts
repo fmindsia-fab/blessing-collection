@@ -133,6 +133,7 @@ export const getProductBySlug = cache(async (storeId: string, slug: string) => {
       .from("product_variants")
       .select("id, name, color, size, price, status, sort_order")
       .eq("product_id", product.id)
+      .neq("status", "archived")
       .order("sort_order", { ascending: true }),
   ]);
 

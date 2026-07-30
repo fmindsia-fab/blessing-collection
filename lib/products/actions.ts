@@ -88,6 +88,7 @@ export async function updateProduct(
   const parsed = parseProductForm(formData);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
   const { error } = await supabase
     .from("products")
@@ -103,7 +104,8 @@ export async function updateProduct(
       is_featured: parsed.data.isFeatured ?? false,
       is_new_arrival: parsed.data.isNewArrival ?? false,
     })
-    .eq("id", productId);
+    .eq("id", productId)
+    .eq("store_id", store.id);
 
   if (error) return { error: "Não foi possível salvar as alterações." };
 
@@ -114,16 +116,23 @@ export async function updateProduct(
 
 // "Excluir" no painel nunca é DELETE físico — sempre soft delete via status.
 export async function deactivateProduct(productId: string) {
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
   await supabase
     .from("products")
     .update({ status: "inactive", archived_at: new Date().toISOString() })
-    .eq("id", productId);
+    .eq("id", productId)
+    .eq("store_id", store.id);
   revalidatePath("/admin/produtos");
 }
 
 export async function restoreProduct(productId: string) {
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
-  await supabase.from("products").update({ status: "available", archived_at: null }).eq("id", productId);
+  await supabase
+    .from("products")
+    .update({ status: "available", archived_at: null })
+    .eq("id", productId)
+    .eq("store_id", store.id);
   revalidatePath("/admin/produtos");
 }

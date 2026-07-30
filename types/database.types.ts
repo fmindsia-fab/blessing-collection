@@ -3,7 +3,7 @@
 // `npx supabase gen types typescript --project-id bipadxpcbmgoatlnnyfw > types/database.types.ts`
 
 export type ProductStatus = "available" | "made_to_order" | "sold_out" | "inactive";
-export type VariantStatus = "available" | "sold_out";
+export type VariantStatus = "available" | "sold_out" | "archived";
 export type ArchivableStatus = "active" | "archived";
 export type StoreStatus = "active" | "inactive";
 export type FontFamily =
