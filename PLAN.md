@@ -288,8 +288,9 @@ modelo, cor e disponibilidade** na listagem. Hoje existe busca por nome e navega
 via rota própria, mas não há filtros por cor, modelo ou disponibilidade — e "modelo" nem existe como
 entidade no schema. Fora do que foi implementado; requer decisão de escopo.
 
-**Pendente de conferência manual sua** (não consigo verificar por código): responsividade real em
-dispositivo físico e navegação completa por teclado.
+**Responsividade verificada** no M8: renderização a 390px conferida em produção — filtros quebram em
+várias linhas sem estourar, grade em 2 colunas, tipografia legível. Resta apenas a **navegação por
+teclado**, que depende de conferência manual sua.
 
 **Achados do code review — resolvidos:**
 
@@ -307,6 +308,8 @@ dispositivo físico e navegação completa por teclado.
 - [x] Migration `0009_brand_palette.sql`: coluna `brand_colors text[]` + check de 1 a 5 cores hex válidas
 - [x] Redesign do catálogo público e do painel (direção: editorial de moda impresso)
 - [x] Testes: paleta (normalização, validação, fallback) e sinalização de status na mensagem — 46 no total
+- [x] Migration `0009` aplicada e confirmada (`brand_colors` migrou os valores das 3 colunas antigas)
+- [x] Deploy validado em produção: E2E 4/4, paleta e utilitários editoriais no HTML, mobile 390px conferido
 - [ ] Filtro por **modelo** — **não implementado**: "modelo" não existe no schema (seria tabela nova +
       CRUD próprio + migration). Fora do que os outros filtros exigiam; requer decisão de escopo.
 
