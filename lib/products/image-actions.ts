@@ -21,10 +21,35 @@ export type ImageUploadState = {
 // rodar como anon e ser rejeitado pela RLS de storage.objects (403),
 // mesmo com uma sessão válida nos cookies. A correção suportada é criar
 // um client dedicado já nascendo com o Authorization do usuário.
+function decodeJwtPayload(token: string) {
+  try {
+    const payload = token.split(".")[1];
+    const json = Buffer.from(payload, "base64url").toString("utf-8");
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
 async function getAuthenticatedStorage(supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>) {
   const {
     data: { session },
   } = await supabase.auth.getSession();
+
+  if (session?.access_token) {
+    const payload = decodeJwtPayload(session.access_token);
+    console.log("[getAuthenticatedStorage] JWT claims:", {
+      role: payload?.role,
+      sub: payload?.sub,
+      exp: payload?.exp,
+      nowSeconds: Math.floor(Date.now() / 1000),
+      isExpired: payload?.exp ? payload.exp < Math.floor(Date.now() / 1000) : "unknown",
+      aud: payload?.aud,
+      iss: payload?.iss,
+    });
+  } else {
+    console.log("[getAuthenticatedStorage] sem access_token na sessão");
+  }
 
   const authedClient = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
