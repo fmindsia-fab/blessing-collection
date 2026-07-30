@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { getActiveStore } from "@/lib/store/get-active-store";
-import { listAllProductsForAdmin } from "@/lib/products/admin-queries";
 import {
   getAnalyticsTotals,
+  getCategoryRankings,
+  getCollectionRankings,
   getProductRankings,
   parsePeriod,
   PERIOD_LABEL,
@@ -11,7 +11,7 @@ import { PeriodFilter } from "@/components/admin/period-filter";
 import { RankingTable } from "@/components/admin/ranking-table";
 import { StatCard } from "@/components/admin/stat-card";
 
-export default async function AdminDashboardPage({
+export default async function AdminAnalyticsPage({
   searchParams,
 }: {
   searchParams: Promise<{ periodo?: string }>;
@@ -20,44 +20,44 @@ export default async function AdminDashboardPage({
   const period = parsePeriod(periodo);
 
   const store = await getActiveStore();
-  const [totals, rankings, products] = await Promise.all([
+  const [totals, products, categories, collections] = await Promise.all([
     getAnalyticsTotals(store.id, period),
     getProductRankings(store.id, period),
-    listAllProductsForAdmin(store.id),
+    getCategoryRankings(store.id, period),
+    getCollectionRankings(store.id, period),
   ]);
-
-  const publicProducts = products.filter((product) => product.status !== "inactive").length;
 
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
-          <h1 className="text-xl font-semibold tracking-tight">Dashboard</h1>
+          <h1 className="text-xl font-semibold tracking-tight">Analytics</h1>
           <p className="text-sm text-zinc-600">
-            Visão geral da loja — {PERIOD_LABEL[period].toLowerCase()}.
+            Interesse dos visitantes por produto, categoria e coleção — {PERIOD_LABEL[period].toLowerCase()}.
           </p>
         </div>
-        <PeriodFilter basePath="/admin" active={period} />
+        <PeriodFilter basePath="/admin/analytics" active={period} />
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          label="Produtos no catálogo"
-          value={String(publicProducts)}
-          hint={`${products.length} cadastrados no total`}
-        />
         <StatCard label="Visualizações de produto" value={String(totals.productViews)} />
         <StatCard label="Cliques no WhatsApp" value={String(totals.whatsappClicks)} />
         <StatCard
           label="Taxa de interesse"
           value={`${totals.interestRate}%`}
-          hint="Cliques no WhatsApp por visualização"
+          hint="Cliques no WhatsApp por visualização de produto"
+        />
+        <StatCard
+          label="Visitas a categorias/coleções"
+          value={String(totals.categoryViews + totals.collectionViews)}
+          hint={`${totals.categoryViews} categorias · ${totals.collectionViews} coleções`}
         />
       </div>
 
       <RankingTable
-        title="Top 5 produtos do período"
-        rows={rankings.slice(0, 5)}
+        title="Produtos mais procurados"
+        description="Top 10 por cliques no WhatsApp, com desempate por visualizações."
+        rows={products}
         emptyMessage="Nenhum evento registrado neste período."
         columns={[
           { header: "Produto", cell: (row) => row.product_name },
@@ -67,9 +67,25 @@ export default async function AdminDashboardPage({
         ]}
       />
 
-      <Link href={`/admin/analytics?periodo=${period}`} className="text-sm text-zinc-600 underline hover:text-zinc-900">
-        Ver analytics completo
-      </Link>
+      <RankingTable
+        title="Categorias mais visitadas"
+        rows={categories}
+        emptyMessage="Nenhuma visita a categorias neste período."
+        columns={[
+          { header: "Categoria", cell: (row) => row.category_name },
+          { header: "Visualizações", align: "right", cell: (row) => row.views },
+        ]}
+      />
+
+      <RankingTable
+        title="Coleções mais visitadas"
+        rows={collections}
+        emptyMessage="Nenhuma visita a coleções neste período."
+        columns={[
+          { header: "Coleção", cell: (row) => row.collection_name },
+          { header: "Visualizações", align: "right", cell: (row) => row.views },
+        ]}
+      />
     </div>
   );
 }

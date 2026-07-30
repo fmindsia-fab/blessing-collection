@@ -207,27 +207,33 @@ Marcar cada item ao concluir. Atualizar este arquivo incrementalmente — nunca 
 - [x] Validado manualmente com 4 produtos de seed: rotas 200, contagem/busca corretos, badges e CTAs por status corretos
 
 ### M5 — Painel administrativo
-- [ ] CRUD de produtos
-- [ ] CRUD de categorias
-- [ ] CRUD de coleções
-- [ ] CRUD de variantes
-- [ ] Upload de imagens com validação (máx 8/produto, 5MB, JPEG/PNG/WebP, sem SVG/GIF)
-- [ ] Upload de logo (máx 2MB, sem SVG)
-- [ ] Marcação de `is_cover`
-- [ ] Configurações da loja (WhatsApp, redes sociais)
-- [ ] Configuração de identidade visual: 3 cores da marca (primária, secundária, destaque) + seleção de fonte (lista pré-definida)
-- [ ] Teste: upload rejeita arquivo inválido
-- [ ] Teste: "excluir" produto seta `status='inactive'`, nunca `DELETE`
+- [x] CRUD de produtos
+- [x] CRUD de categorias
+- [x] CRUD de coleções
+- [x] CRUD de variantes
+- [x] Upload de imagens com validação (máx 8/produto, 5MB, JPEG/PNG/WebP, sem SVG/GIF)
+- [x] Upload de logo (máx 2MB, sem SVG)
+- [x] Marcação de `is_cover`
+- [x] Configurações da loja (WhatsApp, redes sociais)
+- [x] Configuração de identidade visual: 3 cores da marca (primária, secundária, destaque) + seleção de fonte (lista pré-definida)
+- [x] Teste: upload rejeita arquivo inválido — `tests/unit/product-image-upload.test.ts` (SVG, >5MB e arquivo ausente, todos barrados antes do Storage)
+- [x] Teste: "excluir" produto seta `status='inactive'`, nunca `DELETE` — `tests/unit/product-soft-delete.test.ts`
+- [x] Migrations `0005_storage_policies.sql` / `0006_fix_storage_policies_name_shadowing.sql` aplicadas (policies do bucket `product-images`)
 
 ### M6 — Analytics simples
-- [ ] RPC `get_product_rankings`
-- [ ] RPC `get_category_rankings`
-- [ ] RPC `get_collection_rankings`
-- [ ] Dashboard com indicadores gerais
-- [ ] Filtro de período (7/30/90/total)
-- [ ] Cálculo de taxa de interesse
-- [ ] Teste: taxa de interesse calculada corretamente para fixture conhecido
-- [ ] Teste: `p_days=7` exclui eventos fora da janela
+- [x] RPC `get_product_rankings`
+- [x] RPC `get_category_rankings`
+- [x] RPC `get_collection_rankings`
+- [x] Dashboard com indicadores gerais (`/admin`: produtos no catálogo, views, cliques, taxa de interesse + top 5)
+- [x] Filtro de período (7/30/90/total) — via `?periodo=`, sem estado no client; padrão 30 dias
+- [x] Cálculo de taxa de interesse — `interestRate()` em `lib/analytics/queries.ts`, espelhando o arredondamento da RPC
+- [x] Teste: taxa de interesse calculada corretamente para fixture conhecido — `tests/unit/analytics-queries.test.ts`
+- [x] Teste: `p_days=7` exclui eventos fora da janela — `tests/unit/analytics-queries.test.ts`
+- [x] `next build` verde com `/admin/analytics` registrada; 20 testes passando
+
+**Pendência conhecida (não bloqueia o M6):** `lib/selection/selection-context.tsx:44` dispara erro de lint
+`react-hooks/set-state-in-effect` (hidratação do localStorage via `setState` em `useEffect`) — herdado do
+commit da seleção múltipla, a resolver no M7.
 
 ### M7 — Qualidade e publicação
 - [ ] Segunda rodada de `supabase-security-audit` (auditoria final)
