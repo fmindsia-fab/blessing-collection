@@ -240,9 +240,10 @@ commit da seleção múltipla, a resolver no M7.
 - [x] Revisão de performance de queries (`supabase-postgres-best-practices`)
 - [x] Teste E2E (Playwright): home → produto → clique WhatsApp → link `wa.me` correto — `tests/e2e/catalog-whatsapp.spec.ts`, 4 testes passando **contra produção**
 - [x] Lint pendente de `selection-context.tsx` resolvido (`useSyncExternalStore` + init preguiçosa, sem setState em efeito)
-- [ ] Migrations `0007` e `0008` aplicadas no Supabase (**pendente — exige acesso ao SQL Editor**)
+- [x] Migrations `0007` e `0008` aplicadas no Supabase — check constraint de `product_variants` confirmado
+      pelo usuário via `pg_get_constraintdef` incluindo `'archived'`
+- [x] Deploy Vercel com env vars de produção — commit `e5d9463`, build 35s, E2E 4/4 contra produção
 - [ ] `code-reviewer` geral
-- [ ] Deploy Vercel com env vars de produção
 - [ ] Checklist da seção 16 do PRD conferido
 
 **Correções aplicadas na auditoria final:**
