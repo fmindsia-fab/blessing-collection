@@ -212,10 +212,14 @@ Marcar cada item ao concluir. Atualizar este arquivo incrementalmente — nunca 
 - [x] CRUD de coleções
 - [x] CRUD de variantes
 - [x] Upload de imagens com validação (máx 8/produto, 5MB, JPEG/PNG/WebP, sem SVG/GIF)
-- [x] Upload de logo (máx 2MB, sem SVG)
+- [x] Upload de logo (máx 2MB, sem SVG) — `uploadStoreLogo` em `lib/store/actions.ts`, exibido no hero da home
 - [x] Marcação de `is_cover`
 - [x] Configurações da loja (WhatsApp, redes sociais)
-- [x] Configuração de identidade visual: 3 cores da marca (primária, secundária, destaque) + seleção de fonte (lista pré-definida)
+- [x] Configuração de identidade visual: 3 cores da marca (primária, secundária, destaque) + seleção de
+      fonte (lista pré-definida) — `lib/store/{branding,fonts}.ts`, aplicadas no layout público como
+      CSS variables (`--brand-primary/secondary/accent`) e `--font-brand`
+- [x] Teste: logo rejeita SVG e arquivo >2MB — `tests/unit/store-logo-upload.test.ts`
+- [x] Teste: cor hex inválida é rejeitada; fonte desconhecida cai no padrão — `tests/unit/branding.test.ts`
 - [x] Teste: upload rejeita arquivo inválido — `tests/unit/product-image-upload.test.ts` (SVG, >5MB e arquivo ausente, todos barrados antes do Storage)
 - [x] Teste: "excluir" produto seta `status='inactive'`, nunca `DELETE` — `tests/unit/product-soft-delete.test.ts`
 - [x] Migrations `0005_storage_policies.sql` / `0006_fix_storage_policies_name_shadowing.sql` aplicadas (policies do bucket `product-images`)
@@ -243,8 +247,20 @@ commit da seleção múltipla, a resolver no M7.
 - [x] Migrations `0007` e `0008` aplicadas no Supabase — check constraint de `product_variants` confirmado
       pelo usuário via `pg_get_constraintdef` incluindo `'archived'`
 - [x] Deploy Vercel com env vars de produção — commit `e5d9463`, build 35s, E2E 4/4 contra produção
-- [ ] `code-reviewer` geral
-- [ ] Checklist da seção 16 do PRD conferido
+- [x] `code-reviewer` geral — 2 divergências de comportamento anotadas abaixo (seleção múltipla), aguardando decisão
+- [x] Revisão do `PLAN.md` item a item contra o código real — 2 itens do M5 estavam marcados como
+      concluídos sem implementação (identidade visual e upload de logo); ambos implementados nesta rodada
+- [ ] Checklist da seção 16 do PRD conferido — **bloqueado**: o PRD não está no repositório
+
+**Achados do code review (aguardando decisão do usuário):**
+
+1. **Produtos esgotados entram na seleção múltipla.** `SelectionToggleButton` é renderizado sem olhar o
+   `status` (`app/(public)/produtos/[slug]/page.tsx`), então um `sold_out` pode ser enviado no WhatsApp
+   junto com peças disponíveis, e a mensagem sai como "Tenho interesse nestas N peças" sem sinalizar.
+   Contrasta com o botão individual, que troca o CTA para "Consultar disponibilidade".
+2. **O total da seleção ignora preços de variante.** `selection-review.tsx` soma `item.price` (preço base).
+   Produto com variante de preço próprio mostra total menor que o real. O texto "Valor de referência"
+   mitiga em parte, mas a listagem usa "A partir de" e a tela de seleção não.
 
 **Correções aplicadas na auditoria final:**
 

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { getFeaturedProducts, getNewArrivals } from "@/lib/products/queries";
@@ -17,7 +18,14 @@ export default async function HomePage() {
   return (
     <main className="flex flex-1 flex-col gap-16 px-6 py-12 sm:px-10 lg:px-16">
       <section className="flex flex-col items-center gap-3 py-12 text-center">
-        <h1 className="text-4xl font-semibold tracking-tight">{store.name}</h1>
+        {store.logo_url ? (
+          <div className="relative h-24 w-48">
+            <Image src={store.logo_url} alt={store.name} fill className="object-contain" sizes="192px" priority />
+          </div>
+        ) : null}
+        <h1 className="text-4xl font-semibold tracking-tight" style={{ color: "var(--brand-primary)" }}>
+          {store.name}
+        </h1>
         {store.description ? <p className="max-w-xl text-zinc-600">{store.description}</p> : null}
       </section>
 
