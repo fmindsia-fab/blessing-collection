@@ -59,6 +59,7 @@ export async function listProducts({
   page = 1,
   categoryId,
   collectionId,
+  modelId,
   search,
   color,
   availability,
@@ -67,6 +68,7 @@ export async function listProducts({
   page?: number;
   categoryId?: string;
   collectionId?: string;
+  modelId?: string;
   search?: string;
   color?: string;
   availability?: string;
@@ -101,6 +103,7 @@ export async function listProducts({
 
   if (categoryId) query = query.eq("category_id", categoryId);
   if (collectionId) query = query.eq("collection_id", collectionId);
+  if (modelId) query = query.eq("model_id", modelId);
   if (search) query = query.ilike("name", `%${search}%`);
   if (color) {
     query = query.eq("product_variants.color", color).neq("product_variants.status", "archived");

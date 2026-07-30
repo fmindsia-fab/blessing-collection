@@ -4,7 +4,9 @@ import { revalidatePath } from "next/cache";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getActiveStore } from "@/lib/store/get-active-store";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB, conforme PRD seção 13.1
+// 10MB — ampliado do limite original de 5MB do PRD 13.1 a pedido do usuário,
+// para acomodar fotos de câmera sem recompressão prévia.
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_IMAGES_PER_PRODUCT = 8;
 const BUCKET = "product-images";
@@ -43,7 +45,7 @@ export async function uploadProductImage(
     return { error: "Formato inválido. Use JPEG, PNG ou WebP." };
   }
   if (file.size > MAX_FILE_SIZE) {
-    return { error: "A imagem deve ter no máximo 5MB." };
+    return { error: "A imagem deve ter no máximo 10MB." };
   }
 
   const store = await getActiveStore();

@@ -10,8 +10,10 @@ export const AVAILABILITY_OPTIONS = [
 type CatalogFiltersProps = {
   basePath: string;
   colors: string[];
+  models?: { id: string; name: string; slug: string }[];
   activeColor?: string;
   activeAvailability?: string;
+  activeModel?: string;
   search?: string;
 };
 
@@ -20,12 +22,13 @@ type CatalogFiltersProps = {
 // página 1, senão a paginação da busca anterior vazaria para a nova.
 function buildHref(
   basePath: string,
-  params: { busca?: string; cor?: string; disponibilidade?: string },
+  params: { busca?: string; cor?: string; disponibilidade?: string; modelo?: string },
 ) {
   const query = new URLSearchParams();
   if (params.busca) query.set("busca", params.busca);
   if (params.cor) query.set("cor", params.cor);
   if (params.disponibilidade) query.set("disponibilidade", params.disponibilidade);
+  if (params.modelo) query.set("modelo", params.modelo);
 
   const queryString = query.toString();
   return queryString ? `${basePath}?${queryString}` : basePath;
@@ -59,14 +62,41 @@ function FilterChip({
 export function CatalogFilters({
   basePath,
   colors,
+  models = [],
   activeColor,
   activeAvailability,
+  activeModel,
   search,
 }: CatalogFiltersProps) {
-  const hasActiveFilter = Boolean(activeColor || activeAvailability);
+  const hasActiveFilter = Boolean(activeColor || activeAvailability || activeModel);
 
   return (
     <div className="flex flex-col gap-5 border-y border-border py-6">
+      {models.length > 0 ? (
+        <div className="flex flex-col gap-2.5">
+          <span className="kicker">Modelo</span>
+          <div className="flex flex-wrap gap-2">
+            {models.map((model) => {
+              const active = activeModel === model.slug;
+              return (
+                <FilterChip
+                  key={model.id}
+                  active={active}
+                  href={buildHref(basePath, {
+                    busca: search,
+                    cor: activeColor,
+                    disponibilidade: activeAvailability,
+                    modelo: active ? undefined : model.slug,
+                  })}
+                >
+                  {model.name}
+                </FilterChip>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+
       <div className="flex flex-col gap-2.5">
         <span className="kicker">Disponibilidade</span>
         <div className="flex flex-wrap gap-2">
@@ -79,6 +109,7 @@ export function CatalogFilters({
                 href={buildHref(basePath, {
                   busca: search,
                   cor: activeColor,
+                  modelo: activeModel,
                   // Clicar no filtro ativo remove-o.
                   disponibilidade: active ? undefined : option.value,
                 })}
@@ -104,6 +135,7 @@ export function CatalogFilters({
                     busca: search,
                     cor: active ? undefined : color,
                     disponibilidade: activeAvailability,
+                    modelo: activeModel,
                   })}
                 >
                   {color}

@@ -1,5 +1,6 @@
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { listAvailableColors, listProducts } from "@/lib/products/queries";
+import { listModels } from "@/lib/models/queries";
 import { ProductCard } from "@/components/catalog/product-card";
 import { CatalogFilters } from "@/components/catalog/catalog-filters";
 import { BackLink } from "@/components/shared/back-link";
@@ -13,12 +14,17 @@ export default async function ProductsPage({
     busca?: string;
     cor?: string;
     disponibilidade?: string;
+    modelo?: string;
   }>;
 }) {
-  const { page: pageParam, busca, cor, disponibilidade } = await searchParams;
+  const { page: pageParam, busca, cor, disponibilidade, modelo } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
 
   const store = await getActiveStore();
+  const models = await listModels(store.id);
+  // O filtro vem por slug (URL legível); a query precisa do id.
+  const activeModelId = modelo ? models.find((m) => m.slug === modelo)?.id : undefined;
+
   const [{ products, total, hasMore }, colors] = await Promise.all([
     listProducts({
       storeId: store.id,
@@ -26,6 +32,7 @@ export default async function ProductsPage({
       search: busca,
       color: cor,
       availability: disponibilidade,
+      modelId: activeModelId,
     }),
     listAvailableColors(store.id),
   ]);
@@ -37,6 +44,7 @@ export default async function ProductsPage({
   if (busca) nextPageQuery.set("busca", busca);
   if (cor) nextPageQuery.set("cor", cor);
   if (disponibilidade) nextPageQuery.set("disponibilidade", disponibilidade);
+  if (modelo) nextPageQuery.set("modelo", modelo);
 
   return (
     <main className="flex flex-1 flex-col gap-10 px-6 py-12 sm:px-10 lg:px-16">
@@ -66,8 +74,10 @@ export default async function ProductsPage({
       <CatalogFilters
         basePath="/produtos"
         colors={colors}
+        models={models}
         activeColor={cor}
         activeAvailability={disponibilidade}
+        activeModel={modelo}
         search={busca}
       />
 

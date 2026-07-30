@@ -834,7 +834,7 @@ Regras:
 ### 13.1 Produtos
 
 - Máximo de 8 imagens por produto.
-- Máximo de 5 MB por imagem.
+- Máximo de 10 MB por imagem (ampliado de 5 MB a pedido do usuário em 30/07/2026).
 - Formatos:
   - JPEG.
   - PNG.

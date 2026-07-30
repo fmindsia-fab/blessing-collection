@@ -21,7 +21,9 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
         <h2 className="text-sm font-medium">Imagens ({images.length}/8)</h2>
-        <p className="text-xs text-zinc-500">JPEG, PNG ou WebP, até 5MB. Marque a imagem principal do produto.</p>
+        <p className="text-xs text-muted-foreground">
+          JPEG, PNG ou WebP, até 10MB. Marque a imagem principal do produto.
+        </p>
       </div>
 
       {images.length > 0 ? (

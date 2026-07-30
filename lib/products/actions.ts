@@ -25,6 +25,7 @@ const productSchema = z.object({
   status: z.enum(["available", "made_to_order", "sold_out", "inactive"]),
   categoryId: z.string().optional(),
   collectionId: z.string().optional(),
+  modelId: z.string().optional(),
   isFeatured: z.coerce.boolean().optional(),
   isNewArrival: z.coerce.boolean().optional(),
 });
@@ -43,6 +44,7 @@ function parseProductForm(formData: FormData) {
     status: formData.get("status"),
     categoryId: formData.get("categoryId") || undefined,
     collectionId: formData.get("collectionId") || undefined,
+    modelId: formData.get("modelId") || undefined,
     isFeatured: formData.get("isFeatured") === "on",
     isNewArrival: formData.get("isNewArrival") === "on",
   });
@@ -61,6 +63,7 @@ export async function createProduct(_prevState: ProductFormState, formData: Form
       store_id: store.id,
       category_id: parsed.data.categoryId || null,
       collection_id: parsed.data.collectionId || null,
+      model_id: parsed.data.modelId || null,
       name: parsed.data.name,
       slug: slugify(parsed.data.name),
       description: parsed.data.description || null,
@@ -95,6 +98,7 @@ export async function updateProduct(
     .update({
       category_id: parsed.data.categoryId || null,
       collection_id: parsed.data.collectionId || null,
+      model_id: parsed.data.modelId || null,
       name: parsed.data.name,
       description: parsed.data.description || null,
       price: parsed.data.price,

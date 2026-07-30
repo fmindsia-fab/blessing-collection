@@ -1,17 +1,5 @@
-import type { FontFamily } from "@/types/database.types";
-
-// As 5 fontes são fixas e carregadas via next/font/google no layout público.
-// Nunca aceitar fonte arbitrária vinda do banco: evita fonte não licenciada
-// ou erro de digitação derrubando a tipografia do catálogo (PLAN.md seção 2).
-export const FONT_OPTIONS: { value: FontFamily; label: string }[] = [
-  { value: "playfair-display", label: "Playfair Display (serifada clássica)" },
-  { value: "cormorant-garamond", label: "Cormorant Garamond (serifada delicada)" },
-  { value: "lora", label: "Lora (serifada legível)" },
-  { value: "montserrat", label: "Montserrat (sem serifa moderna)" },
-  { value: "inter", label: "Inter (sem serifa neutra)" },
-];
-
-export const FONT_VALUES = FONT_OPTIONS.map((option) => option.value) as [FontFamily, ...FontFamily[]];
+// A lista curada de fontes vive em lib/store/fonts.ts, junto das chamadas ao
+// next/font/google — aqui ficam apenas cores e validações de branding.
 
 // Cor hex de 6 dígitos, com #. O mesmo formato aceito pelo input type="color".
 export const HEX_COLOR_PATTERN = /^#[0-9a-fA-F]{6}$/;
@@ -21,6 +9,33 @@ export function isValidHexColor(value: string): boolean {
 }
 
 export const MAX_BRAND_COLORS = 5;
+
+/**
+ * Só aceita URL do próprio Supabase Storage, no bucket de fontes.
+ * A URL é interpolada num @font-face via dangerouslySetInnerHTML, então uma
+ * string arbitrária vinda do banco poderia fechar a regra CSS e injetar
+ * conteúdo. Validar a origem fecha isso na raiz.
+ */
+export function isSafeBrandFontUrl(url: string | null | undefined): url is string {
+  if (!url) return false;
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!supabaseUrl) return false;
+
+  try {
+    const parsed = new URL(url);
+    const expected = new URL(supabaseUrl);
+
+    return (
+      parsed.protocol === "https:" &&
+      parsed.host === expected.host &&
+      parsed.pathname.includes("/brand-fonts/") &&
+      parsed.pathname.endsWith(".woff2")
+    );
+  } catch {
+    return false;
+  }
+}
 
 // Aceita colagem em qualquer formato comum ("c9a227", "#C9A227 ", "C9A227")
 // e devolve sempre #RRGGBB em maiúsculas. Sem isso, colar do Figma/Photoshop

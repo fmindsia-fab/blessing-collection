@@ -12,6 +12,7 @@ import type { ProductStatus } from "@/types/database.types";
 type ProductFormProps = {
   categories: { id: string; name: string }[];
   collections: { id: string; name: string }[];
+  models: { id: string; name: string }[];
   product?: {
     id: string;
     name: string;
@@ -22,6 +23,7 @@ type ProductFormProps = {
     status: ProductStatus;
     category_id: string | null;
     collection_id: string | null;
+    model_id: string | null;
     is_featured: boolean;
     is_new_arrival: boolean;
   };
@@ -36,7 +38,7 @@ const STATUS_OPTIONS: { value: ProductStatus; label: string }[] = [
   { value: "inactive", label: "Inativo" },
 ];
 
-export function ProductForm({ categories, collections, product }: ProductFormProps) {
+export function ProductForm({ categories, collections, models, product }: ProductFormProps) {
   const action = product ? updateProduct.bind(null, product.id) : createProduct;
   const [state, formAction, isPending] = useActionState(action, initialState);
 
@@ -114,6 +116,22 @@ export function ProductForm({ categories, collections, product }: ProductFormPro
             {collections.map((collection) => (
               <option key={collection.id} value={collection.id}>
                 {collection.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="modelId">Modelo</Label>
+          <select
+            id="modelId"
+            name="modelId"
+            defaultValue={product?.model_id ?? ""}
+            className="h-9 border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
+          >
+            <option value="">Sem modelo</option>
+            {models.map((model) => (
+              <option key={model.id} value={model.id}>
+                {model.name}
               </option>
             ))}
           </select>

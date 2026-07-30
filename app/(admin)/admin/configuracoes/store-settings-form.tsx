@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { FONT_OPTIONS, resolveBrandColors } from "@/lib/store/branding";
+import { resolveBrandColors } from "@/lib/store/branding";
 import { BrandPaletteField } from "./brand-palette-field";
+import { BrandFontField } from "./brand-font-field";
 import type { FontFamily } from "@/types/database.types";
 
 type StoreSettingsFormProps = {
@@ -21,6 +22,8 @@ type StoreSettingsFormProps = {
     color_accent: string;
     brand_colors?: string[] | null;
     font_family: FontFamily;
+    custom_font_url?: string | null;
+    custom_font_name?: string | null;
   };
 };
 
@@ -58,30 +61,20 @@ export function StoreSettingsForm({ store }: StoreSettingsFormProps) {
         <Textarea id="description" name="description" defaultValue={store.description ?? ""} rows={4} />
       </div>
 
-      <fieldset className="flex flex-col gap-4 border-t border-zinc-200 pt-4">
+      <fieldset className="flex flex-col gap-6 border-t border-border pt-6">
         <legend className="sr-only">Identidade visual</legend>
         <div className="flex flex-col gap-1">
           <span className="text-sm font-medium">Identidade visual</span>
-          <span className="text-xs text-zinc-500">Cores e fonte aplicadas ao catálogo público.</span>
+          <span className="text-xs text-muted-foreground">Cores e fonte aplicadas ao catálogo público.</span>
         </div>
 
         <BrandPaletteField initialColors={resolveBrandColors(store)} />
 
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="fontFamily">Fonte da marca</Label>
-          <select
-            id="fontFamily"
-            name="fontFamily"
-            defaultValue={store.font_family}
-            className="h-10 rounded-md border border-zinc-300 bg-transparent px-3 text-sm"
-          >
-            {FONT_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <BrandFontField
+          fontFamily={store.font_family}
+          customFontName={store.custom_font_name ?? null}
+          hasCustomFont={Boolean(store.custom_font_url)}
+        />
       </fieldset>
 
       {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}

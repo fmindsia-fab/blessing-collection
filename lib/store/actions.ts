@@ -4,13 +4,16 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getActiveStore } from "@/lib/store/get-active-store";
-import { FONT_VALUES, parseBrandColors } from "@/lib/store/branding";
+import { parseBrandColors } from "@/lib/store/branding";
+import { isCuratedFont } from "@/lib/store/fonts";
 
 const storeSettingsSchema = z.object({
   whatsappNumber: z.string().min(8, "Informe um número de WhatsApp válido"),
   instagramUrl: z.string().url("Informe uma URL válida").optional().or(z.literal("")),
   description: z.string().optional(),
-  fontFamily: z.enum(FONT_VALUES, { message: "Selecione uma das fontes disponíveis" }),
+  // A lista curada cresce sem migration (o check do banco foi removido na
+  // 0010), então a validação de valor conhecido é feita aqui.
+  fontFamily: z.string().refine(isCuratedFont, "Selecione uma das fontes disponíveis"),
 });
 
 export type StoreSettingsFormState = {
@@ -55,6 +58,80 @@ export async function updateStoreSettings(
     .eq("id", store.id);
 
   if (error) return { error: "Não foi possível salvar as configurações." };
+
+  revalidatePath("/admin/configuracoes");
+  revalidatePath("/", "layout");
+  return { success: true };
+}
+
+const FONT_MAX_SIZE = 2 * 1024 * 1024; // 2MB: .woff2 típico tem 20-200KB
+const FONT_BUCKET = "brand-fonts";
+
+// Só .woff2: formato único com suporte universal em navegadores modernos e o
+// mais leve. Aceitar .ttf/.otf convidaria arquivos de 5MB+ bloqueando a página.
+export async function uploadBrandFont(
+  _prevState: StoreSettingsFormState,
+  formData: FormData,
+): Promise<StoreSettingsFormState> {
+  const file = formData.get("font");
+  if (!(file instanceof File) || file.size === 0) return { error: "Selecione um arquivo de fonte." };
+
+  const isWoff2 =
+    file.name.toLowerCase().endsWith(".woff2") &&
+    ["font/woff2", "application/octet-stream", ""].includes(file.type);
+
+  if (!isWoff2) {
+    return { error: "Envie um arquivo .woff2. Outros formatos não são aceitos." };
+  }
+  if (file.size > FONT_MAX_SIZE) {
+    return { error: "A fonte deve ter no máximo 2MB." };
+  }
+
+  const displayName = String(formData.get("fontName") ?? "").trim();
+  if (!displayName) return { error: "Dê um nome para identificar a fonte." };
+
+  const store = await getActiveStore();
+  const supabase = await createServerSupabaseClient();
+  const bucket = supabase.storage.from(FONT_BUCKET);
+
+  const path = `${store.id}/${crypto.randomUUID()}.woff2`;
+  const { error: uploadError } = await bucket.upload(path, file, {
+    contentType: "font/woff2",
+    upsert: false,
+  });
+
+  if (uploadError) {
+    console.error("[uploadBrandFont]", uploadError);
+    return { error: "Falha ao enviar a fonte. Tente novamente." };
+  }
+
+  const {
+    data: { publicUrl },
+  } = bucket.getPublicUrl(path);
+
+  const { error } = await supabase
+    .from("stores")
+    .update({ custom_font_url: publicUrl, custom_font_name: displayName })
+    .eq("id", store.id);
+
+  if (error) return { error: "Fonte enviada, mas houve falha ao salvar no banco." };
+
+  revalidatePath("/admin/configuracoes");
+  revalidatePath("/", "layout");
+  return { success: true };
+}
+
+// Volta para a lista curada sem apagar o arquivo do Storage.
+export async function removeBrandFont(): Promise<StoreSettingsFormState> {
+  const store = await getActiveStore();
+  const supabase = await createServerSupabaseClient();
+
+  const { error } = await supabase
+    .from("stores")
+    .update({ custom_font_url: null, custom_font_name: null })
+    .eq("id", store.id);
+
+  if (error) return { error: "Não foi possível remover a fonte." };
 
   revalidatePath("/admin/configuracoes");
   revalidatePath("/", "layout");

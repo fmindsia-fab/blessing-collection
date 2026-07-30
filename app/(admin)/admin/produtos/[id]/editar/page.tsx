@@ -3,7 +3,9 @@ import { getActiveStore } from "@/lib/store/get-active-store";
 import { getProductForAdmin } from "@/lib/products/admin-queries";
 import { listAllCategoriesForAdmin } from "@/lib/categories/queries";
 import { listAllCollectionsForAdmin } from "@/lib/collections/queries";
+import { listAllModelsForAdmin } from "@/lib/models/queries";
 import { ProductForm } from "../../product-form";
+import { PageHeading } from "@/components/admin/page-heading";
 import { ProductImages } from "./product-images";
 import { ProductVariants } from "./product-variants";
 
@@ -11,10 +13,11 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
   const { id } = await params;
   const store = await getActiveStore();
 
-  const [result, categories, collections] = await Promise.all([
+  const [result, categories, collections, models] = await Promise.all([
     getProductForAdmin(store.id, id),
     listAllCategoriesForAdmin(store.id),
     listAllCollectionsForAdmin(store.id),
+    listAllModelsForAdmin(store.id),
   ]);
 
   if (!result) notFound();
@@ -23,12 +26,14 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
 
   return (
     <div className="flex max-w-2xl flex-col gap-10">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-xl font-semibold tracking-tight">Editar produto</h1>
-        <p className="text-sm text-zinc-600">{product.name}</p>
-      </div>
+      <PageHeading kicker="Catálogo" title="Editar peça" description={product.name} />
 
-      <ProductForm categories={categories} collections={collections} product={product} />
+      <ProductForm
+        categories={categories}
+        collections={collections}
+        models={models}
+        product={product}
+      />
 
       <ProductImages productId={product.id} images={images} />
 

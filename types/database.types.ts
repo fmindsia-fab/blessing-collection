@@ -6,12 +6,12 @@ export type ProductStatus = "available" | "made_to_order" | "sold_out" | "inacti
 export type VariantStatus = "available" | "sold_out" | "archived";
 export type ArchivableStatus = "active" | "archived";
 export type StoreStatus = "active" | "inactive";
-export type FontFamily =
-  | "playfair-display"
-  | "cormorant-garamond"
-  | "lora"
-  | "montserrat"
-  | "inter";
+/**
+ * Valor da lista curada em `lib/store/fonts.ts`. Deixou de ser union fechada
+ * na migration 0010: a lista cresce sem migration, e o check do banco saiu.
+ * Valor desconhecido cai no padrão em `getBrandFontVariable`.
+ */
+export type FontFamily = string;
 export type AnalyticsEventType =
   | "product_view"
   | "whatsapp_click"
@@ -58,6 +58,9 @@ export interface Database {
           /** Paleta da marca (migration 0009): 1 a 5 cores hex. */
           brand_colors: string[];
           font_family: FontFamily;
+          /** Fonte própria (.woff2 no Storage). Precede font_family quando presente. */
+          custom_font_url: string | null;
+          custom_font_name: string | null;
           status: StoreStatus;
           created_at: string;
           updated_at: string;
@@ -76,6 +79,8 @@ export interface Database {
           color_accent?: string;
           brand_colors?: string[];
           font_family?: FontFamily;
+          custom_font_url?: string | null;
+          custom_font_name?: string | null;
           status?: StoreStatus;
           created_at?: string;
           updated_at?: string;
@@ -139,12 +144,39 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["collections"]["Insert"]>;
         Relationships: [];
       };
+      models: {
+        Row: {
+          id: string;
+          store_id: string;
+          name: string;
+          slug: string;
+          description: string | null;
+          status: ArchivableStatus;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          store_id: string;
+          name: string;
+          slug: string;
+          description?: string | null;
+          status?: ArchivableStatus;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["models"]["Insert"]>;
+        Relationships: [];
+      };
       products: {
         Row: {
           id: string;
           store_id: string;
           category_id: string | null;
           collection_id: string | null;
+          model_id: string | null;
           name: string;
           slug: string;
           description: string | null;
@@ -166,6 +198,7 @@ export interface Database {
           store_id: string;
           category_id?: string | null;
           collection_id?: string | null;
+          model_id?: string | null;
           name: string;
           slug: string;
           description?: string | null;
