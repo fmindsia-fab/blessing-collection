@@ -1,9 +1,12 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { getProductBySlug } from "@/lib/products/queries";
 import { WhatsappButton } from "@/components/catalog/whatsapp-button";
+import { SelectionToggleButton } from "@/components/catalog/selection-toggle-button";
 import { PageViewTracker } from "@/components/shared/page-view-tracker";
+import { BackLink } from "@/components/shared/back-link";
 
 const STATUS_LABEL: Record<string, string> = {
   available: "Disponível",
@@ -13,6 +16,35 @@ const STATUS_LABEL: Record<string, string> = {
 
 function formatPrice(price: number) {
   return price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+// Alimenta o preview de link do WhatsApp/Instagram (miniatura + título) e o SEO.
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const store = await getActiveStore();
+  const result = await getProductBySlug(store.id, slug);
+
+  if (!result) return { title: "Produto não encontrado" };
+
+  const { product, images } = result;
+  const coverImage = images.find((img) => img.is_cover) ?? images[0] ?? null;
+
+  const title = product.seo_title || `${product.name} | ${store.name}`;
+  const description =
+    product.seo_description || product.description || `${product.name} — ${formatPrice(product.price)}`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      url: `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/produtos/${product.slug}`,
+      siteName: store.name,
+      images: coverImage ? [{ url: coverImage.url, alt: coverImage.alt_text ?? product.name }] : [],
+    },
+  };
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -36,6 +68,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   return (
     <main className="flex flex-1 flex-col gap-10 px-6 py-12 sm:px-10 lg:px-16">
       <PageViewTracker storeId={store.id} eventType="product_view" productId={product.id} />
+
+      <BackLink href="/produtos">Voltar para produtos</BackLink>
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
         <div className="flex flex-col gap-3">
@@ -119,16 +153,26 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </div>
           ) : null}
 
-          <WhatsappButton
-            storeId={store.id}
-            storeName={store.name}
-            storeWhatsapp={store.whatsapp_number}
-            productId={product.id}
-            productName={product.name}
-            productUrl={productUrl}
-            status={product.status}
-            className="w-fit"
-          />
+          <div className="flex flex-wrap gap-3">
+            <WhatsappButton
+              storeId={store.id}
+              storeName={store.name}
+              storeWhatsapp={store.whatsapp_number}
+              productId={product.id}
+              productName={product.name}
+              productUrl={productUrl}
+              status={product.status}
+            />
+            <SelectionToggleButton
+              item={{
+                productId: product.id,
+                slug: product.slug,
+                name: product.name,
+                price: product.price,
+                coverImageUrl: coverImage?.url ?? null,
+              }}
+            />
+          </div>
         </div>
       </div>
     </main>

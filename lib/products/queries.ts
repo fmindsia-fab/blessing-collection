@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 const PUBLIC_STATUSES = ["available", "made_to_order", "sold_out"] as const;
@@ -108,7 +109,8 @@ export async function getNewArrivals(storeId: string) {
   return products.map((p) => ({ ...p, cover_image_url: coverByProduct.get(p.id) ?? null }));
 }
 
-export async function getProductBySlug(storeId: string, slug: string) {
+// cache() deduplica a chamada entre generateMetadata e o componente da página.
+export const getProductBySlug = cache(async (storeId: string, slug: string) => {
   const supabase = await createServerSupabaseClient();
 
   const { data: product, error } = await supabase
@@ -139,4 +141,4 @@ export async function getProductBySlug(storeId: string, slug: string) {
     images: images ?? [],
     variants: variants ?? [],
   };
-}
+});

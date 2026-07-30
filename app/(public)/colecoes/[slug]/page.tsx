@@ -4,6 +4,7 @@ import { getCollectionBySlug } from "@/lib/collections/queries";
 import { listProducts } from "@/lib/products/queries";
 import { ProductCard } from "@/components/catalog/product-card";
 import { PageViewTracker } from "@/components/shared/page-view-tracker";
+import { BackLink } from "@/components/shared/back-link";
 
 export default async function CollectionPage({
   params,
@@ -30,6 +31,8 @@ export default async function CollectionPage({
   return (
     <main className="flex flex-1 flex-col gap-8 px-6 py-12 sm:px-10 lg:px-16">
       <PageViewTracker storeId={store.id} eventType="collection_view" collectionId={collection.id} />
+
+      <BackLink href="/">Voltar para a página inicial</BackLink>
 
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold tracking-tight">{collection.name}</h1>

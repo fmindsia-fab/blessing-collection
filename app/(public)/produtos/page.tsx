@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { listProducts } from "@/lib/products/queries";
 import { ProductCard } from "@/components/catalog/product-card";
+import { BackLink } from "@/components/shared/back-link";
 
 export default async function ProductsPage({
   searchParams,
@@ -22,6 +23,8 @@ export default async function ProductsPage({
 
   return (
     <main className="flex flex-1 flex-col gap-8 px-6 py-12 sm:px-10 lg:px-16">
+      <BackLink href="/">Voltar para a página inicial</BackLink>
+
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold tracking-tight">Produtos</h1>
         <p className="text-sm text-zinc-600">{total} produtos encontrados</p>

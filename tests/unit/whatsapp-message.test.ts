@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { buildWhatsappLink, buildWhatsappMessage, getWhatsappCtaLabel } from "@/lib/whatsapp/build-message";
+import {
+  buildSelectionWhatsappMessage,
+  buildWhatsappLink,
+  buildWhatsappMessage,
+  getWhatsappCtaLabel,
+} from "@/lib/whatsapp/build-message";
 
 describe("buildWhatsappMessage", () => {
   const base = {
@@ -34,5 +39,27 @@ describe("buildWhatsappLink", () => {
   it("monta link wa.me com número normalizado e mensagem codificada", () => {
     const link = buildWhatsappLink("+55 (11) 99999-9999", "Olá!");
     expect(link).toBe("https://wa.me/5511999999999?text=Ol%C3%A1!");
+  });
+});
+
+describe("buildSelectionWhatsappMessage", () => {
+  it("lista cada peça com nome e link", () => {
+    const message = buildSelectionWhatsappMessage("Blessing Collection", [
+      { name: "Bolsa Florence", url: "https://exemplo.com/produtos/bolsa-florence" },
+      { name: "Bolsa Aurora", url: "https://exemplo.com/produtos/bolsa-aurora" },
+    ]);
+
+    expect(message).toContain("nestas 2 peças do catálogo da Blessing Collection");
+    expect(message).toContain("• Bolsa Florence — https://exemplo.com/produtos/bolsa-florence");
+    expect(message).toContain("• Bolsa Aurora — https://exemplo.com/produtos/bolsa-aurora");
+  });
+
+  it("usa singular quando há apenas uma peça", () => {
+    const message = buildSelectionWhatsappMessage("Blessing Collection", [
+      { name: "Bolsa Florence", url: "https://exemplo.com/produtos/bolsa-florence" },
+    ]);
+
+    expect(message).toContain("nesta peça do catálogo");
+    expect(message).not.toContain("peças");
   });
 });

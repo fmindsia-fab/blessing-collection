@@ -48,3 +48,19 @@ export function buildWhatsappLink(whatsappNumber: string, message: string): stri
   const digitsOnly = whatsappNumber.replace(/\D/g, "");
   return `https://wa.me/${digitsOnly}?text=${encodeURIComponent(message)}`;
 }
+
+type SelectionMessageItem = {
+  name: string;
+  url: string;
+};
+
+export function buildSelectionWhatsappMessage(storeName: string, items: SelectionMessageItem[]): string {
+  const intro =
+    items.length === 1
+      ? `Olá! Tenho interesse nesta peça do catálogo da ${storeName}:`
+      : `Olá! Tenho interesse nestas ${items.length} peças do catálogo da ${storeName}:`;
+
+  const list = items.map((item) => `• ${item.name} — ${item.url}`).join("\n");
+
+  return `${intro}\n\n${list}`;
+}
