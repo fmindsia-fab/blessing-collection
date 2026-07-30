@@ -109,7 +109,7 @@ export async function updateProduct(
 
   revalidatePath("/admin/produtos");
   revalidatePath(`/admin/produtos/${productId}/editar`);
-  return {};
+  redirect("/admin/produtos");
 }
 
 // "Excluir" no painel nunca é DELETE físico — sempre soft delete via status.

@@ -1,69 +1,17 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@supabase/supabase-js";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getActiveStore } from "@/lib/store/get-active-store";
-import type { Database } from "@/types/database.types";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB, conforme PRD seção 13.1
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_IMAGES_PER_PRODUCT = 8;
+const BUCKET = "product-images";
 
 export type ImageUploadState = {
   error?: string;
 };
-
-// O client de @supabase/ssr monta `storage` com os headers fixados no
-// momento da construção (this.headers no SupabaseClient), sem nunca
-// reavaliar a sessão — diferente de .from() (PostgREST), que resolve o
-// token a cada request via accessToken(). Isso faz todo storage.upload()
-// rodar como anon e ser rejeitado pela RLS de storage.objects (403),
-// mesmo com uma sessão válida nos cookies. A correção suportada é criar
-// um client dedicado já nascendo com o Authorization do usuário.
-function decodeJwtPayload(token: string) {
-  try {
-    const payload = token.split(".")[1];
-    const json = Buffer.from(payload, "base64url").toString("utf-8");
-    return JSON.parse(json);
-  } catch {
-    return null;
-  }
-}
-
-async function getAuthenticatedStorage(supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>) {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (session?.access_token) {
-    const payload = decodeJwtPayload(session.access_token);
-    console.log("[getAuthenticatedStorage] JWT claims:", {
-      role: payload?.role,
-      sub: payload?.sub,
-      exp: payload?.exp,
-      nowSeconds: Math.floor(Date.now() / 1000),
-      isExpired: payload?.exp ? payload.exp < Math.floor(Date.now() / 1000) : "unknown",
-      aud: payload?.aud,
-      iss: payload?.iss,
-    });
-  } else {
-    console.log("[getAuthenticatedStorage] sem access_token na sessão");
-  }
-
-  const authedClient = createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      global: {
-        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
-      },
-      auth: { persistSession: false, autoRefreshToken: false },
-    },
-  );
-
-  return authedClient.storage.from("product-images");
-}
 
 export async function uploadProductImage(
   productId: string,
@@ -82,7 +30,7 @@ export async function uploadProductImage(
 
   const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
-  const bucket = await getAuthenticatedStorage(supabase);
+  const bucket = supabase.storage.from(BUCKET);
 
   const { count } = await supabase
     .from("product_images")
@@ -136,9 +84,9 @@ export async function setCoverImage(productId: string, imageId: string) {
 
 export async function deleteProductImage(productId: string, imageId: string, url: string) {
   const supabase = await createServerSupabaseClient();
-  const bucket = await getAuthenticatedStorage(supabase);
+  const bucket = supabase.storage.from(BUCKET);
 
-  const path = url.split("/product-images/")[1];
+  const path = url.split(`/${BUCKET}/`)[1];
   if (path) {
     await bucket.remove([path]);
   }
