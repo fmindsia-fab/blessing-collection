@@ -7,6 +7,28 @@ import { listCollections } from "@/lib/collections/queries";
 import { ProductCard } from "@/components/catalog/product-card";
 import { SectionHeading } from "@/components/catalog/section-heading";
 import { ActionLink } from "@/components/ui/action";
+import type { Metadata } from "next";
+
+// Título e preview de compartilhamento da home — antes herdava o metadata
+// genérico do layout raiz, sem imagem nem descrição da loja.
+export async function generateMetadata(): Promise<Metadata> {
+  const store = await getActiveStore();
+  const description =
+    store.description ?? `Catálogo de bolsas e acessórios artesanais da ${store.name}.`;
+
+  return {
+    title: `${store.name} | Bolsas e acessórios artesanais`,
+    description,
+    openGraph: {
+      title: store.name,
+      description,
+      type: "website",
+      siteName: store.name,
+      url: process.env.NEXT_PUBLIC_SITE_URL,
+      images: store.logo_url ? [{ url: store.logo_url, alt: store.name }] : [],
+    },
+  };
+}
 
 export default async function HomePage() {
   const store = await getActiveStore();

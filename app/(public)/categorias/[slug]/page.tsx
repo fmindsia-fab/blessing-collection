@@ -5,6 +5,24 @@ import { listProducts } from "@/lib/products/queries";
 import { ProductCard } from "@/components/catalog/product-card";
 import { PageViewTracker } from "@/components/shared/page-view-tracker";
 import { BackLink } from "@/components/shared/back-link";
+import type { Metadata } from "next";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const store = await getActiveStore();
+  const category = await getCategoryBySlug(store.id, slug);
+
+  if (!category) return { title: "Categoria não encontrada" };
+
+  return {
+    title: `${category.name} | ${store.name}`,
+    description: category.description ?? `Peças da categoria ${category.name} no catálogo da ${store.name}.`,
+  };
+}
 
 export default async function CategoryPage({
   params,

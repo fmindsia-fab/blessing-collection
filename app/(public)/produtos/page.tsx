@@ -5,6 +5,16 @@ import { ProductCard } from "@/components/catalog/product-card";
 import { CatalogFilters } from "@/components/catalog/catalog-filters";
 import { BackLink } from "@/components/shared/back-link";
 import { ActionLink } from "@/components/ui/action";
+import type { Metadata } from "next";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const store = await getActiveStore();
+
+  return {
+    title: `Catálogo | ${store.name}`,
+    description: `Todas as peças disponíveis no catálogo da ${store.name}.`,
+  };
+}
 
 export default async function ProductsPage({
   searchParams,
