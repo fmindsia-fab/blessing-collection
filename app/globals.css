@@ -48,31 +48,40 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/*
+ * Paleta Blessing Collection — editorial de moda impresso.
+ * Base nude/pergaminho quente (nunca branco puro, que achata a fotografia),
+ * texto em marrom-tinta em vez de preto, dourado envelhecido como único
+ * acento. Neutro quente > cinza puro: valoriza couro e tons de pele.
+ */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
+  --background: oklch(0.985 0.005 75);   /* pergaminho */
+  --foreground: oklch(0.255 0.012 45);   /* marrom-tinta */
+  --card: oklch(0.995 0.003 75);
+  --card-foreground: oklch(0.255 0.012 45);
+  --popover: oklch(0.995 0.003 75);
+  --popover-foreground: oklch(0.255 0.012 45);
+  --primary: oklch(0.285 0.015 45);      /* café escuro */
+  --primary-foreground: oklch(0.975 0.008 75);
+  --secondary: oklch(0.945 0.012 70);    /* areia */
+  --secondary-foreground: oklch(0.285 0.015 45);
+  --muted: oklch(0.945 0.012 70);
+  --muted-foreground: oklch(0.505 0.018 50); /* argila */
+  --accent: oklch(0.905 0.028 75);       /* nude */
+  --accent-foreground: oklch(0.285 0.015 45);
+  --destructive: oklch(0.545 0.155 25);
+  --border: oklch(0.895 0.012 70);
+  --input: oklch(0.895 0.012 70);
+  --ring: oklch(0.685 0.055 70);
+  --chart-1: oklch(0.72 0.07 70);
+  --chart-2: oklch(0.62 0.055 55);
+  --chart-3: oklch(0.52 0.04 45);
+  --chart-4: oklch(0.42 0.03 40);
+  --chart-5: oklch(0.32 0.02 38);
+
+  /* Dourado envelhecido — usado com parcimônia, só em detalhes. */
+  --gold: oklch(0.685 0.085 78);
+  --radius: 0.25rem;                     /* cantos quase retos: editorial impresso */
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -123,8 +132,56 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Grão sutil de papel: tira o "chapado" digital do fundo liso. */
+    background-image: radial-gradient(
+      oklch(0.72 0.02 70 / 0.035) 0.5px,
+      transparent 0.5px
+    );
+    background-size: 4px 4px;
   }
   html {
     @apply font-sans;
+  }
+  /* Fotografia é a protagonista: nunca deixar a imagem "pular" no hover. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* Kicker: rótulo em versalete espaçado, marca registrada do editorial. */
+  .kicker {
+    @apply text-[0.6875rem] font-medium uppercase tracking-[0.22em] text-muted-foreground;
+  }
+
+  /* Título de seção com fio dourado — substitui o h2 solto. */
+  .rule-heading {
+    @apply relative pb-3;
+  }
+  .rule-heading::after {
+    content: "";
+    @apply absolute bottom-0 left-0 h-px w-10;
+    background: var(--gold);
+  }
+
+  /* Entrada escalonada: um único momento coreografado no carregamento. */
+  .reveal {
+    animation: reveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

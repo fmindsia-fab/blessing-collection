@@ -9,6 +9,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import type { ProductStatus } from "@/types/database.types";
 
 const STORAGE_KEY = "blessing:selection";
 
@@ -20,7 +21,11 @@ export type SelectedItem = {
   productId: string;
   slug: string;
   name: string;
+  /** Menor preço exibido (base ou variante mais barata) — o mesmo "a partir de" do card. */
   price: number;
+  /** true quando o produto tem variante com preço próprio: o total é uma estimativa mínima. */
+  priceIsFrom?: boolean;
+  status?: ProductStatus;
   coverImageUrl: string | null;
 };
 

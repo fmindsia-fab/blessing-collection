@@ -19,10 +19,10 @@ export function SelectionToggleButton({ item, className }: SelectionToggleButton
       onClick={() => toggle(item)}
       aria-pressed={selected}
       className={cn(
-        "inline-flex h-11 items-center justify-center gap-2 rounded-full border px-5 text-sm font-medium transition-colors",
+        "inline-flex h-12 items-center justify-center gap-2 border px-6 text-xs uppercase tracking-[0.18em] transition-colors",
         selected
-          ? "border-zinc-900 bg-zinc-900 text-white hover:bg-zinc-800"
-          : "border-zinc-300 text-zinc-900 hover:border-zinc-500",
+          ? "border-[var(--gold)] bg-[var(--gold)]/10 text-foreground"
+          : "border-foreground/25 text-foreground hover:border-foreground",
         className,
       )}
     >

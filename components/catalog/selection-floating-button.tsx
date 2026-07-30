@@ -15,7 +15,7 @@ export function SelectionFloatingButton() {
   return (
     <Link
       href="/selecao"
-      className="fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 rounded-full bg-zinc-900 px-5 py-3 text-sm font-medium text-white shadow-lg transition-colors hover:bg-zinc-800"
+      className="reveal fixed bottom-6 right-6 z-50 inline-flex items-center gap-2.5 bg-foreground px-6 py-4 text-xs uppercase tracking-[0.16em] text-background shadow-[0_8px_30px_-8px_rgba(0,0,0,0.35)] transition-colors hover:bg-[var(--gold)]"
     >
       <ShoppingBagIcon className="size-4" />
       Minha seleção ({items.length})

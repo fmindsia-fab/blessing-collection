@@ -8,6 +8,7 @@ import {
   PERIOD_LABEL,
 } from "@/lib/analytics/queries";
 import { PeriodFilter } from "@/components/admin/period-filter";
+import { PageHeading } from "@/components/admin/page-heading";
 import { RankingTable } from "@/components/admin/ranking-table";
 import { StatCard } from "@/components/admin/stat-card";
 
@@ -30,13 +31,12 @@ export default async function AdminDashboardPage({
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-xl font-semibold tracking-tight">Dashboard</h1>
-          <p className="text-sm text-zinc-600">
-            Visão geral da loja — {PERIOD_LABEL[period].toLowerCase()}.
-          </p>
-        </div>
+      <div className="flex flex-col gap-5">
+        <PageHeading
+          kicker="Visão geral"
+          title="Dashboard"
+          description={`Indicadores da loja — ${PERIOD_LABEL[period].toLowerCase()}.`}
+        />
         <PeriodFilter basePath="/admin" active={period} />
       </div>
 
@@ -67,8 +67,14 @@ export default async function AdminDashboardPage({
         ]}
       />
 
-      <Link href={`/admin/analytics?periodo=${period}`} className="text-sm text-zinc-600 underline hover:text-zinc-900">
+      <Link
+        href={`/admin/analytics?periodo=${period}`}
+        className="group inline-flex w-fit items-center gap-2 text-[0.6875rem] uppercase tracking-[0.14em] text-muted-foreground transition-colors hover:text-foreground"
+      >
         Ver analytics completo
+        <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">
+          →
+        </span>
       </Link>
     </div>
   );

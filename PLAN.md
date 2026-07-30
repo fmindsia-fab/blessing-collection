@@ -291,15 +291,30 @@ entidade no schema. Fora do que foi implementado; requer decisão de escopo.
 **Pendente de conferência manual sua** (não consigo verificar por código): responsividade real em
 dispositivo físico e navegação completa por teclado.
 
-**Achados do code review (aguardando decisão do usuário):**
+**Achados do code review — resolvidos:**
 
-1. **Produtos esgotados entram na seleção múltipla.** `SelectionToggleButton` é renderizado sem olhar o
-   `status` (`app/(public)/produtos/[slug]/page.tsx`), então um `sold_out` pode ser enviado no WhatsApp
-   junto com peças disponíveis, e a mensagem sai como "Tenho interesse nestas N peças" sem sinalizar.
-   Contrasta com o botão individual, que troca o CTA para "Consultar disponibilidade".
-2. **O total da seleção ignora preços de variante.** `selection-review.tsx` soma `item.price` (preço base).
-   Produto com variante de preço próprio mostra total menor que o real. O texto "Valor de referência"
-   mitiga em parte, mas a listagem usa "A partir de" e a tela de seleção não.
+1. ~~Produtos esgotados entram na seleção múltipla sem sinalização.~~ **Resolvido:** o item da seleção passa
+   a carregar o `status` e a mensagem do WhatsApp sinaliza cada peça — "(esgotada — gostaria de saber sobre
+   reposição)" / "(sob encomenda)". A peça continua selecionável, como você decidiu.
+2. ~~O total da seleção ignora preços de variante.~~ **Resolvido:** a seleção guarda o menor preço (base ou
+   variante mais barata) e o total exibe "a partir de" quando alguma peça tem variante com preço próprio.
+
+### M8 — Filtros, paleta e redesign (pedido do usuário, pós-M7)
+
+- [x] Filtro por **cor** na listagem (join com `product_variants.color`, desduplicado) — PRD 3.2
+- [x] Filtro por **disponibilidade** (subconjunto dos status públicos, nunca amplia o que o visitante vê)
+- [x] Paleta da marca com **até 5 cores** e campo hex colável (aceita `c9a227`, `#C9A227`, com/sem espaço)
+- [x] Migration `0009_brand_palette.sql`: coluna `brand_colors text[]` + check de 1 a 5 cores hex válidas
+- [x] Redesign do catálogo público e do painel (direção: editorial de moda impresso)
+- [x] Testes: paleta (normalização, validação, fallback) e sinalização de status na mensagem — 46 no total
+- [ ] Filtro por **modelo** — **não implementado**: "modelo" não existe no schema (seria tabela nova +
+      CRUD próprio + migration). Fora do que os outros filtros exigiam; requer decisão de escopo.
+
+**Direção visual adotada:** base pergaminho quente (`oklch(0.985 0.005 75)`) em vez de branco puro, texto
+em marrom-tinta, dourado envelhecido como único acento, cantos quase retos (`--radius: 0.25rem`), grão
+sutil de papel no fundo. Tipografia serifada da marca nos títulos, versaletes espaçados nos rótulos.
+O CTA do WhatsApp deixou de usar o verde da marca de terceiro — passa a ser sólido escuro, coerente com
+o editorial. Grades usam `auto-fill` com largura máxima para não esticar os cards quando há poucas peças.
 
 **Correções aplicadas na auditoria final:**
 

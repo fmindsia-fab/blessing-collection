@@ -52,7 +52,21 @@ export function buildWhatsappLink(whatsappNumber: string, message: string): stri
 type SelectionMessageItem = {
   name: string;
   url: string;
+  status?: ProductStatus;
 };
+
+// Sufixo por status: a peça esgotada/sob encomenda precisa chegar sinalizada
+// na mensagem, senão a proprietária responde como se estivesse disponível.
+const SELECTION_STATUS_SUFFIX: Record<Exclude<ProductStatus, "inactive">, string> = {
+  available: "",
+  made_to_order: " (sob encomenda)",
+  sold_out: " (esgotada — gostaria de saber sobre reposição)",
+};
+
+function selectionStatusSuffix(status?: ProductStatus): string {
+  if (!status || status === "inactive") return "";
+  return SELECTION_STATUS_SUFFIX[status];
+}
 
 export function buildSelectionWhatsappMessage(storeName: string, items: SelectionMessageItem[]): string {
   const intro =
@@ -60,7 +74,9 @@ export function buildSelectionWhatsappMessage(storeName: string, items: Selectio
       ? `Olá! Tenho interesse nesta peça do catálogo da ${storeName}:`
       : `Olá! Tenho interesse nestas ${items.length} peças do catálogo da ${storeName}:`;
 
-  const list = items.map((item) => `• ${item.name} — ${item.url}`).join("\n");
+  const list = items
+    .map((item) => `• ${item.name}${selectionStatusSuffix(item.status)} — ${item.url}`)
+    .join("\n");
 
   return `${intro}\n\n${list}`;
 }

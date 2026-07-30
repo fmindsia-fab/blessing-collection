@@ -4,18 +4,12 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getActiveStore } from "@/lib/store/get-active-store";
-import { FONT_VALUES, HEX_COLOR_PATTERN } from "@/lib/store/branding";
-
-const hexColor = (label: string) =>
-  z.string().regex(HEX_COLOR_PATTERN, `Informe uma cor válida em hexadecimal para ${label} (ex: #C9A227)`);
+import { FONT_VALUES, parseBrandColors } from "@/lib/store/branding";
 
 const storeSettingsSchema = z.object({
   whatsappNumber: z.string().min(8, "Informe um número de WhatsApp válido"),
   instagramUrl: z.string().url("Informe uma URL válida").optional().or(z.literal("")),
   description: z.string().optional(),
-  colorPrimary: hexColor("a cor primária"),
-  colorSecondary: hexColor("a cor secundária"),
-  colorAccent: hexColor("a cor de destaque"),
   fontFamily: z.enum(FONT_VALUES, { message: "Selecione uma das fontes disponíveis" }),
 });
 
@@ -34,12 +28,14 @@ export async function updateStoreSettings(
     whatsappNumber: formData.get("whatsappNumber"),
     instagramUrl: formData.get("instagramUrl"),
     description: formData.get("description"),
-    colorPrimary: formData.get("colorPrimary"),
-    colorSecondary: formData.get("colorSecondary"),
-    colorAccent: formData.get("colorAccent"),
     fontFamily: formData.get("fontFamily"),
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
+
+  // A paleta chega serializada do BrandPaletteField; validada aqui no servidor
+  // com as mesmas regras do check constraint da migration 0009.
+  const palette = parseBrandColors(String(formData.get("brandColors") ?? ""));
+  if ("error" in palette) return { error: palette.error };
 
   const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
@@ -49,9 +45,11 @@ export async function updateStoreSettings(
       whatsapp_number: parsed.data.whatsappNumber.replace(/\D/g, ""),
       instagram_url: parsed.data.instagramUrl || null,
       description: parsed.data.description || null,
-      color_primary: parsed.data.colorPrimary,
-      color_secondary: parsed.data.colorSecondary,
-      color_accent: parsed.data.colorAccent,
+      brand_colors: palette.colors,
+      // Mantém as 3 colunas antigas em sincronia — leitura de fallback.
+      color_primary: palette.colors[0],
+      color_secondary: palette.colors[1] ?? palette.colors[0],
+      color_accent: palette.colors[2] ?? palette.colors[0],
       font_family: parsed.data.fontFamily,
     })
     .eq("id", store.id);

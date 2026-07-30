@@ -10,11 +10,12 @@ export function PeriodFilter({ basePath, active }: { basePath: string; active: A
         <Link
           key={period}
           href={`${basePath}?periodo=${period}`}
+          aria-current={period === active ? "true" : undefined}
           className={cn(
-            "rounded-full border px-3 py-1 text-xs transition-colors",
+            "border px-4 py-1.5 text-[0.6875rem] uppercase tracking-[0.12em] transition-colors",
             period === active
-              ? "border-zinc-900 bg-zinc-900 text-white"
-              : "border-zinc-200 text-zinc-600 hover:border-zinc-400 hover:text-zinc-900",
+              ? "border-foreground bg-foreground text-background"
+              : "border-border text-muted-foreground hover:border-foreground hover:text-foreground",
           )}
         >
           {PERIOD_LABEL[period]}

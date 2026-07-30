@@ -8,6 +8,7 @@ import {
   PERIOD_LABEL,
 } from "@/lib/analytics/queries";
 import { PeriodFilter } from "@/components/admin/period-filter";
+import { PageHeading } from "@/components/admin/page-heading";
 import { RankingTable } from "@/components/admin/ranking-table";
 import { StatCard } from "@/components/admin/stat-card";
 
@@ -29,13 +30,12 @@ export default async function AdminAnalyticsPage({
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-xl font-semibold tracking-tight">Analytics</h1>
-          <p className="text-sm text-zinc-600">
-            Interesse dos visitantes por produto, categoria e coleção — {PERIOD_LABEL[period].toLowerCase()}.
-          </p>
-        </div>
+      <div className="flex flex-col gap-5">
+        <PageHeading
+          kicker="Interesse dos visitantes"
+          title="Analytics"
+          description={`Por produto, categoria e coleção — ${PERIOD_LABEL[period].toLowerCase()}.`}
+        />
         <PeriodFilter basePath="/admin/analytics" active={period} />
       </div>
 

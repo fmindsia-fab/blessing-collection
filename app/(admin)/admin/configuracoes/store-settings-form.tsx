@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { FONT_OPTIONS } from "@/lib/store/branding";
+import { FONT_OPTIONS, resolveBrandColors } from "@/lib/store/branding";
+import { BrandPaletteField } from "./brand-palette-field";
 import type { FontFamily } from "@/types/database.types";
 
 type StoreSettingsFormProps = {
@@ -18,15 +19,10 @@ type StoreSettingsFormProps = {
     color_primary: string;
     color_secondary: string;
     color_accent: string;
+    brand_colors?: string[] | null;
     font_family: FontFamily;
   };
 };
-
-// input type="color" só aceita #rrggbb; valor inesperado do banco cairia em
-// preto silenciosamente, então normalizamos antes de usar como defaultValue.
-function colorOrDefault(value: string, fallback: string) {
-  return /^#[0-9a-fA-F]{6}$/.test(value) ? value : fallback;
-}
 
 const initialState: StoreSettingsFormState = {};
 
@@ -69,38 +65,7 @@ export function StoreSettingsForm({ store }: StoreSettingsFormProps) {
           <span className="text-xs text-zinc-500">Cores e fonte aplicadas ao catálogo público.</span>
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="colorPrimary">Primária</Label>
-            <Input
-              id="colorPrimary"
-              name="colorPrimary"
-              type="color"
-              defaultValue={colorOrDefault(store.color_primary, "#000000")}
-              className="h-10 w-full p-1"
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="colorSecondary">Secundária</Label>
-            <Input
-              id="colorSecondary"
-              name="colorSecondary"
-              type="color"
-              defaultValue={colorOrDefault(store.color_secondary, "#FFFFFF")}
-              className="h-10 w-full p-1"
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="colorAccent">Destaque</Label>
-            <Input
-              id="colorAccent"
-              name="colorAccent"
-              type="color"
-              defaultValue={colorOrDefault(store.color_accent, "#C9A227")}
-              className="h-10 w-full p-1"
-            />
-          </div>
-        </div>
+        <BrandPaletteField initialColors={resolveBrandColors(store)} />
 
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="fontFamily">Fonte da marca</Label>

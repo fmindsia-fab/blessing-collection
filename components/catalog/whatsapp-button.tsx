@@ -44,7 +44,9 @@ export function WhatsappButton({
       rel="noopener noreferrer"
       onClick={() => track({ storeId, eventType: "whatsapp_click", productId })}
       className={cn(
-        "inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#25D366] px-6 text-sm font-semibold text-white transition-opacity hover:opacity-90",
+        // Sólido e escuro em vez do verde do WhatsApp: o CTA precisa pertencer
+        // ao editorial, não à marca de terceiro.
+        "inline-flex h-12 items-center justify-center gap-2 bg-foreground px-8 text-xs uppercase tracking-[0.18em] text-background transition-colors hover:bg-[var(--gold)]",
         className,
       )}
     >

@@ -2,13 +2,7 @@ import { SelectionProvider } from "@/lib/selection/selection-context";
 import { SelectionFloatingButton } from "@/components/catalog/selection-floating-button";
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { getBrandFontVariable } from "@/lib/store/fonts";
-import { isValidHexColor } from "@/lib/store/branding";
-
-// Cor gravada fora do formato hex (banco editado à mão) cai no padrão em vez
-// de injetar um valor arbitrário no style.
-function safeColor(value: string, fallback: string) {
-  return isValidHexColor(value) ? value : fallback;
-}
+import { resolveBrandColors } from "@/lib/store/branding";
 
 export default async function PublicLayout({
   children,
@@ -17,16 +11,24 @@ export default async function PublicLayout({
 }>) {
   const store = await getActiveStore();
   const fontVariable = getBrandFontVariable(store.font_family);
+  const palette = resolveBrandColors(store);
+
+  // Cada cor da paleta vira --brand-1..5; as 3 primeiras mantêm o papel
+  // semântico (primária, fundo, destaque) para uso direto no CSS.
+  const paletteVars = Object.fromEntries(
+    palette.map((color, index) => [`--brand-${index + 1}`, color]),
+  );
 
   return (
     <SelectionProvider>
       <div
-        className={`${fontVariable} flex flex-1 flex-col font-[family-name:var(--font-brand)]`}
+        className={`${fontVariable} flex flex-1 flex-col`}
         style={
           {
-            "--brand-primary": safeColor(store.color_primary, "#000000"),
-            "--brand-secondary": safeColor(store.color_secondary, "#FFFFFF"),
-            "--brand-accent": safeColor(store.color_accent, "#C9A227"),
+            ...paletteVars,
+            "--brand-primary": palette[0],
+            "--brand-secondary": palette[1] ?? palette[0],
+            "--brand-accent": palette[2] ?? palette[0],
           } as React.CSSProperties
         }
       >

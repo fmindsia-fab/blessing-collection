@@ -32,38 +32,91 @@ async function withCoverImages(
   return new Map((images ?? []).map((img) => [img.product_id, img.url]));
 }
 
+// Cores disponíveis na loja, para alimentar o filtro da listagem (PRD 3.2).
+// Distintas, já normalizadas, ordenadas alfabeticamente.
+export async function listAvailableColors(storeId: string): Promise<string[]> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data } = await supabase
+    .from("product_variants")
+    .select("color, products!inner(store_id, status)")
+    .eq("products.store_id", storeId)
+    .in("products.status", PUBLIC_STATUSES)
+    .neq("status", "archived")
+    .not("color", "is", null);
+
+  const colors = new Set<string>();
+  for (const row of (data ?? []) as { color: string | null }[]) {
+    const color = row.color?.trim();
+    if (color) colors.add(color);
+  }
+
+  return [...colors].sort((a, b) => a.localeCompare(b, "pt-BR"));
+}
+
 export async function listProducts({
   storeId,
   page = 1,
   categoryId,
   collectionId,
   search,
+  color,
+  availability,
 }: {
   storeId: string;
   page?: number;
   categoryId?: string;
   collectionId?: string;
   search?: string;
+  color?: string;
+  availability?: string;
 }) {
   const supabase = await createServerSupabaseClient();
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 
+  // Filtro por cor precisa de join com as variantes; sem ele, evitamos o join
+  // para não pagar o custo em toda listagem.
+  const selectClause = color
+    ? "id, name, slug, price, status, product_variants!inner(color, status)"
+    : "id, name, slug, price, status";
+
   let query = supabase
     .from("products")
-    .select("id, name, slug, price, status", { count: "exact" })
+    .select(selectClause, { count: "exact" })
     .eq("store_id", storeId)
-    .in("status", PUBLIC_STATUSES)
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: false })
     .range(from, to);
 
+  // Disponibilidade é um subconjunto dos status públicos — nunca amplia o que
+  // o visitante enxerga.
+  const isPublicStatus = (value: string): value is (typeof PUBLIC_STATUSES)[number] =>
+    (PUBLIC_STATUSES as readonly string[]).includes(value);
+
+  const statusFilter: readonly (typeof PUBLIC_STATUSES)[number][] =
+    availability && isPublicStatus(availability) ? [availability] : PUBLIC_STATUSES;
+
+  query = query.in("status", statusFilter);
+
   if (categoryId) query = query.eq("category_id", categoryId);
   if (collectionId) query = query.eq("collection_id", collectionId);
   if (search) query = query.ilike("name", `%${search}%`);
+  if (color) {
+    query = query.eq("product_variants.color", color).neq("product_variants.status", "archived");
+  }
 
-  const { data: products, count, error } = await query;
-  if (error || !products) return { products: [], total: 0, hasMore: false };
+  const { data, count, error } = await query;
+  if (error || !data) return { products: [], total: 0, hasMore: false };
+
+  // O join do filtro por cor pode repetir o produto quando ele tem mais de uma
+  // variante da mesma cor; desduplica por id preservando a ordem.
+  const seen = new Set<string>();
+  const products = (data as unknown as { id: string; price: number }[]).filter((p) => {
+    if (seen.has(p.id)) return false;
+    seen.add(p.id);
+    return true;
+  });
 
   const coverByProduct = await withCoverImages(supabase, products);
 
@@ -71,7 +124,7 @@ export async function listProducts({
     products: products.map((p) => ({
       ...p,
       cover_image_url: coverByProduct.get(p.id) ?? null,
-    })),
+    })) as (ProductListItem & { cover_image_url: string | null })[],
     total: count ?? 0,
     hasMore: (count ?? 0) > to + 1,
   };

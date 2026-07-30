@@ -55,6 +55,8 @@ export interface Database {
           color_primary: string;
           color_secondary: string;
           color_accent: string;
+          /** Paleta da marca (migration 0009): 1 a 5 cores hex. */
+          brand_colors: string[];
           font_family: FontFamily;
           status: StoreStatus;
           created_at: string;
@@ -72,6 +74,7 @@ export interface Database {
           color_primary?: string;
           color_secondary?: string;
           color_accent?: string;
+          brand_colors?: string[];
           font_family?: FontFamily;
           status?: StoreStatus;
           created_at?: string;

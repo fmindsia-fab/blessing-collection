@@ -62,4 +62,33 @@ describe("buildSelectionWhatsappMessage", () => {
     expect(message).toContain("nesta peça do catálogo");
     expect(message).not.toContain("peças");
   });
+
+  // A proprietária precisa saber que a peça está esgotada sem abrir o link,
+  // senão responde como se estivesse disponível.
+  it("sinaliza peça esgotada na linha correspondente", () => {
+    const message = buildSelectionWhatsappMessage("Blessing Collection", [
+      { name: "Bolsa Florence", url: "https://exemplo.com/a", status: "available" },
+      { name: "Bolsa Aurora", url: "https://exemplo.com/b", status: "sold_out" },
+    ]);
+
+    expect(message).toContain("• Bolsa Florence — https://exemplo.com/a");
+    expect(message).toContain("• Bolsa Aurora (esgotada — gostaria de saber sobre reposição)");
+  });
+
+  it("sinaliza peça sob encomenda", () => {
+    const message = buildSelectionWhatsappMessage("Blessing Collection", [
+      { name: "Bolsa Aurora", url: "https://exemplo.com/b", status: "made_to_order" },
+    ]);
+
+    expect(message).toContain("• Bolsa Aurora (sob encomenda)");
+  });
+
+  it("não adiciona sufixo quando o status não foi informado", () => {
+    const message = buildSelectionWhatsappMessage("Blessing Collection", [
+      { name: "Bolsa Florence", url: "https://exemplo.com/a" },
+    ]);
+
+    expect(message).toContain("• Bolsa Florence — https://exemplo.com/a");
+    expect(message).not.toContain("(");
+  });
 });

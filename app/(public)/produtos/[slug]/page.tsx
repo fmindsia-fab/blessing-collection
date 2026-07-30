@@ -71,9 +71,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
       <BackLink href="/produtos">Voltar para produtos</BackLink>
 
-      <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
-        <div className="flex flex-col gap-3">
-          <div className="relative aspect-[4/5] w-full overflow-hidden rounded-lg bg-zinc-100">
+      <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
+        <div className="reveal flex flex-col gap-3">
+          <div className="relative aspect-[4/5] w-full overflow-hidden bg-secondary">
             {coverImage ? (
               <Image
                 src={coverImage.url}
@@ -81,20 +81,20 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 fill
                 priority
                 className="object-cover"
-                sizes="(min-width: 1024px) 50vw, 100vw"
+                sizes="(min-width: 1024px) 55vw, 100vw"
               />
             ) : null}
           </div>
           {otherImages.length > 0 ? (
             <div className="grid grid-cols-4 gap-3">
               {otherImages.map((img) => (
-                <div key={img.id} className="relative aspect-square overflow-hidden rounded-lg bg-zinc-100">
+                <div key={img.id} className="relative aspect-square overflow-hidden bg-secondary">
                   <Image
                     src={img.url}
                     alt={img.alt_text ?? product.name}
                     fill
-                    className="object-cover"
-                    sizes="25vw"
+                    className="object-cover transition-transform duration-700 hover:scale-105"
+                    sizes="14vw"
                   />
                 </div>
               ))}
@@ -102,48 +102,57 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           ) : null}
         </div>
 
-        <div className="flex flex-col gap-6">
-          <div className="flex flex-col gap-2">
+        <div
+          className="reveal flex flex-col gap-8 lg:sticky lg:top-12 lg:self-start"
+          style={{ animationDelay: "120ms" }}
+        >
+          <div className="flex flex-col gap-3">
             {product.status !== "available" ? (
-              <span className="w-fit rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-700">
-                {STATUS_LABEL[product.status]}
-              </span>
+              <span className="kicker text-[var(--gold)]">{STATUS_LABEL[product.status]}</span>
             ) : null}
-            <h1 className="text-2xl font-semibold tracking-tight">{product.name}</h1>
-            <p className="text-lg text-zinc-900">
-              {hasVariantPricing ? "A partir de " : ""}
+            <h1 className="font-[family-name:var(--font-brand)] text-[2.5rem] leading-[1.05] tracking-tight sm:text-5xl">
+              {product.name}
+            </h1>
+            <p className="flex items-baseline gap-2 text-xl">
+              {hasVariantPricing ? <span className="kicker normal-case">a partir de</span> : null}
               {formatPrice(displayPrice)}
             </p>
           </div>
 
-          {product.description ? <p className="text-sm leading-relaxed text-zinc-600">{product.description}</p> : null}
+          {product.description ? (
+            <p className="max-w-prose text-[0.9375rem] leading-relaxed text-muted-foreground">
+              {product.description}
+            </p>
+          ) : null}
 
-          <dl className="flex flex-col gap-2 text-sm text-zinc-600">
-            {product.materials ? (
-              <div className="flex gap-2">
-                <dt className="font-medium text-zinc-900">Materiais:</dt>
-                <dd>{product.materials}</dd>
-              </div>
-            ) : null}
-            {product.measurements ? (
-              <div className="flex gap-2">
-                <dt className="font-medium text-zinc-900">Medidas:</dt>
-                <dd>{product.measurements}</dd>
-              </div>
-            ) : null}
-          </dl>
+          {product.materials || product.measurements ? (
+            <dl className="flex flex-col divide-y divide-border border-y border-border text-sm">
+              {product.materials ? (
+                <div className="flex gap-6 py-3">
+                  <dt className="kicker w-28 shrink-0 pt-0.5">Materiais</dt>
+                  <dd className="text-muted-foreground">{product.materials}</dd>
+                </div>
+              ) : null}
+              {product.measurements ? (
+                <div className="flex gap-6 py-3">
+                  <dt className="kicker w-28 shrink-0 pt-0.5">Medidas</dt>
+                  <dd className="text-muted-foreground">{product.measurements}</dd>
+                </div>
+              ) : null}
+            </dl>
+          ) : null}
 
           {variants.length > 0 ? (
-            <div className="flex flex-col gap-2">
-              <span className="text-sm font-medium text-zinc-900">Variações</span>
+            <div className="flex flex-col gap-3">
+              <span className="kicker">Variações</span>
               <div className="flex flex-wrap gap-2">
                 {variants.map((variant) => (
                   <span
                     key={variant.id}
-                    className={`rounded-full border px-3 py-1.5 text-sm ${
+                    className={`border px-3.5 py-1.5 text-xs tracking-wide ${
                       variant.status === "sold_out"
-                        ? "border-zinc-200 text-zinc-400 line-through"
-                        : "border-zinc-300 text-zinc-900"
+                        ? "border-border text-muted-foreground/60 line-through"
+                        : "border-foreground/25 text-foreground"
                     }`}
                   >
                     {variant.name}
@@ -153,7 +162,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </div>
           ) : null}
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 pt-2">
             <WhatsappButton
               storeId={store.id}
               storeName={store.name}
@@ -168,7 +177,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 productId: product.id,
                 slug: product.slug,
                 name: product.name,
-                price: product.price,
+                // Mesmo "a partir de" do card: menor entre preço base e variantes.
+                price: displayPrice,
+                priceIsFrom: hasVariantPricing,
+                status: product.status,
                 coverImageUrl: coverImage?.url ?? null,
               }}
             />

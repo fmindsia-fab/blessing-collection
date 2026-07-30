@@ -9,12 +9,14 @@ type ProductCardProps = {
   fromPrice?: boolean;
   status: ProductStatus;
   coverImageUrl: string | null;
+  /** Índice na grade — escalona a entrada, criando a cascata editorial. */
+  index?: number;
 };
 
-const STATUS_BADGE: Record<ProductStatus, { label: string; className: string } | null> = {
+const STATUS_BADGE: Record<ProductStatus, string | null> = {
   available: null,
-  made_to_order: { label: "Sob encomenda", className: "bg-amber-100 text-amber-900" },
-  sold_out: { label: "Esgotado", className: "bg-zinc-200 text-zinc-700" },
+  made_to_order: "Sob encomenda",
+  sold_out: "Esgotado",
   inactive: null,
 };
 
@@ -22,33 +24,57 @@ function formatPrice(price: number) {
   return price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-export function ProductCard({ slug, name, price, fromPrice, status, coverImageUrl }: ProductCardProps) {
+export function ProductCard({
+  slug,
+  name,
+  price,
+  fromPrice,
+  status,
+  coverImageUrl,
+  index = 0,
+}: ProductCardProps) {
   const badge = STATUS_BADGE[status];
 
   return (
-    <Link href={`/produtos/${slug}`} className="group flex flex-col gap-3">
-      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-lg bg-zinc-100">
+    <Link
+      href={`/produtos/${slug}`}
+      className="group reveal flex flex-col"
+      style={{ animationDelay: `${Math.min(index, 8) * 60}ms` }}
+    >
+      <div className="relative aspect-[4/5] w-full overflow-hidden bg-secondary">
         {coverImageUrl ? (
           <Image
             src={coverImageUrl}
             alt={name}
             fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            className="object-cover transition-[transform,filter] duration-[900ms] ease-out group-hover:scale-[1.04]"
             sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
           />
-        ) : null}
+        ) : (
+          <div className="flex h-full items-center justify-center">
+            <span className="kicker">Sem imagem</span>
+          </div>
+        )}
+
         {badge ? (
-          <span
-            className={`absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-medium ${badge.className}`}
-          >
-            {badge.label}
+          <span className="absolute left-0 top-4 bg-background/92 px-3 py-1.5 text-[0.625rem] font-medium uppercase tracking-[0.18em] text-foreground backdrop-blur-sm">
+            {badge}
           </span>
         ) : null}
+
+        {/* Fio dourado que cresce no hover — o detalhe que assina o card. */}
+        <span
+          aria-hidden
+          className="absolute bottom-0 left-0 h-px w-0 bg-[var(--gold)] transition-all duration-500 ease-out group-hover:w-full"
+        />
       </div>
-      <div className="flex flex-col gap-1">
-        <h3 className="text-sm font-medium text-zinc-900">{name}</h3>
-        <p className="text-sm text-zinc-600">
-          {fromPrice ? "A partir de " : ""}
+
+      <div className="flex flex-col gap-1 pt-4">
+        <h3 className="font-[family-name:var(--font-brand)] text-[0.9375rem] leading-snug text-foreground">
+          {name}
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          {fromPrice ? <span className="kicker mr-1.5 normal-case">a partir de</span> : null}
           {formatPrice(price)}
         </p>
       </div>

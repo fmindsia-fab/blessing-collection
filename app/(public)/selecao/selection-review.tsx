@@ -6,7 +6,6 @@ import { XIcon } from "lucide-react";
 import { useSelection } from "@/lib/selection/selection-context";
 import { track } from "@/lib/analytics/track";
 import { buildSelectionWhatsappMessage, buildWhatsappLink } from "@/lib/whatsapp/build-message";
-import { Button } from "@/components/ui/button";
 
 type SelectionReviewProps = {
   storeId: string;
@@ -26,20 +25,31 @@ export function SelectionReview({ storeId, storeName, storeWhatsapp, siteUrl }: 
 
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-start gap-4 py-12">
-        <p className="text-sm text-zinc-500">Você ainda não escolheu nenhuma peça.</p>
-        <Button render={<Link href="/produtos" />} variant="outline">
-          Ver produtos
-        </Button>
+      <div className="flex flex-col items-start gap-5 py-16">
+        <p className="font-[family-name:var(--font-brand)] text-xl text-muted-foreground">
+          Você ainda não escolheu nenhuma peça.
+        </p>
+        <Link
+          href="/produtos"
+          className="border border-foreground px-8 py-3 text-xs uppercase tracking-[0.18em] transition-colors hover:bg-foreground hover:text-background"
+        >
+          Ver o catálogo
+        </Link>
       </div>
     );
   }
 
   const total = items.reduce((sum, item) => sum + item.price, 0);
+  // Se alguma peça tem variante com preço próprio, o total é um piso, não o valor final.
+  const totalIsFrom = items.some((item) => item.priceIsFrom);
 
   const message = buildSelectionWhatsappMessage(
     storeName,
-    items.map((item) => ({ name: item.name, url: `${siteUrl}/produtos/${item.slug}` })),
+    items.map((item) => ({
+      name: item.name,
+      url: `${siteUrl}/produtos/${item.slug}`,
+      status: item.status,
+    })),
   );
   const whatsappHref = buildWhatsappLink(storeWhatsapp, message);
 
@@ -49,26 +59,37 @@ export function SelectionReview({ storeId, storeName, storeWhatsapp, siteUrl }: 
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-col divide-y divide-zinc-200 border-y border-zinc-200">
+    <div className="flex flex-col gap-10">
+      <div className="flex flex-col divide-y divide-border border-y border-border">
         {items.map((item) => (
-          <div key={item.productId} className="flex items-center gap-4 py-4">
-            <div className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-zinc-100">
+          <div key={item.productId} className="flex items-center gap-5 py-5">
+            <div className="relative size-20 shrink-0 overflow-hidden bg-secondary">
               {item.coverImageUrl ? (
-                <Image src={item.coverImageUrl} alt={item.name} fill className="object-cover" sizes="64px" />
+                <Image src={item.coverImageUrl} alt={item.name} fill className="object-cover" sizes="80px" />
               ) : null}
             </div>
-            <div className="flex flex-1 flex-col">
-              <Link href={`/produtos/${item.slug}`} className="text-sm font-medium hover:underline">
+            <div className="flex flex-1 flex-col gap-1">
+              <Link
+                href={`/produtos/${item.slug}`}
+                className="font-[family-name:var(--font-brand)] text-base transition-colors hover:text-[var(--gold)]"
+              >
                 {item.name}
               </Link>
-              <span className="text-sm text-zinc-600">{formatPrice(item.price)}</span>
+              <span className="text-sm text-muted-foreground">
+                {item.priceIsFrom ? "a partir de " : ""}
+                {formatPrice(item.price)}
+              </span>
+              {item.status && item.status !== "available" ? (
+                <span className="kicker text-[var(--gold)]">
+                  {item.status === "sold_out" ? "Esgotada" : "Sob encomenda"}
+                </span>
+              ) : null}
             </div>
             <button
               type="button"
               onClick={() => remove(item.productId)}
               aria-label={`Remover ${item.name} da seleção`}
-              className="rounded-full p-2 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+              className="p-2 text-muted-foreground transition-colors hover:text-foreground"
             >
               <XIcon className="size-4" />
             </button>
@@ -76,29 +97,39 @@ export function SelectionReview({ storeId, storeName, storeWhatsapp, siteUrl }: 
         ))}
       </div>
 
-      <div className="flex flex-col gap-1">
-        <span className="text-sm text-zinc-600">
+      <div className="flex flex-col gap-2">
+        <span className="kicker">
           {items.length} {items.length === 1 ? "peça selecionada" : "peças selecionadas"}
         </span>
-        <span className="text-lg font-medium">{formatPrice(total)}</span>
-        <span className="text-xs text-zinc-500">
-          Valor de referência. Condições e frete são combinados diretamente pelo WhatsApp.
+        <span className="font-[family-name:var(--font-brand)] text-3xl">
+          {totalIsFrom ? <span className="kicker mr-2 normal-case">a partir de</span> : null}
+          {formatPrice(total)}
+        </span>
+        <span className="max-w-md text-xs leading-relaxed text-muted-foreground">
+          {totalIsFrom
+            ? "Estimativa com o menor preço de cada peça — variações podem ter valores diferentes. "
+            : "Valor de referência. "}
+          Condições e frete são combinados diretamente pelo WhatsApp.
         </span>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-5">
         <a
           href={whatsappHref}
           target="_blank"
           rel="noopener noreferrer"
           onClick={handleSend}
-          className="inline-flex h-11 items-center justify-center rounded-full bg-[#25D366] px-6 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+          className="inline-flex h-12 items-center justify-center bg-foreground px-8 text-xs uppercase tracking-[0.18em] text-background transition-colors hover:bg-[var(--gold)]"
         >
           Enviar seleção pelo WhatsApp
         </a>
-        <Button type="button" variant="ghost" onClick={clear}>
+        <button
+          type="button"
+          onClick={clear}
+          className="text-xs uppercase tracking-[0.16em] text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
+        >
           Limpar seleção
-        </Button>
+        </button>
       </div>
     </div>
   );
