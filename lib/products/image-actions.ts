@@ -23,6 +23,12 @@ async function getAuthenticatedBucket(supabase: Awaited<ReturnType<typeof create
     data: { session },
   } = await supabase.auth.getSession();
 
+  console.log("[getAuthenticatedBucket] sessão encontrada?", {
+    hasSession: !!session,
+    hasToken: !!session?.access_token,
+    userId: session?.user?.id,
+  });
+
   if (session?.access_token) {
     bucket.setHeader("Authorization", `Bearer ${session.access_token}`);
   }
