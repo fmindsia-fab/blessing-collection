@@ -10,11 +10,11 @@ import { cn } from "@/lib/utils"
  * shadcn para não quebrar os 12 arquivos do painel que já usam este Button.
  */
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding whitespace-nowrap uppercase tracking-[0.14em] transition-colors duration-300 outline-none select-none focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-45 aria-invalid:border-destructive [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding whitespace-nowrap uppercase tracking-[0.14em] transition-all duration-300 outline-none select-none focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-45 aria-invalid:border-destructive [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5",
   {
     variants: {
       variant: {
-        default: "bg-foreground text-background hover:bg-[var(--gold)]",
+        default: "bg-foreground text-background shadow-sm hover:bg-[var(--gold)] hover:shadow-md",
         outline:
           "border-foreground/30 bg-transparent text-foreground hover:border-foreground hover:bg-foreground hover:text-background",
         secondary:

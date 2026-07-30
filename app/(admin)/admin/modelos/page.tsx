@@ -16,13 +16,15 @@ export default async function AdminModelsPage() {
         description="O formato da peça: clutch, tote, transversal, mochila…"
       />
 
-      <div className="max-w-md">
+      <div className="mx-auto w-full max-w-md rounded-[var(--radius-image)] border border-border bg-card p-6 shadow-sm">
         <ModelForm />
       </div>
 
-      <div className="flex flex-col divide-y divide-border border-y border-border">
+      <div className="flex flex-col gap-3">
         {models.length === 0 ? (
-          <p className="py-10 text-sm text-muted-foreground">Nenhum modelo cadastrado ainda.</p>
+          <p className="rounded-[var(--radius-image)] border border-dashed border-border py-12 text-center text-sm text-muted-foreground">
+            Nenhum modelo cadastrado ainda.
+          </p>
         ) : (
           models.map((model) => <ModelRow key={model.id} model={model} />)
         )}

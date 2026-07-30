@@ -79,9 +79,12 @@
   --chart-4: oklch(0.42 0.03 40);
   --chart-5: oklch(0.32 0.02 38);
 
-  /* Dourado envelhecido — usado com parcimônia, só em detalhes. */
+  /* Acento da marca. Sobrescrito em runtime pela 3ª cor da paleta da loja
+     (ver app/(public)/layout.tsx e (admin)/layout.tsx); o dourado é só o
+     padrão de quando nenhuma paleta foi configurada. */
   --gold: oklch(0.685 0.085 78);
-  --radius: 0.25rem;                     /* cantos quase retos: editorial impresso */
+  --radius: 0.75rem;                     /* cantos arredondados */
+  --radius-image: 1rem;                  /* imagens: um pouco mais suaves */
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);

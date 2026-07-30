@@ -41,7 +41,7 @@ export function ProductCard({
       className="group reveal flex flex-col outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-4 focus-visible:ring-offset-background"
       style={{ animationDelay: `${Math.min(index, 8) * 60}ms` }}
     >
-      <div className="relative aspect-[4/5] w-full overflow-hidden bg-secondary">
+      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[var(--radius-image)] bg-secondary shadow-sm transition-shadow duration-500 group-hover:shadow-lg">
         {coverImageUrl ? (
           <Image
             src={coverImageUrl}
@@ -57,16 +57,23 @@ export function ProductCard({
         )}
 
         {badge ? (
-          <span className="absolute left-0 top-4 bg-background/92 px-3 py-1.5 text-[0.625rem] font-medium uppercase tracking-[0.18em] text-foreground backdrop-blur-sm">
+          <span className="absolute left-3 top-3 rounded-full bg-background/92 px-3.5 py-1.5 text-[0.625rem] font-medium uppercase tracking-[0.14em] text-foreground shadow-sm backdrop-blur-sm">
             {badge}
           </span>
         ) : null}
 
-        {/* Fio dourado que cresce no hover — o detalhe que assina o card. */}
+        {/* Véu + selo revelados no hover: substitui o fio, que não assentava
+            bem no canto arredondado. */}
         <span
           aria-hidden
-          className="absolute bottom-0 left-0 h-px w-0 bg-[var(--gold)] transition-all duration-500 ease-out group-hover:w-full group-focus-visible:w-full"
+          className="absolute inset-0 bg-foreground/0 transition-colors duration-500 group-hover:bg-foreground/10"
         />
+        <span
+          aria-hidden
+          className="absolute bottom-3 left-1/2 -translate-x-1/2 translate-y-3 rounded-full bg-background/95 px-4 py-2 text-[0.625rem] uppercase tracking-[0.16em] text-foreground opacity-0 shadow-md backdrop-blur-sm transition-all duration-400 ease-out group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100"
+        >
+          Ver peça
+        </span>
       </div>
 
       <div className="flex flex-col gap-1 pt-4">

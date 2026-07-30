@@ -48,10 +48,10 @@ function FilterChip({
       href={href}
       aria-current={active ? "true" : undefined}
       className={cn(
-        "border px-4 py-2 text-xs tracking-wide outline-none transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        "rounded-full border px-4 py-2 text-xs tracking-wide outline-none transition-all duration-300 focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         active
-          ? "border-foreground bg-foreground text-background"
-          : "border-border text-muted-foreground hover:border-foreground hover:text-foreground",
+          ? "border-foreground bg-foreground text-background shadow-sm"
+          : "border-border text-muted-foreground hover:border-foreground hover:bg-secondary hover:text-foreground",
       )}
     >
       {children}
@@ -73,9 +73,9 @@ export function CatalogFilters({
   return (
     <div className="flex flex-col gap-5 border-y border-border py-6">
       {models.length > 0 ? (
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col items-center gap-2.5">
           <span className="kicker">Modelo</span>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap justify-center gap-2">
             {models.map((model) => {
               const active = activeModel === model.slug;
               return (
@@ -97,9 +97,9 @@ export function CatalogFilters({
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-2.5">
+      <div className="flex flex-col items-center gap-2.5">
         <span className="kicker">Disponibilidade</span>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap justify-center gap-2">
           {AVAILABILITY_OPTIONS.map((option) => {
             const active = activeAvailability === option.value;
             return (
@@ -122,9 +122,9 @@ export function CatalogFilters({
       </div>
 
       {colors.length > 0 ? (
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col items-center gap-2.5">
           <span className="kicker">Cor</span>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap justify-center gap-2">
             {colors.map((color) => {
               const active = activeColor === color;
               return (
@@ -149,7 +149,7 @@ export function CatalogFilters({
       {hasActiveFilter ? (
         <Link
           href={buildHref(basePath, { busca: search })}
-          className="self-start text-[0.6875rem] uppercase tracking-[0.16em] text-muted-foreground underline underline-offset-4 outline-none transition-colors hover:text-foreground focus-visible:text-foreground"
+          className="self-center text-[0.6875rem] uppercase tracking-[0.16em] text-muted-foreground underline underline-offset-4 outline-none transition-colors hover:text-foreground focus-visible:text-foreground"
         >
           Limpar filtros
         </Link>

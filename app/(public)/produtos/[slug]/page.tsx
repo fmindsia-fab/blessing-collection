@@ -73,7 +73,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
         <div className="reveal flex flex-col gap-3">
-          <div className="relative aspect-[4/5] w-full overflow-hidden bg-secondary">
+          <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[var(--radius-image)] bg-secondary shadow-sm">
             {coverImage ? (
               <Image
                 src={coverImage.url}
@@ -88,7 +88,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           {otherImages.length > 0 ? (
             <div className="grid grid-cols-4 gap-3">
               {otherImages.map((img) => (
-                <div key={img.id} className="relative aspect-square overflow-hidden bg-secondary">
+                <div
+                  key={img.id}
+                  className="relative aspect-square overflow-hidden rounded-[var(--radius)] bg-secondary shadow-sm"
+                >
                   <Image
                     src={img.url}
                     alt={img.alt_text ?? product.name}
@@ -149,7 +152,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 {variants.map((variant) => (
                   <span
                     key={variant.id}
-                    className={`border px-3.5 py-1.5 text-xs tracking-wide ${
+                    className={`rounded-full border px-4 py-2 text-xs tracking-wide ${
                       variant.status === "sold_out"
                         ? "border-border text-muted-foreground/60 line-through"
                         : "border-foreground/25 text-foreground"

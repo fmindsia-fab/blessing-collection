@@ -3,7 +3,8 @@ import { SelectionFloatingButton } from "@/components/catalog/selection-floating
 import { SiteFooter } from "@/components/catalog/site-footer";
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { getBrandFontVariable } from "@/lib/store/fonts";
-import { isSafeBrandFontUrl, resolveBrandColors } from "@/lib/store/branding";
+import { isSafeBrandFontUrl } from "@/lib/store/branding";
+import { buildStoreTheme } from "@/lib/store/theme";
 
 export default async function PublicLayout({
   children,
@@ -11,19 +12,15 @@ export default async function PublicLayout({
   children: React.ReactNode;
 }>) {
   const store = await getActiveStore();
-  const palette = resolveBrandColors(store);
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+  // A paleta configurada no painel vira tokens do tema, aplicados a todas as
+  // páginas públicas de uma vez.
+  const theme = buildStoreTheme(store);
 
   // Fonte própria enviada pela proprietária tem precedência sobre a curada —
   // desde que a URL seja comprovadamente do nosso bucket de fontes.
   const customFontUrl = isSafeBrandFontUrl(store.custom_font_url) ? store.custom_font_url : null;
   const fontVariable = customFontUrl ? "" : getBrandFontVariable(store.font_family);
-
-  // Cada cor da paleta vira --brand-1..5; as 3 primeiras mantêm o papel
-  // semântico (primária, fundo, destaque) para uso direto no CSS.
-  const paletteVars = Object.fromEntries(
-    palette.map((color, index) => [`--brand-${index + 1}`, color]),
-  );
 
   return (
     <SelectionProvider>
@@ -41,10 +38,7 @@ export default async function PublicLayout({
         className={`${fontVariable} flex flex-1 flex-col`}
         style={
           {
-            ...paletteVars,
-            "--brand-primary": palette[0],
-            "--brand-secondary": palette[1] ?? palette[0],
-            "--brand-accent": palette[2] ?? palette[0],
+            ...theme,
             ...(customFontUrl ? { "--font-brand": "'BrandCustom', Georgia, serif" } : {}),
           } as React.CSSProperties
         }
@@ -53,6 +47,7 @@ export default async function PublicLayout({
         <SiteFooter
           storeName={store.name}
           instagramUrl={store.instagram_url}
+          whatsappNumber={store.whatsapp_number}
           siteUrl={siteUrl}
         />
       </div>

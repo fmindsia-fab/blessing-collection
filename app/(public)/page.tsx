@@ -24,10 +24,19 @@ export default async function HomePage() {
     <main className="flex flex-1 flex-col">
       {/* CAPA — assimétrica: texto à esquerda, fotografia sangrando à direita. */}
       <section className="grid grid-cols-1 items-center gap-10 px-6 pb-20 pt-14 sm:px-10 lg:grid-cols-[0.85fr_1fr] lg:gap-16 lg:px-16 lg:pb-28 lg:pt-20">
-        <div className="reveal flex flex-col items-start gap-6">
+        {/* Centralizado no mobile (coluna única), alinhado à esquerda a partir
+            do desktop, onde a assimetria com a foto é o que dá o ar editorial. */}
+        <div className="reveal flex flex-col items-center gap-6 text-center lg:items-start lg:text-left">
           {store.logo_url ? (
             <div className="relative h-16 w-40">
-              <Image src={store.logo_url} alt={store.name} fill className="object-contain object-left" sizes="160px" priority />
+              <Image
+                src={store.logo_url}
+                alt={store.name}
+                fill
+                className="object-contain lg:object-left"
+                sizes="160px"
+                priority
+              />
             </div>
           ) : null}
 
@@ -49,7 +58,7 @@ export default async function HomePage() {
         {heroProduct?.cover_image_url ? (
           <Link
             href={`/produtos/${heroProduct.slug}`}
-            className="reveal group relative block aspect-[4/5] w-full overflow-hidden bg-secondary lg:aspect-[4/4.4]"
+            className="reveal group relative block aspect-[4/5] w-full overflow-hidden rounded-[var(--radius-image)] bg-secondary shadow-md transition-shadow duration-500 hover:shadow-xl lg:aspect-[4/4.4]"
             style={{ animationDelay: "120ms" }}
           >
             <Image
@@ -116,7 +125,7 @@ export default async function HomePage() {
         {categories.length > 0 ? (
           <section className="flex flex-col gap-8">
             <SectionHeading kicker="Navegue por" title="Categorias" />
-            <div className="flex flex-wrap gap-x-8 gap-y-4">
+            <div className="flex flex-wrap justify-center gap-x-8 gap-y-4">
               {categories.map((category) => (
                 <Link
                   key={category.id}
@@ -134,7 +143,7 @@ export default async function HomePage() {
         {collections.length > 0 ? (
           <section className="flex flex-col gap-8">
             <SectionHeading kicker="Reunidas em" title="Coleções" />
-            <div className="flex flex-wrap gap-x-8 gap-y-4">
+            <div className="flex flex-wrap justify-center gap-x-8 gap-y-4">
               {collections.map((collection) => (
                 <Link
                   key={collection.id}

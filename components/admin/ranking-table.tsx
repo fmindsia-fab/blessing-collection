@@ -18,14 +18,15 @@ export function RankingTable<T>({
   emptyMessage: string;
 }) {
   return (
-    <section className="flex flex-col gap-4">
-      <div className="rule-heading flex flex-col gap-1.5">
+    <section className="flex flex-col gap-4 rounded-[var(--radius-image)] border border-border bg-card p-6 shadow-sm">
+      <div className="flex flex-col items-center gap-2 pb-2 text-center">
         <h2 className="font-[family-name:var(--font-brand)] text-xl leading-none tracking-tight">{title}</h2>
-        {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
+        <span aria-hidden className="h-px w-10 rounded-full bg-[var(--gold)]" />
+        {description ? <p className="pt-1 text-sm text-muted-foreground">{description}</p> : null}
       </div>
 
       {rows.length === 0 ? (
-        <p className="py-8 text-sm text-muted-foreground">{emptyMessage}</p>
+        <p className="py-8 text-center text-sm text-muted-foreground">{emptyMessage}</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[34rem] border-collapse text-sm">
@@ -51,10 +52,19 @@ export function RankingTable<T>({
               {rows.map((row, index) => (
                 <tr
                   key={index}
-                  className="border-b border-border/60 transition-colors last:border-0 hover:bg-secondary/60"
+                  className="group border-b border-border/60 transition-colors last:border-0 hover:bg-secondary/50"
                 >
-                  <td className="py-3 text-xs tabular-nums text-muted-foreground">
-                    {String(index + 1).padStart(2, "0")}
+                  <td className="py-3">
+                    {/* Top 3 recebem o acento; o resto fica neutro. */}
+                    <span
+                      className={`inline-flex size-7 items-center justify-center rounded-full text-[0.625rem] tabular-nums transition-colors ${
+                        index < 3
+                          ? "bg-[var(--gold)]/15 font-medium text-foreground"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      {index + 1}
+                    </span>
                   </td>
                   {columns.map((column) => (
                     <td

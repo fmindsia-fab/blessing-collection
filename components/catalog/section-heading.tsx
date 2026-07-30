@@ -7,19 +7,18 @@ type SectionHeadingProps = {
   linkLabel?: string;
 };
 
-// Cabeçalho editorial: rótulo em versalete, título serifado e fio dourado.
+// Cabeçalho de seção centralizado, com fio de acento sob o título.
 export function SectionHeading({ kicker, title, href, linkLabel }: SectionHeadingProps) {
   return (
-    <div className="flex items-end justify-between gap-6">
-      <div className="rule-heading flex flex-col gap-1.5">
-        {kicker ? <span className="kicker">{kicker}</span> : null}
-        <h2 className="font-[family-name:var(--font-brand)] text-2xl leading-none tracking-tight sm:text-[1.75rem]">
-          {title}
-        </h2>
-      </div>
+    <div className="flex flex-col items-center gap-3 text-center">
+      {kicker ? <span className="kicker">{kicker}</span> : null}
+      <h2 className="font-[family-name:var(--font-brand)] text-[1.75rem] leading-none tracking-tight sm:text-3xl">
+        {title}
+      </h2>
+      <span aria-hidden className="h-px w-12 rounded-full bg-[var(--gold)]" />
 
       {href ? (
-        <ActionLink href={href} variant="ghost" arrow className="hidden shrink-0 pb-3 sm:inline-flex">
+        <ActionLink href={href} variant="ghost" arrow className="mt-1">
           {linkLabel ?? "Ver tudo"}
         </ActionLink>
       ) : null}

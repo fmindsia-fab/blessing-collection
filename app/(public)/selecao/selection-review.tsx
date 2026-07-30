@@ -61,7 +61,7 @@ export function SelectionReview({ storeId, storeName, storeWhatsapp, siteUrl }: 
       <div className="flex flex-col divide-y divide-border border-y border-border">
         {items.map((item) => (
           <div key={item.productId} className="flex items-center gap-5 py-5">
-            <div className="relative size-20 shrink-0 overflow-hidden bg-secondary">
+            <div className="relative size-20 shrink-0 overflow-hidden rounded-[var(--radius)] bg-secondary shadow-sm">
               {item.coverImageUrl ? (
                 <Image src={item.coverImageUrl} alt={item.name} fill className="object-cover" sizes="80px" />
               ) : null}

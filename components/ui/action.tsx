@@ -12,23 +12,24 @@ import { Arrow } from "./arrow";
  * sólido escuro (critério de acessibilidade do PRD seção 15).
  */
 const actionVariants = cva(
-  "group inline-flex items-center justify-center gap-2.5 whitespace-nowrap text-[0.6875rem] uppercase tracking-[0.18em] transition-colors duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-4 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-45",
+  "group inline-flex items-center justify-center gap-2.5 whitespace-nowrap rounded-full text-[0.6875rem] uppercase tracking-[0.18em] transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-4 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-45",
   {
     variants: {
       variant: {
-        /** CTA principal: sólido escuro que vira dourado. */
-        solid: "h-12 bg-foreground px-8 text-background hover:bg-[var(--gold)]",
+        /** CTA principal: sólido que vira o acento da marca, com leve elevação. */
+        solid:
+          "h-12 bg-foreground px-8 text-background shadow-sm hover:bg-[var(--gold)] hover:shadow-md",
         /** Ação secundária: contorno que preenche no hover. */
         outline:
           "h-12 border border-foreground px-8 text-foreground hover:bg-foreground hover:text-background",
         /** Terciária: contorno leve, para o que não deve competir. */
         quiet:
           "h-12 border border-border px-6 text-muted-foreground hover:border-foreground hover:text-foreground",
-        /** Link editorial: fio embaixo, sem caixa. */
+        /** Link editorial: fio embaixo, sem caixa (rounded-full não se aplica). */
         underline:
-          "border-b border-foreground pb-1.5 text-foreground hover:border-[var(--gold)] hover:text-[var(--gold)]",
+          "rounded-none border-b border-foreground pb-1.5 text-foreground hover:border-[var(--gold)] hover:text-[var(--gold)]",
         /** Link discreto: sem fio, só cor. */
-        ghost: "text-muted-foreground hover:text-foreground",
+        ghost: "rounded-none text-muted-foreground hover:text-foreground",
       },
     },
     defaultVariants: { variant: "solid" },

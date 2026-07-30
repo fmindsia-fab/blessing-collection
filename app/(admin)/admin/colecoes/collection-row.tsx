@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { archiveCollection, restoreCollection } from "@/lib/collections/actions";
 import { Button } from "@/components/ui/button";
+import { StatusPill } from "@/components/admin/status-pill";
 import type { ArchivableStatus } from "@/types/database.types";
 
 type CollectionRowProps = {
@@ -20,13 +21,13 @@ export function CollectionRow({ collection }: CollectionRowProps) {
   const isArchived = collection.status === "archived";
 
   return (
-    <div className="flex items-center justify-between gap-4 py-4">
-      <div className="flex flex-col">
-        <span className="text-sm font-medium">{collection.name}</span>
-        <span className="text-xs text-zinc-500">/{collection.slug}</span>
+    <div className="flex items-center justify-between gap-4 rounded-[var(--radius-image)] border border-border bg-card px-5 py-4 shadow-sm transition-all duration-300 hover:border-foreground/25 hover:shadow-md">
+      <div className="flex flex-col gap-1">
+        <span className="font-[family-name:var(--font-brand)] text-base">{collection.name}</span>
+        <span className="font-mono text-xs text-muted-foreground">/{collection.slug}</span>
       </div>
       <div className="flex items-center gap-3">
-        {isArchived ? <span className="text-xs text-zinc-500">Arquivada</span> : null}
+        {isArchived ? <StatusPill tone="muted">Arquivada</StatusPill> : null}
         <Button
           type="button"
           variant="outline"

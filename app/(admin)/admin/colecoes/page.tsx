@@ -16,13 +16,15 @@ export default async function AdminCollectionsPage() {
         description="Reúna peças em coleções temáticas."
       />
 
-      <div className="max-w-md">
+      <div className="mx-auto w-full max-w-md rounded-[var(--radius-image)] border border-border bg-card p-6 shadow-sm">
         <CollectionForm />
       </div>
 
-      <div className="flex flex-col divide-y divide-border border-y border-border">
+      <div className="flex flex-col gap-3">
         {collections.length === 0 ? (
-          <p className="py-10 text-sm text-muted-foreground">Nenhuma coleção cadastrada ainda.</p>
+          <p className="rounded-[var(--radius-image)] border border-dashed border-border py-12 text-center text-sm text-muted-foreground">
+            Nenhuma coleção cadastrada ainda.
+          </p>
         ) : (
           collections.map((collection) => <CollectionRow key={collection.id} collection={collection} />)
         )}

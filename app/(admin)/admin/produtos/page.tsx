@@ -29,9 +29,14 @@ export default async function AdminProductsPage() {
       />
 
       {products.length === 0 ? (
-        <p className="py-12 text-sm text-muted-foreground">Nenhuma peça cadastrada ainda.</p>
+        <div className="flex flex-col items-center gap-4 rounded-[var(--radius-image)] border border-dashed border-border py-16 text-center">
+          <p className="text-sm text-muted-foreground">Nenhuma peça cadastrada ainda.</p>
+          <ActionLink href="/admin/produtos/novo" variant="outline" className="h-11 px-6">
+            Cadastrar a primeira
+          </ActionLink>
+        </div>
       ) : (
-        <div className="flex flex-col divide-y divide-border border-y border-border">
+        <div className="flex flex-col gap-3">
           {products.map((product) => (
             <ProductRow key={product.id} product={product} statusLabel={STATUS_LABEL[product.status]} />
           ))}

@@ -50,14 +50,15 @@ export default async function ProductsPage({
     <main className="flex flex-1 flex-col gap-10 px-6 py-12 sm:px-10 lg:px-16">
       <BackLink href="/">Voltar para a página inicial</BackLink>
 
-      <div className="rule-heading flex flex-col gap-2">
+      <div className="flex flex-col items-center gap-3 text-center">
         <span className="kicker">O catálogo</span>
         <h1 className="font-[family-name:var(--font-brand)] text-4xl leading-none tracking-tight sm:text-5xl">
           Peças
         </h1>
+        <span aria-hidden className="h-px w-12 rounded-full bg-[var(--gold)]" />
       </div>
 
-      <form className="max-w-sm" role="search">
+      <form className="mx-auto w-full max-w-md" role="search">
         <label htmlFor="busca" className="sr-only">
           Buscar peças por nome
         </label>
@@ -67,7 +68,7 @@ export default async function ProductsPage({
           name="busca"
           defaultValue={busca}
           placeholder="Buscar por nome…"
-          className="w-full border-b border-border bg-transparent pb-2.5 text-sm outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-foreground"
+          className="w-full rounded-full border border-border bg-card px-5 py-3 text-center text-sm shadow-sm outline-none transition-all placeholder:text-muted-foreground/70 focus:border-foreground/40 focus:ring-2 focus:ring-[var(--gold)]/40"
         />
       </form>
 
@@ -81,7 +82,7 @@ export default async function ProductsPage({
         search={busca}
       />
 
-      <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+      <p className="text-center text-xs uppercase tracking-[0.16em] text-muted-foreground">
         {total} {total === 1 ? "peça encontrada" : "peças encontradas"}
       </p>
 
