@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { getProductBySlug, getRelatedProducts } from "@/lib/products/queries";
 import { ProductCard } from "@/components/catalog/product-card";
