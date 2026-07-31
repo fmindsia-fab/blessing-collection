@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState, useTransition } from "react";
+import { useActionState, useEffect, useRef, useTransition } from "react";
 import Image from "next/image";
+import { ImagePlusIcon, Loader2Icon } from "lucide-react";
 import {
   uploadProductImage,
   setCoverImage,
@@ -24,13 +25,21 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
   const uploadAction = uploadProductImage.bind(null, productId);
   const [state, formAction, isUploading] = useActionState(uploadAction, initialState);
   const [isPending, startTransition] = useTransition();
+  const formRef = useRef<HTMLFormElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Limpa o input ao terminar o envio: sem isso o arquivo continua selecionado
+  // e escolher a mesma foto de novo não dispara `change`.
+  useEffect(() => {
+    if (!isUploading && inputRef.current) inputRef.current.value = "";
+  }, [isUploading]);
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
         <h2 className="text-sm font-medium">Imagens ({images.length}/8)</h2>
         <p className="text-xs text-muted-foreground">
-          JPEG, PNG ou WebP, até 10MB. Marque a imagem principal e descreva cada foto para leitores de tela.
+          Marque a imagem principal e descreva cada foto para leitores de tela.
         </p>
       </div>
 
@@ -111,18 +120,45 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
       ) : null}
 
       {images.length < 8 ? (
-        <form action={formAction} className="flex flex-col gap-2">
+        <form ref={formRef} action={formAction} className="flex flex-col gap-2">
+          {/* O input nativo fica oculto: o botão de "Escolher arquivo" do
+              sistema é um alvo pequeno demais no celular. O label cobre a área
+              inteira e o envio dispara sozinho ao escolher a foto — no toque,
+              ter que voltar e apertar "Enviar" era um passo a mais. */}
           <input
+            ref={inputRef}
             type="file"
             name="file"
             accept="image/jpeg,image/png,image/webp"
             required
-            className="text-sm"
+            disabled={isUploading}
+            onChange={(e) => {
+              if (e.target.files?.length) formRef.current?.requestSubmit();
+            }}
+            className="sr-only"
+            id="product-image-input"
           />
+          <label
+            htmlFor="product-image-input"
+            className={`flex min-h-32 cursor-pointer flex-col items-center justify-center gap-2 rounded-[var(--radius)] border border-dashed border-input px-6 py-8 text-center transition-colors hover:border-foreground/40 hover:bg-secondary/50 focus-within:border-foreground/40 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[var(--gold)]/40 ${
+              isUploading ? "pointer-events-none opacity-60" : ""
+            }`}
+          >
+            <span className="flex size-11 items-center justify-center rounded-full bg-secondary text-foreground">
+              {isUploading ? (
+                <Loader2Icon className="size-5 animate-spin" />
+              ) : (
+                <ImagePlusIcon className="size-5" />
+              )}
+            </span>
+            <span className="text-sm font-medium">
+              {isUploading ? "Enviando…" : "Toque para adicionar uma foto"}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {images.length}/8 · JPEG, PNG ou WebP, até 10MB
+            </span>
+          </label>
           {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
-          <Button type="submit" variant="outline" size="sm" disabled={isUploading} className="w-fit">
-            {isUploading ? "Enviando..." : "Enviar imagem"}
-          </Button>
         </form>
       ) : null}
     </div>
