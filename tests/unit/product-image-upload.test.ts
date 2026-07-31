@@ -58,6 +58,25 @@ describe("uploadProductImage", () => {
     expect(insertSpy).not.toHaveBeenCalled();
   });
 
+  // Com accept="image/*" o iPhone passa a oferecer HEIC, então a recusa
+  // precisa dizer o que fazer em vez de só listar formatos.
+  it("orienta o usuário de iPhone quando a foto vem em HEIC", async () => {
+    const file = new File([new Uint8Array(8)], "IMG_0001.HEIC", { type: "image/heic" });
+
+    const result = await uploadProductImage("product-1", {}, formDataWith(file));
+
+    expect(result.error).toContain("Mais Compatível");
+    expect(uploadSpy).not.toHaveBeenCalled();
+  });
+
+  it("detecta HEIC pela extensão quando o navegador não informa o tipo", async () => {
+    const file = new File([new Uint8Array(8)], "IMG_0002.heif", { type: "application/octet-stream" });
+
+    const result = await uploadProductImage("product-1", {}, formDataWith(file));
+
+    expect(result.error).toContain("Mais Compatível");
+  });
+
   it("rejeita arquivo acima de 10MB", async () => {
     const oversized = new File([new Uint8Array(10 * 1024 * 1024 + 1)], "foto.jpg", { type: "image/jpeg" });
 

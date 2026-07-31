@@ -42,7 +42,14 @@ export async function uploadProductImage(
   if (!(file instanceof File) || file.size === 0) return { error: "Selecione uma imagem." };
 
   if (!ALLOWED_TYPES.includes(file.type)) {
-    return { error: "Formato inválido. Use JPEG, PNG ou WebP." };
+    // HEIC/HEIF é o padrão da câmera do iPhone e navegador nenhum exibe:
+    // vale orientar em vez de só recusar.
+    const isAppleFormat = /hei[cf]/i.test(file.type) || /\.hei[cf]$/i.test(file.name);
+    return {
+      error: isAppleFormat
+        ? "Formato HEIC não é exibido pelos navegadores. No iPhone: Ajustes › Câmera › Formatos › Mais Compatível, ou compartilhe a foto como JPEG."
+        : "Formato inválido. Use JPEG, PNG ou WebP.",
+    };
   }
   if (file.size > MAX_FILE_SIZE) {
     return { error: "A imagem deve ter no máximo 10MB." };
