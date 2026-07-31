@@ -5,16 +5,10 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getActiveStore } from "@/lib/store/get-active-store";
+import { slugify } from "@/lib/utils";
 
-function slugify(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
+// slugify vem de lib/utils: o componente ProductSlug usa a mesma função para
+// prever a URL no client, e duas implementações divergiriam com o tempo.
 
 // Campo numérico opcional: string vazia vira null (não informado), e valor
 // preenchido precisa ser positivo — espelha o check da migration 0012.
@@ -29,7 +23,6 @@ const productSchema = z.object({
   description: z.string().optional(),
   price: z.coerce.number().positive("Informe um preço válido"),
   materials: z.string().optional(),
-  measurements: z.string().optional(),
   weightKg: optionalPositiveNumber("o peso"),
   lengthCm: optionalPositiveNumber("o comprimento"),
   widthCm: optionalPositiveNumber("a largura"),
@@ -52,7 +45,6 @@ function parseProductForm(formData: FormData) {
     description: formData.get("description"),
     price: formData.get("price"),
     materials: formData.get("materials"),
-    measurements: formData.get("measurements"),
     weightKg: formData.get("weightKg") ?? "",
     lengthCm: formData.get("lengthCm") ?? "",
     widthCm: formData.get("widthCm") ?? "",
@@ -85,7 +77,6 @@ export async function createProduct(_prevState: ProductFormState, formData: Form
       description: parsed.data.description || null,
       price: parsed.data.price,
       materials: parsed.data.materials || null,
-      measurements: parsed.data.measurements || null,
       weight_kg: parsed.data.weightKg,
       length_cm: parsed.data.lengthCm,
       width_cm: parsed.data.widthCm,
@@ -123,7 +114,6 @@ export async function updateProduct(
       description: parsed.data.description || null,
       price: parsed.data.price,
       materials: parsed.data.materials || null,
-      measurements: parsed.data.measurements || null,
       weight_kg: parsed.data.weightKg,
       length_cm: parsed.data.lengthCm,
       width_cm: parsed.data.widthCm,
@@ -140,6 +130,45 @@ export async function updateProduct(
   revalidatePath("/admin/produtos");
   revalidatePath(`/admin/produtos/${productId}/editar`);
   redirect("/admin/produtos");
+}
+
+/**
+ * Regenera o slug (URL) a partir do nome atual.
+ *
+ * A URL não muda sozinha ao renomear o produto: links já enviados a clientes
+ * por WhatsApp continuariam funcionando, e o Google não perderia a página.
+ * Esta ação é explícita — a proprietária decide quando vale trocar.
+ */
+export async function refreshProductSlug(productId: string): Promise<ProductFormState> {
+  const store = await getActiveStore();
+  const supabase = await createServerSupabaseClient();
+
+  const { data: product } = await supabase
+    .from("products")
+    .select("name, slug")
+    .eq("id", productId)
+    .eq("store_id", store.id)
+    .maybeSingle();
+
+  if (!product) return { error: "Produto não encontrado." };
+
+  const nextSlug = slugify(product.name);
+  if (!nextSlug) return { error: "O nome do produto não gera uma URL válida." };
+  if (nextSlug === product.slug) return {};
+
+  const { error } = await supabase
+    .from("products")
+    .update({ slug: nextSlug })
+    .eq("id", productId)
+    .eq("store_id", store.id);
+
+  // unique(store_id, slug): outra peça já usa essa URL.
+  if (error) return { error: "Já existe uma peça com essa URL. Ajuste o nome e tente de novo." };
+
+  revalidatePath("/admin/produtos");
+  revalidatePath(`/admin/produtos/${productId}/editar`);
+  revalidatePath("/produtos");
+  return {};
 }
 
 /**

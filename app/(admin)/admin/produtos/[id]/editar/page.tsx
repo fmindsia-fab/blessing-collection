@@ -7,6 +7,7 @@ import { listAllModelsForAdmin } from "@/lib/models/queries";
 import { ProductForm } from "../../product-form";
 import { PageHeading } from "@/components/admin/page-heading";
 import { ProductImages } from "./product-images";
+import { ProductSlug } from "./product-slug";
 import { ProductVariants } from "./product-variants";
 
 export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
@@ -27,6 +28,8 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
   return (
     <div className="flex max-w-2xl flex-col gap-10">
       <PageHeading kicker="Catálogo" title="Editar peça" description={product.name} />
+
+      <ProductSlug productId={product.id} name={product.name} slug={product.slug} />
 
       <ProductForm
         categories={categories}

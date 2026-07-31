@@ -19,7 +19,6 @@ type ProductFormProps = {
     description: string | null;
     price: number;
     materials: string | null;
-    measurements: string | null;
     weight_kg: number | null;
     length_cm: number | null;
     width_cm: number | null;
@@ -80,20 +79,11 @@ export function ProductForm({ categories, collections, models, product }: Produc
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="materials">Materiais</Label>
-          <Input id="materials" name="materials" defaultValue={product?.materials ?? ""} />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="measurements">Medidas (texto livre)</Label>
-          <Input
-            id="measurements"
-            name="measurements"
-            placeholder="30cm x 22cm x 10cm"
-            defaultValue={product?.measurements ?? ""}
-          />
-        </div>
+      {/* As medidas ficam na seção "Peso e dimensões" abaixo, em campos
+          numéricos — o antigo campo de texto livre era redundante. */}
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="materials">Materiais</Label>
+        <Input id="materials" name="materials" defaultValue={product?.materials ?? ""} />
       </div>
 
       {/* Peso e dimensões numéricos: aparecem em "Mais detalhes" na página da

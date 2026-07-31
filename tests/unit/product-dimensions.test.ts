@@ -52,7 +52,6 @@ function form(fields: Record<string, string>) {
   data.set("status", "available");
   data.set("description", "");
   data.set("materials", "");
-  data.set("measurements", "");
   for (const [key, value] of Object.entries(fields)) data.set(key, value);
   return data;
 }

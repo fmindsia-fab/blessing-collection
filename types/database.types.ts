@@ -182,6 +182,9 @@ export interface Database {
           description: string | null;
           price: number;
           materials: string | null;
+          /** @deprecated Substituído pelos campos numéricos abaixo. A coluna
+           * permanece no banco para não perder o que já foi digitado, mas o
+           * cadastro não a edita e o catálogo não a exibe. */
           measurements: string | null;
           /** Peso e dimensões (migration 0012). Nulo = não informado. */
           weight_kg: number | null;

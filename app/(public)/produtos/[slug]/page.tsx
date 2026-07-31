@@ -6,6 +6,7 @@ import { getProductBySlug, getRelatedProducts } from "@/lib/products/queries";
 import { ProductCard } from "@/components/catalog/product-card";
 import { SectionHeading } from "@/components/catalog/section-heading";
 import { ProductDetails } from "@/components/catalog/product-details";
+import { ProductGallery } from "@/components/catalog/product-gallery";
 import { WhatsappButton } from "@/components/catalog/whatsapp-button";
 import { SelectionToggleButton } from "@/components/catalog/selection-toggle-button";
 import { PageViewTracker } from "@/components/shared/page-view-tracker";
@@ -62,7 +63,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const related = await getRelatedProducts(store.id, product);
 
   const coverImage = images.find((img) => img.is_cover) ?? images[0] ?? null;
-  const otherImages = images.filter((img) => img.id !== coverImage?.id);
+  // A capa abre a galeria; as demais seguem na ordem definida no painel.
+  const galleryImages = coverImage
+    ? [coverImage, ...images.filter((img) => img.id !== coverImage.id)]
+    : images;
 
   const variantPrices = variants.map((v) => v.price).filter((p): p is number => p != null);
   const hasVariantPricing = variantPrices.length > 0;
@@ -77,37 +81,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       <BackLink href="/produtos">Voltar para produtos</BackLink>
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
-        <div className="reveal flex flex-col gap-3">
-          <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[var(--radius-image)] bg-secondary shadow-sm">
-            {coverImage ? (
-              <Image
-                src={coverImage.url}
-                alt={coverImage.alt_text ?? product.name}
-                fill
-                priority
-                className="object-cover"
-                sizes="(min-width: 1024px) 55vw, 100vw"
-              />
-            ) : null}
-          </div>
-          {otherImages.length > 0 ? (
-            <div className="grid grid-cols-4 gap-3">
-              {otherImages.map((img) => (
-                <div
-                  key={img.id}
-                  className="relative aspect-square overflow-hidden rounded-[var(--radius)] bg-secondary shadow-sm"
-                >
-                  <Image
-                    src={img.url}
-                    alt={img.alt_text ?? product.name}
-                    fill
-                    className="object-cover transition-transform duration-700 hover:scale-105"
-                    sizes="14vw"
-                  />
-                </div>
-              ))}
-            </div>
-          ) : null}
+        <div className="reveal">
+          <ProductGallery images={galleryImages} productName={product.name} />
         </div>
 
         <div
@@ -133,18 +108,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </p>
           ) : null}
 
-          {product.materials || product.measurements ? (
+          {product.materials ? (
             <dl className="flex flex-col divide-y divide-border border-y border-border text-sm">
               {product.materials ? (
                 <div className="flex gap-6 py-3">
                   <dt className="kicker w-28 shrink-0 pt-0.5">Materiais</dt>
                   <dd className="text-muted-foreground">{product.materials}</dd>
-                </div>
-              ) : null}
-              {product.measurements ? (
-                <div className="flex gap-6 py-3">
-                  <dt className="kicker w-28 shrink-0 pt-0.5">Medidas</dt>
-                  <dd className="text-muted-foreground">{product.measurements}</dd>
                 </div>
               ) : null}
             </dl>
