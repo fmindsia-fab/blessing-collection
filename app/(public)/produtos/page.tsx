@@ -1,6 +1,6 @@
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { listAvailableColors, listProducts } from "@/lib/products/queries";
-import { listModels } from "@/lib/models/queries";
+import { listModelsInUse } from "@/lib/models/queries";
 import { ProductCard } from "@/components/catalog/product-card";
 import { CatalogFilters } from "@/components/catalog/catalog-filters";
 import { BackLink } from "@/components/shared/back-link";
@@ -31,7 +31,7 @@ export default async function ProductsPage({
   const page = Math.max(1, Number(pageParam) || 1);
 
   const store = await getActiveStore();
-  const models = await listModels(store.id);
+  const models = await listModelsInUse(store.id);
   // O filtro vem por slug (URL legível); a query precisa do id.
   const activeModelId = modelo ? models.find((m) => m.slug === modelo)?.id : undefined;
 

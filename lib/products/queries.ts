@@ -32,26 +32,38 @@ async function withCoverImages(
   return new Map((images ?? []).map((img) => [img.product_id, img.url]));
 }
 
-// Cores disponíveis na loja, para alimentar o filtro da listagem (PRD 3.2).
-// Distintas, já normalizadas, ordenadas alfabeticamente.
-export async function listAvailableColors(storeId: string): Promise<string[]> {
+/**
+ * Cores em uso no catálogo, com quantas peças cada uma tem (PRD 3.2).
+ *
+ * Conta produtos distintos, não variantes: uma peça com duas variantes da
+ * mesma cor apareceria como "2" e não bateria com o resultado do filtro.
+ */
+export async function listAvailableColors(
+  storeId: string,
+): Promise<{ name: string; count: number }[]> {
   const supabase = await createServerSupabaseClient();
 
   const { data } = await supabase
     .from("product_variants")
-    .select("color, products!inner(store_id, status)")
+    .select("color, product_id, products!inner(store_id, status)")
     .eq("products.store_id", storeId)
     .in("products.status", PUBLIC_STATUSES)
     .neq("status", "archived")
     .not("color", "is", null);
 
-  const colors = new Set<string>();
-  for (const row of (data ?? []) as { color: string | null }[]) {
+  const productsByColor = new Map<string, Set<string>>();
+  for (const row of (data ?? []) as { color: string | null; product_id: string }[]) {
     const color = row.color?.trim();
-    if (color) colors.add(color);
+    if (!color) continue;
+
+    const products = productsByColor.get(color) ?? new Set<string>();
+    products.add(row.product_id);
+    productsByColor.set(color, products);
   }
 
-  return [...colors].sort((a, b) => a.localeCompare(b, "pt-BR"));
+  return [...productsByColor.entries()]
+    .map(([name, products]) => ({ name, count: products.size }))
+    .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 }
 
 export async function listProducts({

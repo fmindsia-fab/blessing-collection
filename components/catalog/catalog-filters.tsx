@@ -9,8 +9,8 @@ export const AVAILABILITY_OPTIONS = [
 
 type CatalogFiltersProps = {
   basePath: string;
-  colors: string[];
-  models?: { id: string; name: string; slug: string }[];
+  colors: { name: string; count: number }[];
+  models?: { id: string; name: string; slug: string; count: number }[];
   activeColor?: string;
   activeAvailability?: string;
   activeModel?: string;
@@ -37,10 +37,13 @@ function buildHref(
 function FilterChip({
   href,
   active,
+  count,
   children,
 }: {
   href: string;
   active: boolean;
+  /** Quantas peças a opção tem — ausente para filtros sem contagem. */
+  count?: number;
   children: React.ReactNode;
 }) {
   return (
@@ -48,13 +51,18 @@ function FilterChip({
       href={href}
       aria-current={active ? "true" : undefined}
       className={cn(
-        "rounded-full border px-4 py-2 text-xs tracking-wide outline-none transition-all duration-300 focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs tracking-wide outline-none transition-all duration-300 focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         active
           ? "border-foreground bg-foreground text-background shadow-sm"
           : "border-border text-muted-foreground hover:border-foreground hover:bg-secondary hover:text-foreground",
       )}
     >
       {children}
+      {count !== undefined ? (
+        <span className={cn("tabular-nums", active ? "text-background/70" : "text-muted-foreground/60")}>
+          {count}
+        </span>
+      ) : null}
     </Link>
   );
 }
@@ -82,6 +90,7 @@ export function CatalogFilters({
                 <FilterChip
                   key={model.id}
                   active={active}
+                  count={model.count}
                   href={buildHref(basePath, {
                     busca: search,
                     cor: activeColor,
@@ -126,19 +135,20 @@ export function CatalogFilters({
           <span className="kicker">Cor</span>
           <div className="flex flex-wrap justify-center gap-2">
             {colors.map((color) => {
-              const active = activeColor === color;
+              const active = activeColor === color.name;
               return (
                 <FilterChip
-                  key={color}
+                  key={color.name}
                   active={active}
+                  count={color.count}
                   href={buildHref(basePath, {
                     busca: search,
-                    cor: active ? undefined : color,
+                    cor: active ? undefined : color.name,
                     disponibilidade: activeAvailability,
                     modelo: activeModel,
                   })}
                 >
-                  {color}
+                  {color.name}
                 </FilterChip>
               );
             })}
