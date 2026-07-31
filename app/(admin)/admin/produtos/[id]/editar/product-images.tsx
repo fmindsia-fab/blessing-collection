@@ -120,48 +120,49 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
       ) : null}
 
       {images.length < 8 ? (
-        <form ref={formRef} action={formAction} className="flex flex-col gap-2">
-          {/* O input cobre a área inteira com `opacity-0` em vez de ficar
-              escondido: Safari iOS e Chrome Android não abrem o seletor de
-              arquivos de um input recortado por `sr-only` (width:1px +
-              clip-path), nem quando acionado por um label associado. Aqui o
-              toque acerta o próprio input, que é o caminho que sempre funciona.
-              O conteúdo visível fica embaixo, com `pointer-events-none`. */}
-          <div
-            className={`relative flex min-h-32 flex-col items-center justify-center gap-2 rounded-[var(--radius)] border border-dashed border-input px-6 py-8 text-center transition-colors hover:border-foreground/40 hover:bg-secondary/50 has-[input:focus-visible]:border-foreground/40 has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-[var(--gold)]/40 ${
-              isUploading ? "opacity-60" : ""
-            }`}
+        <form ref={formRef} action={formAction} className="relative flex flex-col gap-2">
+          {/* O input fica fora de tela em vez de `sr-only` (width:1px +
+              clip-path), que impede o Safari iOS de abrir o seletor, e é
+              acionado por `.click()` a partir de um <button> real.
+
+              Sem `required`: num input invisível o navegador tentaria exibir
+              "Preencha este campo" apontando para um elemento que não existe
+              na tela. O servidor já recusa envio sem arquivo. */}
+          <input
+            ref={inputRef}
+            type="file"
+            name="file"
+            // `image/*` em vez da lista de MIMEs: alguns Androids escondem a
+            // câmera e filtram demais a galeria quando o accept é restrito.
+            // O servidor rejeita formato inválido de qualquer forma.
+            accept="image/*"
+            tabIndex={-1}
+            aria-hidden="true"
+            onChange={(e) => {
+              if (e.target.files?.length) formRef.current?.requestSubmit();
+            }}
+            className="absolute left-[-9999px] size-px opacity-0"
+          />
+          <button
+            type="button"
+            disabled={isUploading}
+            onClick={() => inputRef.current?.click()}
+            className="flex min-h-32 w-full flex-col items-center justify-center gap-2 rounded-[var(--radius)] border border-dashed border-input px-6 py-8 text-center outline-none transition-colors hover:border-foreground/40 hover:bg-secondary/50 focus-visible:border-foreground/40 focus-visible:ring-2 focus-visible:ring-[var(--gold)]/40 disabled:opacity-60"
           >
-            <input
-              ref={inputRef}
-              type="file"
-              name="file"
-              // `image/*` em vez da lista de MIMEs: alguns Androids escondem a
-              // câmera e filtram demais a galeria quando o accept é restrito.
-              // O servidor rejeita formato inválido de qualquer forma.
-              accept="image/*"
-              required
-              disabled={isUploading}
-              aria-label="Adicionar uma foto do produto"
-              onChange={(e) => {
-                if (e.target.files?.length) formRef.current?.requestSubmit();
-              }}
-              className="absolute inset-0 z-10 size-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
-            />
-            <span className="pointer-events-none flex size-11 items-center justify-center rounded-full bg-secondary text-foreground">
+            <span className="flex size-11 items-center justify-center rounded-full bg-secondary text-foreground">
               {isUploading ? (
                 <Loader2Icon className="size-5 animate-spin" />
               ) : (
                 <ImagePlusIcon className="size-5" />
               )}
             </span>
-            <span className="pointer-events-none text-sm font-medium">
+            <span className="text-sm font-medium">
               {isUploading ? "Enviando…" : "Toque para adicionar uma foto"}
             </span>
-            <span className="pointer-events-none text-xs text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               {images.length}/8 · JPEG, PNG ou WebP, até 10MB
             </span>
-          </div>
+          </button>
           {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
         </form>
       ) : null}
