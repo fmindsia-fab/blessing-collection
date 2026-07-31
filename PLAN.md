@@ -313,8 +313,34 @@ escuro). Fecha o último critério de acessibilidade do PRD seção 15 que depen
 - [x] Testes: paleta (normalização, validação, fallback) e sinalização de status na mensagem — 46 no total
 - [x] Migration `0009` aplicada e confirmada (`brand_colors` migrou os valores das 3 colunas antigas)
 - [x] Deploy validado em produção: E2E 4/4, paleta e utilitários editoriais no HTML, mobile 390px conferido
-- [ ] Filtro por **modelo** — **não implementado**: "modelo" não existe no schema (seria tabela nova +
-      CRUD próprio + migration). Fora do que os outros filtros exigiam; requer decisão de escopo.
+- [x] Filtro por **modelo** — implementado no M11: tabela `models` (migration `0010`), CRUD em
+      `/admin/modelos`, `model_id` em `products` e filtro na listagem. O filtro público só exibe
+      modelos que têm peças, com a contagem de cada um.
+
+### M11 — Ajustes pós-publicação
+
+- [x] Modelos, fontes ampliadas (16 curadas + upload de `.woff2`), compartilhamento e acesso ao painel
+- [x] Limite de imagem 5MB → 10MB (PRD 13.1 atualizado)
+- [x] SEO técnico: `sitemap.xml` gerado do banco, `robots.txt`, metadata das rotas públicas
+- [x] Acesso discreto ao painel: 5 cliques no fio do rodapé (o link visível anunciava o painel a quem
+      recebesse o catálogo compartilhado)
+- [x] Produtos relacionados (PRD 3.4) e `alt_text` por imagem (PRD 15)
+- [x] Reordenar imagens e produtos (PRD 3.7) — botões em vez de arrastar, operável por toque e teclado
+- [x] Peso e dimensões em campos numéricos (migration `0012`), exibidos em "Mais detalhes";
+      o campo `measurements` de texto livre saiu do cadastro e do catálogo por redundância
+- [x] Galeria: miniatura troca a foto principal e a foto abre em tela cheia (portal no `body`, porque o
+      container `sticky` prendia o `fixed` à coluna)
+- [x] `refreshProductSlug`: botão para regenerar a URL quando o nome muda, por ação explícita —
+      trocar sozinho quebraria links já enviados a clientes
+- [x] Filtros só listam opções com resultado, com contagem por opção
+
+**Pendências de conteúdo (bloqueiam a divulgação, não o código):**
+
+1. Produto **"Clutch nome novo"** com descrição `asdqweasdzxcasdqwe` e slug `/produtos/teste-novo-produto`
+   — dado de teste, público e no sitemap.
+2. **Nenhuma das 5 imagens tem `alt_text`** preenchido. O campo existe no painel desde o M11; o `alt` cai
+   no nome do produto, o que funciona mas não descreve a foto (PRD 15).
+3. **Nenhum `seo_description`** preenchido — a metadata cai na descrição do produto.
 
 ### M9 — Sistema de botões, links e setas
 
