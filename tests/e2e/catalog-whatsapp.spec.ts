@@ -71,7 +71,7 @@ test("o CTA do WhatsApp corresponde ao status do produto", async ({ page }) => {
   const label = (await whatsappLink.textContent())?.trim();
 
   // Os 3 status públicos têm CTA próprio (lib/whatsapp/build-message.ts).
-  expect(["Quero esta bolsa", "Encomendar esta bolsa", "Consultar disponibilidade"]).toContain(label);
+  expect(["Quero esta peça", "Encomendar esta peça", "Consultar disponibilidade"]).toContain(label);
 });
 
 test("área administrativa exige login", async ({ page }) => {

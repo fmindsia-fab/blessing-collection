@@ -8,23 +8,27 @@ type BuildWhatsappMessageParams = {
   productUrl: string;
 };
 
+// "Peça" e não "bolsa": o catálogo tem bolsas, pulseiras e acessórios, e o
+// mesmo botão serve a todos. É o termo que a seleção múltipla já usa.
 const CTA_LABEL: Record<Exclude<ProductStatus, "inactive">, string> = {
-  available: "Quero esta bolsa",
-  made_to_order: "Encomendar esta bolsa",
+  available: "Quero esta peça",
+  made_to_order: "Encomendar esta peça",
   sold_out: "Consultar disponibilidade",
 };
 
 function buildIntentSentence(status: ProductStatus, productName: string, variantLabel?: string | null) {
   const variantSuffix = variantLabel ? `, ${variantLabel}` : "";
 
+  // Sem artigo antes do nome ("a Maxi Pulseira", "o Colar"): o catálogo tem
+  // peças de ambos os gêneros e não há como saber qual usar a partir do nome.
   switch (status) {
     case "made_to_order":
-      return `Tenho interesse em encomendar a ${productName}${variantSuffix}. Poderia me informar prazo de produção e opções de personalização?`;
+      return `Tenho interesse em encomendar: ${productName}${variantSuffix}. Poderia me informar prazo de produção e opções de personalização?`;
     case "sold_out":
-      return `Gostaria de saber se a ${productName}${variantSuffix} tem previsão de reposição ou se é possível encomendar.`;
+      return `Gostaria de saber se esta peça tem previsão de reposição ou se é possível encomendar: ${productName}${variantSuffix}.`;
     case "available":
     default:
-      return `Tenho interesse na ${productName}${variantSuffix}.`;
+      return `Tenho interesse nesta peça: ${productName}${variantSuffix}.`;
   }
 }
 
