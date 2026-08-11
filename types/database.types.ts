@@ -170,6 +170,34 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["models"]["Insert"]>;
         Relationships: [];
       };
+      colors: {
+        Row: {
+          id: string;
+          store_id: string;
+          name: string;
+          slug: string;
+          hex: string;
+          hex_secondary: string | null;
+          status: ArchivableStatus;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          store_id: string;
+          name: string;
+          slug: string;
+          hex: string;
+          hex_secondary?: string | null;
+          status?: ArchivableStatus;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["colors"]["Insert"]>;
+        Relationships: [];
+      };
       products: {
         Row: {
           id: string;
@@ -259,7 +287,9 @@ export interface Database {
           id: string;
           product_id: string;
           name: string;
+          /** Texto livre legado; `color_id` é a fonte a partir da migration 0013. */
           color: string | null;
+          color_id: string | null;
           size: string | null;
           sku: string | null;
           price: number | null;
@@ -273,6 +303,7 @@ export interface Database {
           product_id: string;
           name: string;
           color?: string | null;
+          color_id?: string | null;
           size?: string | null;
           sku?: string | null;
           price?: number | null;

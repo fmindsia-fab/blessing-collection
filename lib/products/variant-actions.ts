@@ -7,7 +7,12 @@ import { getActiveStore } from "@/lib/store/get-active-store";
 
 const variantSchema = z.object({
   name: z.string().min(1, "Informe o nome da variação"),
-  color: z.string().optional(),
+  // Cor vem do cadastro (migration 0013). O campo de texto livre criava
+  // "Rose"/"Rosé" como cores distintas no filtro público.
+  colorId: z
+    .union([z.literal(""), z.uuid("Cor inválida")])
+    .optional()
+    .transform((value) => value || null),
   size: z.string().optional(),
   price: z.union([z.coerce.number().positive(), z.literal("")]).optional(),
   status: z.enum(["available", "sold_out"]),
@@ -43,22 +48,36 @@ export async function createVariant(
 ): Promise<VariantFormState> {
   const parsed = variantSchema.safeParse({
     name: formData.get("name"),
-    color: formData.get("color"),
+    colorId: formData.get("colorId") ?? "",
     size: formData.get("size"),
     price: formData.get("price") || undefined,
     status: formData.get("status"),
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
   if (!(await assertProductBelongsToStore(supabase, productId))) {
     return { error: "Produto não encontrado." };
   }
 
+  // O id da cor vem do formulário: confirma que é da loja ativa antes de
+  // gravar. A RLS bloquearia a leitura, mas a checagem é a defesa da aplicação.
+  if (parsed.data.colorId) {
+    const { data: color } = await supabase
+      .from("colors")
+      .select("id")
+      .eq("id", parsed.data.colorId)
+      .eq("store_id", store.id)
+      .maybeSingle();
+
+    if (!color) return { error: "Cor não encontrada." };
+  }
+
   const { error } = await supabase.from("product_variants").insert({
     product_id: productId,
     name: parsed.data.name,
-    color: parsed.data.color || null,
+    color_id: parsed.data.colorId,
     size: parsed.data.size || null,
     price: parsed.data.price || null,
     status: parsed.data.status,

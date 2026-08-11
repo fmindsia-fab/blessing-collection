@@ -32,38 +32,61 @@ async function withCoverImages(
   return new Map((images ?? []).map((img) => [img.product_id, img.url]));
 }
 
+export type ColorFilterOption = {
+  id: string;
+  name: string;
+  slug: string;
+  hex: string;
+  hexSecondary: string | null;
+  count: number;
+};
+
 /**
  * Cores em uso no catálogo, com quantas peças cada uma tem (PRD 3.2).
  *
  * Conta produtos distintos, não variantes: uma peça com duas variantes da
  * mesma cor apareceria como "2" e não bateria com o resultado do filtro.
+ *
+ * Só retorna cores que têm peça pública — mesma razão de `listModelsInUse`:
+ * uma opção sem resultado é um beco sem saída para a cliente.
  */
-export async function listAvailableColors(
-  storeId: string,
-): Promise<{ name: string; count: number }[]> {
+export async function listColorsInUse(storeId: string): Promise<ColorFilterOption[]> {
   const supabase = await createServerSupabaseClient();
 
-  const { data } = await supabase
-    .from("product_variants")
-    .select("color, product_id, products!inner(store_id, status)")
-    .eq("products.store_id", storeId)
-    .in("products.status", PUBLIC_STATUSES)
-    .neq("status", "archived")
-    .not("color", "is", null);
+  const [{ data: colors }, { data: variants }] = await Promise.all([
+    supabase
+      .from("colors")
+      .select("id, name, slug, hex, hex_secondary")
+      .eq("store_id", storeId)
+      .eq("status", "active")
+      .order("sort_order", { ascending: true }),
+    supabase
+      .from("product_variants")
+      .select("color_id, product_id, products!inner(store_id, status)")
+      .eq("products.store_id", storeId)
+      .in("products.status", PUBLIC_STATUSES)
+      .neq("status", "archived")
+      .not("color_id", "is", null),
+  ]);
 
   const productsByColor = new Map<string, Set<string>>();
-  for (const row of (data ?? []) as { color: string | null; product_id: string }[]) {
-    const color = row.color?.trim();
-    if (!color) continue;
-
-    const products = productsByColor.get(color) ?? new Set<string>();
+  for (const row of (variants ?? []) as { color_id: string | null; product_id: string }[]) {
+    if (!row.color_id) continue;
+    const products = productsByColor.get(row.color_id) ?? new Set<string>();
     products.add(row.product_id);
-    productsByColor.set(color, products);
+    productsByColor.set(row.color_id, products);
   }
 
-  return [...productsByColor.entries()]
-    .map(([name, products]) => ({ name, count: products.size }))
-    .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+  return (colors ?? [])
+    .filter((color) => productsByColor.has(color.id))
+    .map((color) => ({
+      id: color.id,
+      name: color.name,
+      slug: color.slug,
+      hex: color.hex,
+      hexSecondary: color.hex_secondary,
+      count: productsByColor.get(color.id)!.size,
+    }));
 }
 
 export async function listProducts({
@@ -73,7 +96,7 @@ export async function listProducts({
   collectionId,
   modelId,
   search,
-  color,
+  colorId,
   availability,
 }: {
   storeId: string;
@@ -82,7 +105,7 @@ export async function listProducts({
   collectionId?: string;
   modelId?: string;
   search?: string;
-  color?: string;
+  colorId?: string;
   availability?: string;
 }) {
   const supabase = await createServerSupabaseClient();
@@ -91,8 +114,8 @@ export async function listProducts({
 
   // Filtro por cor precisa de join com as variantes; sem ele, evitamos o join
   // para não pagar o custo em toda listagem.
-  const selectClause = color
-    ? "id, name, slug, price, status, product_variants!inner(color, status)"
+  const selectClause = colorId
+    ? "id, name, slug, price, status, product_variants!inner(color_id, status)"
     : "id, name, slug, price, status";
 
   let query = supabase
@@ -117,8 +140,8 @@ export async function listProducts({
   if (collectionId) query = query.eq("collection_id", collectionId);
   if (modelId) query = query.eq("model_id", modelId);
   if (search) query = query.ilike("name", `%${search}%`);
-  if (color) {
-    query = query.eq("product_variants.color", color).neq("product_variants.status", "archived");
+  if (colorId) {
+    query = query.eq("product_variants.color_id", colorId).neq("product_variants.status", "archived");
   }
 
   const { data, count, error } = await query;
@@ -251,7 +274,7 @@ export const getProductBySlug = cache(async (storeId: string, slug: string) => {
       .order("sort_order", { ascending: true }),
     supabase
       .from("product_variants")
-      .select("id, name, color, size, price, status, sort_order")
+      .select("id, name, color, color_id, size, price, status, sort_order")
       .eq("product_id", product.id)
       .neq("status", "archived")
       .order("sort_order", { ascending: true }),

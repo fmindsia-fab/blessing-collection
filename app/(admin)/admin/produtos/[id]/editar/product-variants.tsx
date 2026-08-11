@@ -1,11 +1,14 @@
 "use client";
 
 import { useActionState, useTransition } from "react";
+import Link from "next/link";
 import { createVariant, toggleVariantStatus, archiveVariant, type VariantFormState } from "@/lib/products/variant-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { VariantStatus } from "@/types/database.types";
+
+type StoreColor = { id: string; name: string; hex: string; hex_secondary: string | null };
 
 type ProductVariantsProps = {
   productId: string;
@@ -13,10 +16,12 @@ type ProductVariantsProps = {
     id: string;
     name: string;
     color: string | null;
+    color_id: string | null;
     size: string | null;
     price: number | null;
     status: VariantStatus;
   }[];
+  colors: StoreColor[];
 };
 
 const initialState: VariantFormState = {};
@@ -25,10 +30,12 @@ function formatPrice(price: number) {
   return price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-export function ProductVariants({ productId, variants }: ProductVariantsProps) {
+export function ProductVariants({ productId, variants, colors }: ProductVariantsProps) {
   const createAction = createVariant.bind(null, productId);
   const [state, formAction, isPending] = useActionState(createAction, initialState);
   const [isToggling, startTransition] = useTransition();
+
+  const colorById = new Map(colors.map((color) => [color.id, color]));
 
   return (
     <div className="flex flex-col gap-4">
@@ -39,14 +46,35 @@ export function ProductVariants({ productId, variants }: ProductVariantsProps) {
 
       {variants.length > 0 ? (
         <div className="flex flex-col divide-y divide-zinc-200 border-y border-zinc-200">
-          {variants.map((variant) => (
+          {variants.map((variant) => {
+            const color = variant.color_id ? colorById.get(variant.color_id) : undefined;
+
+            return (
             <div key={variant.id} className="flex items-center justify-between gap-4 py-3">
-              <div className="flex flex-col">
-                <span className="text-sm">{variant.name}</span>
-                <span className="text-xs text-zinc-500">
-                  {variant.price ? formatPrice(variant.price) : "Preço base"} ·{" "}
-                  {variant.status === "available" ? "Disponível" : "Esgotado"}
-                </span>
+              <div className="flex min-w-0 items-center gap-3">
+                {color ? (
+                  <span
+                    aria-hidden
+                    title={color.name}
+                    className="size-6 shrink-0 rounded-full border border-foreground/15"
+                    style={
+                      color.hex_secondary
+                        ? { background: `linear-gradient(135deg, ${color.hex} 50%, ${color.hex_secondary} 50%)` }
+                        : { backgroundColor: color.hex }
+                    }
+                  />
+                ) : null}
+                <div className="flex min-w-0 flex-col">
+                  <span className="truncate text-sm">{variant.name}</span>
+                  <span className="text-xs text-zinc-500">
+                    {variant.price ? formatPrice(variant.price) : "Preço base"} ·{" "}
+                    {variant.status === "available" ? "Disponível" : "Esgotado"}
+                    {color ? ` · ${color.name}` : ""}
+                    {/* Variante anterior à migration 0013 que não casou com
+                        nenhuma cor cadastrada: não aparece no filtro público. */}
+                    {!color && variant.color ? ` · ${variant.color} (sem cor cadastrada)` : ""}
+                  </span>
+                </div>
               </div>
               <div className="flex gap-2">
                 <Button
@@ -69,7 +97,8 @@ export function ProductVariants({ productId, variants }: ProductVariantsProps) {
                 </Button>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       ) : null}
 
@@ -84,7 +113,27 @@ export function ProductVariants({ productId, variants }: ProductVariantsProps) {
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="variant-color">Cor (opcional)</Label>
-          <Input id="variant-color" name="color" />
+          <select
+            id="variant-color"
+            name="colorId"
+            defaultValue=""
+            className="h-9 rounded-[var(--radius)] border border-input bg-background px-3 text-sm outline-none transition-colors focus-visible:border-foreground/40 focus-visible:ring-2 focus-visible:ring-[var(--gold)]/40"
+          >
+            <option value="">Sem cor</option>
+            {colors.map((color) => (
+              <option key={color.id} value={color.id}>
+                {color.name}
+              </option>
+            ))}
+          </select>
+          {colors.length === 0 ? (
+            <span className="text-xs text-muted-foreground">
+              Nenhuma cor cadastrada —{" "}
+              <Link href="/admin/cores" className="underline underline-offset-2">
+                cadastrar cores
+              </Link>
+            </span>
+          ) : null}
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="variant-size">Tamanho (opcional)</Label>

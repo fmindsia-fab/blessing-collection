@@ -4,6 +4,7 @@ import { getProductForAdmin } from "@/lib/products/admin-queries";
 import { listAllCategoriesForAdmin } from "@/lib/categories/queries";
 import { listAllCollectionsForAdmin } from "@/lib/collections/queries";
 import { listAllModelsForAdmin } from "@/lib/models/queries";
+import { listColors } from "@/lib/colors/queries";
 import { ProductForm } from "../../product-form";
 import { PageHeading } from "@/components/admin/page-heading";
 import { ProductImages } from "./product-images";
@@ -14,11 +15,12 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
   const { id } = await params;
   const store = await getActiveStore();
 
-  const [result, categories, collections, models] = await Promise.all([
+  const [result, categories, collections, models, colors] = await Promise.all([
     getProductForAdmin(store.id, id),
     listAllCategoriesForAdmin(store.id),
     listAllCollectionsForAdmin(store.id),
     listAllModelsForAdmin(store.id),
+    listColors(store.id),
   ]);
 
   if (!result) notFound();
@@ -40,7 +42,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
 
       <ProductImages productId={product.id} images={images} />
 
-      <ProductVariants productId={product.id} variants={variants} />
+      <ProductVariants productId={product.id} variants={variants} colors={colors} />
     </div>
   );
 }
