@@ -226,6 +226,64 @@ export async function moveProduct(productId: string, direction: "up" | "down") {
   revalidatePath("/");
 }
 
+/**
+ * Grava a nova ordem de um grupo inteiro após arrastar e soltar.
+ *
+ * Recebe os ids na ordem final em vez de uma troca par a par: arrastar move um
+ * item várias posições de uma vez, e reproduzir isso com trocas sucessivas
+ * geraria uma escrita por passo.
+ *
+ * As peças só trocam de posição entre si — as demais categorias mantêm as
+ * posições que já tinham, porque o painel arrasta dentro de um grupo só.
+ */
+export async function reorderProducts(orderedIds: string[]) {
+  if (orderedIds.length < 2) return;
+
+  const store = await getActiveStore();
+  const supabase = await createServerSupabaseClient();
+
+  const { data: products } = await supabase
+    .from("products")
+    .select("id, sort_order, created_at")
+    .eq("store_id", store.id)
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: false });
+
+  if (!products) return;
+
+  // Os ids chegam do client: descarta qualquer um que não seja da loja ativa
+  // antes de escrever. A RLS bloquearia a gravação, mas a checagem explícita é
+  // a defesa da aplicação (regra do CLAUDE.md).
+  const known = new Set(products.map((p) => p.id));
+  const moving = orderedIds.filter((id) => known.has(id));
+  if (moving.length < 2) return;
+
+  // As posições que o grupo ocupa hoje na lista global; o conteúdo delas é
+  // substituído pela nova ordem, sem deslocar as outras categorias.
+  const slots = products
+    .map((product, index) => (moving.includes(product.id) ? index : -1))
+    .filter((index) => index !== -1);
+
+  const reordered = [...products];
+  slots.forEach((slot, i) => {
+    reordered[slot] = products.find((p) => p.id === moving[i])!;
+  });
+
+  await Promise.all(
+    reordered.map((product, position) =>
+      supabase
+        .from("products")
+        .update({ sort_order: position })
+        .eq("id", product.id)
+        .eq("store_id", store.id),
+    ),
+  );
+
+  revalidatePath("/admin/produtos");
+  revalidatePath("/produtos");
+  revalidatePath("/");
+}
+
 // "Excluir" no painel nunca é DELETE físico — sempre soft delete via status.
 export async function deactivateProduct(productId: string) {
   const store = await getActiveStore();

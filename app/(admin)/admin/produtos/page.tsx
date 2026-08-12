@@ -5,6 +5,7 @@ import { PageHeading } from "@/components/admin/page-heading";
 import { ActionLink } from "@/components/ui/action";
 import { ProductRow } from "./product-row";
 import { CategoryGroup } from "./category-group";
+import { SortableList } from "./sortable-list";
 
 const STATUS_LABEL: Record<string, string> = {
   available: "Disponível",
@@ -76,17 +77,22 @@ export default async function AdminProductsPage() {
               // conteúdo que a proprietária precisa ver toda vez.
               defaultOpen={group.key !== SEM_CATEGORIA}
             >
-              {group.items.map((product, index) => (
-                <ProductRow
-                  key={product.id}
-                  product={product}
-                  statusLabel={STATUS_LABEL[product.status]}
-                  // Primeiro/último dentro do grupo: é entre vizinhos da mesma
-                  // categoria que `moveProduct` troca as posições.
-                  isFirst={index === 0}
-                  isLast={index === group.items.length - 1}
-                />
-              ))}
+              {/* Arrastar acontece dentro do grupo: as peças de uma categoria
+                  trocam de posição entre si, sem afetar as outras seções. */}
+              <SortableList items={group.items}>
+                {(product, index, drag) => (
+                  <ProductRow
+                    key={product.id}
+                    product={product}
+                    statusLabel={STATUS_LABEL[product.status]}
+                    // Primeiro/último dentro do grupo: é entre vizinhos da mesma
+                    // categoria que `moveProduct` troca as posições.
+                    isFirst={index === 0}
+                    isLast={index === group.items.length - 1}
+                    drag={drag}
+                  />
+                )}
+              </SortableList>
             </CategoryGroup>
           ))}
         </div>

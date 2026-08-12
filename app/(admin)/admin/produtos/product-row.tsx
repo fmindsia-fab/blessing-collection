@@ -2,10 +2,13 @@
 
 import { useTransition } from "react";
 import Link from "next/link";
+import { GripVerticalIcon } from "lucide-react";
 import { deactivateProduct, restoreProduct, moveProduct } from "@/lib/products/actions";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/admin/status-pill";
 import { ReorderButtons } from "@/components/admin/reorder-buttons";
+import { cn } from "@/lib/utils";
+import type { DragHandlers } from "./sortable-list";
 import type { ProductStatus } from "@/types/database.types";
 
 type ProductRowProps = {
@@ -22,19 +25,44 @@ type ProductRowProps = {
   statusLabel: string;
   isFirst: boolean;
   isLast: boolean;
+  drag?: DragHandlers;
 };
 
 function formatPrice(price: number) {
   return price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-export function ProductRow({ product, statusLabel, isFirst, isLast }: ProductRowProps) {
+export function ProductRow({ product, statusLabel, isFirst, isLast, drag }: ProductRowProps) {
   const [isPending, startTransition] = useTransition();
   const isInactive = product.status === "inactive";
 
   return (
-    <div className="flex items-center gap-4 rounded-[var(--radius-image)] border border-border bg-card px-5 py-4 shadow-sm transition-all duration-300 hover:border-foreground/25 hover:shadow-md">
-      {/* Ordem de exibição no catálogo (PRD 3.7). */}
+    <div
+      draggable={drag?.draggable}
+      onDragStart={drag?.onDragStart}
+      onDragOver={drag?.onDragOver}
+      onDrop={drag?.onDrop}
+      onDragEnd={drag?.onDragEnd}
+      className={cn(
+        "flex items-center gap-3 rounded-[var(--radius-image)] border border-border bg-card px-5 py-4 shadow-sm transition-all duration-300 hover:border-foreground/25 hover:shadow-md",
+        drag?.isDragging && "opacity-40",
+        drag?.isOver && !drag.isDragging && "border-[var(--gold)]",
+      )}
+    >
+      {/* A alça só sinaliza que a linha inteira arrasta — `draggable` está no
+          container, senão soltar sobre o próprio card não seria detectado. */}
+      {drag ? (
+        <span
+          aria-hidden
+          title="Arraste para reordenar"
+          className="hidden cursor-grab text-muted-foreground/50 transition-colors hover:text-foreground active:cursor-grabbing sm:block"
+        >
+          <GripVerticalIcon className="size-4" />
+        </span>
+      ) : null}
+
+      {/* Alternativa por clique e teclado: `draggable` não é operável sem
+          mouse, e no celular arrastar numa página que rola é impreciso. */}
       <ReorderButtons
         label={product.name}
         isFirst={isFirst}
