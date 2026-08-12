@@ -11,17 +11,19 @@ import { cn } from "@/lib/utils";
 import type { DragHandlers } from "./sortable-list";
 import type { ProductStatus } from "@/types/database.types";
 
+export type AdminProduct = {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  status: ProductStatus;
+  is_featured: boolean;
+  is_new_arrival: boolean;
+  category_id: string | null;
+};
+
 type ProductRowProps = {
-  product: {
-    id: string;
-    name: string;
-    slug: string;
-    price: number;
-    status: ProductStatus;
-    is_featured: boolean;
-    is_new_arrival: boolean;
-    category_id: string | null;
-  };
+  product: AdminProduct;
   statusLabel: string;
   isFirst: boolean;
   isLast: boolean;
@@ -38,7 +40,7 @@ export function ProductRow({ product, statusLabel, isFirst, isLast, drag }: Prod
 
   return (
     <div
-      draggable={drag?.draggable}
+      draggable={drag !== undefined}
       onDragStart={drag?.onDragStart}
       onDragOver={drag?.onDragOver}
       onDrop={drag?.onDrop}

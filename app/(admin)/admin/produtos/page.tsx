@@ -3,7 +3,6 @@ import { listAllProductsForAdmin } from "@/lib/products/admin-queries";
 import { listAllCategoriesForAdmin } from "@/lib/categories/queries";
 import { PageHeading } from "@/components/admin/page-heading";
 import { ActionLink } from "@/components/ui/action";
-import { ProductRow } from "./product-row";
 import { CategoryGroup } from "./category-group";
 import { SortableList } from "./sortable-list";
 
@@ -79,20 +78,7 @@ export default async function AdminProductsPage() {
             >
               {/* Arrastar acontece dentro do grupo: as peças de uma categoria
                   trocam de posição entre si, sem afetar as outras seções. */}
-              <SortableList items={group.items}>
-                {(product, index, drag) => (
-                  <ProductRow
-                    key={product.id}
-                    product={product}
-                    statusLabel={STATUS_LABEL[product.status]}
-                    // Primeiro/último dentro do grupo: é entre vizinhos da mesma
-                    // categoria que `moveProduct` troca as posições.
-                    isFirst={index === 0}
-                    isLast={index === group.items.length - 1}
-                    drag={drag}
-                  />
-                )}
-              </SortableList>
+              <SortableList items={group.items} statusLabels={STATUS_LABEL} />
             </CategoryGroup>
           ))}
         </div>

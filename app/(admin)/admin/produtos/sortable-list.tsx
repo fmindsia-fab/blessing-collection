@@ -2,26 +2,28 @@
 
 import { useState, useTransition } from "react";
 import { reorderProducts } from "@/lib/products/actions";
-
-type Item = { id: string };
+import { ProductRow, type AdminProduct } from "./product-row";
 
 /**
- * Lista reordenável por arrastar e soltar, com a HTML Drag and Drop API.
+ * Lista de peças reordenável por arrastar e soltar, com a HTML Drag and Drop
+ * API.
  *
- * Sem biblioteca: a API nativa cobre o caso (lista vertical, um nível, sem
- * arrastar entre grupos) e uma dependência de drag-and-drop custaria mais em
- * peso e manutenção do que resolve aqui.
+ * Sem biblioteca: a lista é vertical, de um nível e sem arraste entre grupos —
+ * a API nativa cobre o caso, e uma dependência custaria mais em peso e
+ * manutenção do que resolve aqui.
  *
- * A ordem fica em estado local durante o arraste para o item acompanhar o
- * cursor; ao soltar, grava no servidor. As setas continuam funcionando e são
- * o caminho de quem usa teclado — `draggable` não é operável sem mouse.
+ * Monta as linhas em vez de receber uma função de render: a página é Server
+ * Component, e função não atravessa a fronteira servidor→cliente.
+ *
+ * A ordem fica em estado local durante o arraste para a linha acompanhar o
+ * cursor; ao soltar, grava no servidor.
  */
-export function SortableList<T extends Item>({
+export function SortableList({
   items,
-  children,
+  statusLabels,
 }: {
-  items: T[];
-  children: (item: T, index: number, dragHandlers: DragHandlers) => React.ReactNode;
+  items: AdminProduct[];
+  statusLabels: Record<string, string>;
 }) {
   const [order, setOrder] = useState(items);
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -30,8 +32,9 @@ export function SortableList<T extends Item>({
 
   // O servidor é a fonte da verdade: quando a página revalida (após gravar, ou
   // ao desativar uma peça), a ordem local precisa acompanhar. Ajustar durante o
-  // render em vez de num efeito evita o render extra com a lista defasada —
-  // e não pode acontecer no meio de um arraste, que descartaria o movimento.
+  // render em vez de num efeito evita o render extra com a lista defasada — e
+  // não pode acontecer no meio de um arraste, que descartaria o movimento.
+  //
   // Compara os ids, não a referência: o servidor devolve um array novo a cada
   // render, e comparar por identidade recriaria o estado sem necessidade.
   const signature = items.map((item) => item.id).join("|");
@@ -39,10 +42,6 @@ export function SortableList<T extends Item>({
   if (signature !== syncedWith && !draggingId) {
     setSyncedWith(signature);
     setOrder(items);
-  }
-
-  function handleDragStart(id: string) {
-    setDraggingId(id);
   }
 
   function handleDragOver(id: string) {
@@ -74,32 +73,39 @@ export function SortableList<T extends Item>({
 
   return (
     <>
-      {order.map((item, index) =>
-        children(item, index, {
-          draggable: true,
-          isDragging: draggingId === item.id,
-          isOver: overId === item.id,
-          onDragStart: (event) => {
-            // Firefox só inicia o arraste se houver dado no dataTransfer.
-            event.dataTransfer.setData("text/plain", item.id);
-            event.dataTransfer.effectAllowed = "move";
-            handleDragStart(item.id);
-          },
-          onDragOver: (event) => {
-            event.preventDefault();
-            event.dataTransfer.dropEffect = "move";
-            handleDragOver(item.id);
-          },
-          onDrop: (event) => event.preventDefault(),
-          onDragEnd: handleDragEnd,
-        }),
-      )}
+      {order.map((product, index) => (
+        <ProductRow
+          key={product.id}
+          product={product}
+          statusLabel={statusLabels[product.status]}
+          // Primeiro/último dentro do grupo: é entre vizinhos da mesma
+          // categoria que `moveProduct` troca as posições.
+          isFirst={index === 0}
+          isLast={index === order.length - 1}
+          drag={{
+            isDragging: draggingId === product.id,
+            isOver: overId === product.id,
+            onDragStart: (event) => {
+              // Firefox só inicia o arraste se houver dado no dataTransfer.
+              event.dataTransfer.setData("text/plain", product.id);
+              event.dataTransfer.effectAllowed = "move";
+              setDraggingId(product.id);
+            },
+            onDragOver: (event) => {
+              event.preventDefault();
+              event.dataTransfer.dropEffect = "move";
+              handleDragOver(product.id);
+            },
+            onDrop: (event) => event.preventDefault(),
+            onDragEnd: handleDragEnd,
+          }}
+        />
+      ))}
     </>
   );
 }
 
 export type DragHandlers = {
-  draggable: boolean;
   isDragging: boolean;
   isOver: boolean;
   onDragStart: (event: React.DragEvent) => void;
