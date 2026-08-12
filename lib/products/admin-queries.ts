@@ -5,7 +5,7 @@ export async function listAllProductsForAdmin(storeId: string) {
   const supabase = await createServerSupabaseClient();
   const { data } = await supabase
     .from("products")
-    .select("id, name, slug, price, status, is_featured, is_new_arrival")
+    .select("id, name, slug, price, status, is_featured, is_new_arrival, category_id")
     .eq("store_id", storeId)
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: false });

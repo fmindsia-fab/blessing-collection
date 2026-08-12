@@ -17,6 +17,7 @@ type ProductRowProps = {
     status: ProductStatus;
     is_featured: boolean;
     is_new_arrival: boolean;
+    category_id: string | null;
   };
   statusLabel: string;
   isFirst: boolean;

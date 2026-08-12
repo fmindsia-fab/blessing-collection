@@ -174,10 +174,10 @@ export async function refreshProductSlug(productId: string): Promise<ProductForm
 /**
  * Move um produto na ordem de exibição do catálogo (PRD 3.7).
  *
- * A ordem vale para a loja inteira, então a troca acontece entre vizinhos na
- * mesma listagem que o painel mostra. Reescreve `sort_order` de todos para
- * manter a sequência densa — produtos criados depois nascem com 0 e ficariam
- * empatados, tornando a troca por índice imprevisível.
+ * A ordem vale para a loja inteira, mas a troca acontece entre vizinhos da
+ * mesma categoria — é assim que o painel agrupa a listagem. Reescreve
+ * `sort_order` de todos para manter a sequência densa: produtos criados depois
+ * nascem com 0 e ficariam empatados, tornando a troca por índice imprevisível.
  */
 export async function moveProduct(productId: string, direction: "up" | "down") {
   const store = await getActiveStore();
@@ -185,7 +185,7 @@ export async function moveProduct(productId: string, direction: "up" | "down") {
 
   const { data: products } = await supabase
     .from("products")
-    .select("id, sort_order, created_at")
+    .select("id, sort_order, created_at, category_id")
     .eq("store_id", store.id)
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: false });
@@ -193,8 +193,20 @@ export async function moveProduct(productId: string, direction: "up" | "down") {
   if (!products || products.length < 2) return;
 
   const index = products.findIndex((p) => p.id === productId);
-  const target = direction === "up" ? index - 1 : index + 1;
-  if (index === -1 || target < 0 || target >= products.length) return;
+  if (index === -1) return;
+
+  // O painel agrupa a listagem por categoria, então a seta troca com o vizinho
+  // do mesmo grupo — não com o vizinho na lista global. Sem isso, subir a
+  // primeira peça de "Acessórios" a mandaria para dentro de "Bolsas", e a
+  // seta faria algo diferente do que a tela mostra.
+  const categoryId = products[index].category_id;
+  const sameCategory = products.filter((p) => p.category_id === categoryId);
+
+  const indexInGroup = sameCategory.findIndex((p) => p.id === productId);
+  const targetInGroup = direction === "up" ? indexInGroup - 1 : indexInGroup + 1;
+  if (targetInGroup < 0 || targetInGroup >= sameCategory.length) return;
+
+  const target = products.findIndex((p) => p.id === sameCategory[targetInGroup].id);
 
   const reordered = [...products];
   [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
