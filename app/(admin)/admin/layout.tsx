@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: "/admin/colecoes", label: "Coleções" },
   { href: "/admin/modelos", label: "Modelos" },
   { href: "/admin/cores", label: "Cores" },
+  { href: "/admin/precificacao", label: "Precificação" },
   { href: "/admin/analytics", label: "Analytics" },
   { href: "/admin/configuracoes", label: "Configurações" },
 ];

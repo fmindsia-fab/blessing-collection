@@ -6,6 +6,9 @@ export type ProductStatus = "available" | "made_to_order" | "sold_out" | "inacti
 export type VariantStatus = "available" | "sold_out" | "archived";
 export type ArchivableStatus = "active" | "archived";
 export type StoreStatus = "active" | "inactive";
+/** MEI não entra como percentual: o DAS é custo fixo mensal (migration 0014). */
+export type TaxRegime = "none" | "mei" | "simples" | "other";
+export type PricingMethodValue = "margin" | "markup";
 /**
  * Valor da lista curada em `lib/store/fonts.ts`. Deixou de ser union fechada
  * na migration 0010: a lista cresce sem migration, e o check do banco saiu.
@@ -61,6 +64,14 @@ export interface Database {
           /** Fonte própria (.woff2 no Storage). Precede font_family quando presente. */
           custom_font_url: string | null;
           custom_font_name: string | null;
+          /** Precificação (migration 0014) — valores mensais, nunca por hora. */
+          monthly_pay: number;
+          monthly_fixed_cost: number;
+          productive_hours_per_month: number;
+          tax_regime: TaxRegime;
+          tax_percent: number;
+          default_pricing_method: PricingMethodValue;
+          default_margin_percent: number;
           status: StoreStatus;
           created_at: string;
           updated_at: string;
@@ -81,6 +92,13 @@ export interface Database {
           font_family?: FontFamily;
           custom_font_url?: string | null;
           custom_font_name?: string | null;
+          monthly_pay?: number;
+          monthly_fixed_cost?: number;
+          productive_hours_per_month?: number;
+          tax_regime?: TaxRegime;
+          tax_percent?: number;
+          default_pricing_method?: PricingMethodValue;
+          default_margin_percent?: number;
           status?: StoreStatus;
           created_at?: string;
           updated_at?: string;
@@ -170,6 +188,58 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["models"]["Insert"]>;
         Relationships: [];
       };
+      payment_methods: {
+        Row: {
+          id: string;
+          store_id: string;
+          label: string;
+          fee_percent: number;
+          installments: number;
+          status: ArchivableStatus;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          store_id: string;
+          label: string;
+          fee_percent?: number;
+          installments?: number;
+          status?: ArchivableStatus;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["payment_methods"]["Insert"]>;
+        Relationships: [];
+      };
+      product_materials: {
+        Row: {
+          id: string;
+          product_id: string;
+          description: string;
+          quantity: number;
+          unit: string;
+          unit_cost: number;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          product_id: string;
+          description: string;
+          quantity?: number;
+          unit?: string;
+          unit_cost?: number;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["product_materials"]["Insert"]>;
+        Relationships: [];
+      };
       colors: {
         Row: {
           id: string;
@@ -225,6 +295,12 @@ export interface Database {
           sort_order: number;
           seo_title: string | null;
           seo_description: string | null;
+          /** Precificação (migration 0014) — interno, nunca exposto no catálogo. */
+          production_hours: number;
+          other_costs: number;
+          /** null herda o padrão da loja. */
+          pricing_method: PricingMethodValue | null;
+          pricing_rate_percent: number | null;
           archived_at: string | null;
           created_at: string;
           updated_at: string;
@@ -251,6 +327,10 @@ export interface Database {
           sort_order?: number;
           seo_title?: string | null;
           seo_description?: string | null;
+          production_hours?: number;
+          other_costs?: number;
+          pricing_method?: PricingMethodValue | null;
+          pricing_rate_percent?: number | null;
           archived_at?: string | null;
           created_at?: string;
           updated_at?: string;

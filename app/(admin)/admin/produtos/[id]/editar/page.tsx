@@ -5,23 +5,33 @@ import { listAllCategoriesForAdmin } from "@/lib/categories/queries";
 import { listAllCollectionsForAdmin } from "@/lib/collections/queries";
 import { listAllModelsForAdmin } from "@/lib/models/queries";
 import { listColors } from "@/lib/colors/queries";
+import {
+  getStorePricingSettings,
+  listPaymentMethods,
+  listProductMaterials,
+} from "@/lib/pricing/queries";
 import { ProductForm } from "../../product-form";
 import { PageHeading } from "@/components/admin/page-heading";
 import { ProductImages } from "./product-images";
 import { ProductSlug } from "./product-slug";
 import { ProductVariants } from "./product-variants";
+import { ProductPricing } from "./product-pricing";
 
 export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const store = await getActiveStore();
 
-  const [result, categories, collections, models, colors] = await Promise.all([
-    getProductForAdmin(store.id, id),
-    listAllCategoriesForAdmin(store.id),
-    listAllCollectionsForAdmin(store.id),
-    listAllModelsForAdmin(store.id),
-    listColors(store.id),
-  ]);
+  const [result, categories, collections, models, colors, pricing, paymentMethods, materials] =
+    await Promise.all([
+      getProductForAdmin(store.id, id),
+      listAllCategoriesForAdmin(store.id),
+      listAllCollectionsForAdmin(store.id),
+      listAllModelsForAdmin(store.id),
+      listColors(store.id),
+      getStorePricingSettings(store.id),
+      listPaymentMethods(store.id),
+      listProductMaterials(id),
+    ]);
 
   if (!result) notFound();
 
@@ -43,6 +53,24 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
       <ProductImages productId={product.id} images={images} />
 
       <ProductVariants productId={product.id} variants={variants} colors={colors} />
+
+      <div className="border-t border-border pt-10">
+        <ProductPricing
+          productId={product.id}
+          currentPrice={product.price}
+          productionHours={product.production_hours}
+          otherCosts={product.other_costs}
+          pricingMethod={product.pricing_method}
+          pricingRatePercent={product.pricing_rate_percent}
+          materials={materials}
+          rates={pricing.rates}
+          paymentMethods={paymentMethods}
+          taxBasisPoints={pricing.taxBasisPoints}
+          storeDefaultMethod={pricing.defaultMethod}
+          storeDefaultRate={pricing.defaultRatePercent}
+          hasLaborConfigured={pricing.rates.totalPerHourCents > 0}
+        />
+      </div>
     </div>
   );
 }
