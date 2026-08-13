@@ -4,10 +4,17 @@ import { getActiveStore } from "@/lib/store/get-active-store";
 import { getFeaturedProducts, getNewArrivals } from "@/lib/products/queries";
 import { listCategories } from "@/lib/categories/queries";
 import { listCollections } from "@/lib/collections/queries";
+import { pickHeroProduct } from "@/lib/catalog/hero";
 import { ProductCard } from "@/components/catalog/product-card";
 import { SectionHeading } from "@/components/catalog/section-heading";
 import { ActionLink } from "@/components/ui/action";
 import type { Metadata } from "next";
+
+// A capa é sorteada a cada visita: sem isto o Next poderia servir uma versão
+// em cache e todo mundo veria a mesma peça. Hoje a rota já é dinâmica porque o
+// cliente Supabase lê cookies, mas depender disso deixaria o sorteio congelar
+// silenciosamente se essa leitura mudasse.
+export const dynamic = "force-dynamic";
 
 // Título e preview de compartilhamento da home — antes herdava o metadata
 // genérico do layout raiz, sem imagem nem descrição da loja.
@@ -39,8 +46,9 @@ export default async function HomePage() {
     listCollections(store.id),
   ]);
 
-  // A primeira peça em destaque vira a imagem de capa do editorial.
-  const heroProduct = featured[0] ?? newArrivals[0] ?? null;
+  // A capa sorteia entre destaques e lançamentos a cada visita: quem volta ao
+  // catálogo vê uma peça diferente em vez da mesma foto sempre.
+  const heroProduct = pickHeroProduct(featured, newArrivals);
 
   return (
     <main className="flex flex-1 flex-col">

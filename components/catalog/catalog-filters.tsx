@@ -84,7 +84,10 @@ function FilterDropdown({
   const isActive = Boolean(activeLabel);
 
   return (
-    <div ref={containerRef} className="relative">
+    // `static` no celular: assim o painel abaixo se posiciona contra a barra
+    // inteira (que é `relative`) e ocupa a largura dela, em vez de se ancorar
+    // neste botão e escapar da tela.
+    <div ref={containerRef} className="static sm:relative">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -102,9 +105,13 @@ function FilterDropdown({
         />
       </button>
 
+      {/* No celular o painel ocupa a faixa inteira da barra em vez de se
+          centralizar no botão: centralizado, o painel do primeiro filtro saía
+          ~58px para fora da tela. A partir de sm há espaço para centralizar.
+          A barra tem `relative` para servir de referência a este `inset-x-0`. */}
       {open ? (
-        <div className="absolute left-1/2 top-[calc(100%+0.5rem)] z-40 w-[min(20rem,calc(100vw-3rem))] -translate-x-1/2 rounded-[var(--radius)] border border-border bg-card p-2 shadow-lg">
-          <div className="flex max-h-[min(22rem,60vh)] flex-col gap-0.5 overflow-y-auto">
+        <div className="absolute inset-x-0 top-[calc(100%+0.5rem)] z-40 rounded-[var(--radius)] border border-border bg-card p-2 shadow-lg sm:inset-x-auto sm:left-1/2 sm:w-80 sm:-translate-x-1/2">
+          <div className="flex max-h-[min(22rem,50vh)] flex-col gap-0.5 overflow-y-auto">
             {children(() => setOpen(false))}
           </div>
         </div>
@@ -193,7 +200,9 @@ export function CatalogFilters({
 
   return (
     <div className="flex flex-col items-center gap-3 border-y border-border py-5">
-      <div className="flex flex-wrap items-center justify-center gap-2">
+      {/* `relative` é a referência do painel no celular, onde ele ocupa a
+          largura da barra em vez de se ancorar no próprio botão. */}
+      <div className="relative flex flex-wrap items-center justify-center gap-2">
         {showCategory ? (
           <FilterDropdown label="Categoria" activeLabel={selectedCategory?.name}>
             {(close) =>
