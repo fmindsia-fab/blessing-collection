@@ -2,7 +2,7 @@ import { cache } from "react";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 const PUBLIC_STATUSES = ["available", "made_to_order", "sold_out"] as const;
-const PAGE_SIZE = 12;
+export const PAGE_SIZE = 12;
 
 export type ProductListItem = {
   id: string;
@@ -109,8 +109,11 @@ export async function listProducts({
   availability?: string;
 }) {
   const supabase = await createServerSupabaseClient();
-  const from = (page - 1) * PAGE_SIZE;
-  const to = from + PAGE_SIZE - 1;
+  // "Carregar mais" acumula: a página 2 traz as 24 primeiras peças, não as 12
+  // da segunda fatia. Buscar só a fatia trocaria a lista em vez de estendê-la,
+  // e a cliente perderia de vista o que já tinha rolado.
+  const from = 0;
+  const to = page * PAGE_SIZE - 1;
 
   // Filtro por cor precisa de join com as variantes; sem ele, evitamos o join
   // para não pagar o custo em toda listagem.

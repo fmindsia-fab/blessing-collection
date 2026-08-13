@@ -1,5 +1,5 @@
 import { getActiveStore } from "@/lib/store/get-active-store";
-import { listColorsInUse, listProducts } from "@/lib/products/queries";
+import { listColorsInUse, listProducts, PAGE_SIZE } from "@/lib/products/queries";
 import { listModelsInUse } from "@/lib/models/queries";
 import { listCategoriesInUse } from "@/lib/categories/queries";
 import { ProductCard } from "@/components/catalog/product-card";
@@ -57,6 +57,10 @@ export default async function ProductsPage({
   });
 
   const isEmpty = products.length === 0;
+
+  // Quantas peças já estavam na tela antes desta carga — usado para animar só
+  // as novas.
+  const previousCount = (page - 1) * PAGE_SIZE;
 
   // Preserva todos os filtros ao paginar.
   const nextPageQuery = new URLSearchParams({ page: String(page + 1) });
@@ -130,7 +134,12 @@ export default async function ProductsPage({
           {products.map((product, index) => (
             <ProductCard
               key={product.id}
-              index={index}
+              anchorId={`peca-${index}`}
+              // A cascata de entrada conta a partir da primeira peça recém
+              // carregada: escalonar pelo índice absoluto atrasaria demais as
+              // peças da página 3 em diante, e reanimaria as que já estavam
+              // na tela.
+              index={Math.max(0, index - previousCount)}
               slug={product.slug}
               name={product.name}
               price={product.price}
@@ -142,10 +151,18 @@ export default async function ProductsPage({
       )}
 
       {hasMore ? (
-        <div className="flex justify-center pt-6">
-          <ActionLink href={`/produtos?${nextPageQuery.toString()}`} variant="outline">
+        <div className="flex flex-col items-center gap-3 pt-6">
+          {/* Âncora na primeira peça nova: sem ela o navegador volta ao topo e
+              a cliente teria que rolar de novo tudo o que já viu. */}
+          <ActionLink
+            href={`/produtos?${nextPageQuery.toString()}#peca-${products.length}`}
+            variant="outline"
+          >
             Carregar mais
           </ActionLink>
+          <span className="text-[0.6875rem] uppercase tracking-[0.16em] text-muted-foreground">
+            {products.length} de {total}
+          </span>
         </div>
       ) : null}
     </main>

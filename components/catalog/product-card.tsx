@@ -11,6 +11,8 @@ type ProductCardProps = {
   coverImageUrl: string | null;
   /** Índice na grade — escalona a entrada, criando a cascata editorial. */
   index?: number;
+  /** Alvo de rolagem do "Carregar mais", para não voltar ao topo. */
+  anchorId?: string;
 };
 
 const STATUS_BADGE: Record<ProductStatus, string | null> = {
@@ -32,13 +34,15 @@ export function ProductCard({
   status,
   coverImageUrl,
   index = 0,
+  anchorId,
 }: ProductCardProps) {
   const badge = STATUS_BADGE[status];
 
   return (
     <Link
+      id={anchorId}
       href={`/produtos/${slug}`}
-      className="group reveal flex flex-col outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-4 focus-visible:ring-offset-background"
+      className="group reveal flex scroll-mt-24 flex-col outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-4 focus-visible:ring-offset-background"
       style={{ animationDelay: `${Math.min(index, 8) * 60}ms` }}
     >
       <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[var(--radius-image)] bg-secondary shadow-sm transition-shadow duration-500 group-hover:shadow-lg">
