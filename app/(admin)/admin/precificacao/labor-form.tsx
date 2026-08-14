@@ -47,6 +47,13 @@ export function LaborForm({ settings }: { settings: Settings }) {
 
   const incidesOnSale = regime === "simples" || regime === "other";
 
+  // Até 12h por mês é menos de 3h por semana — plausível para quem produz por
+  // encomenda esporádica, mas na prática quase sempre é a hora diária digitada
+  // no lugar do total. O aviso pergunta em vez de bloquear: quem produz pouco
+  // mesmo só ignora.
+  const numericHours = Number(hours) || 0;
+  const looksLikeDailyHours = numericHours > 0 && numericHours <= 12;
+
   return (
     <form action={formAction} className="flex flex-col gap-6">
       <fieldset className="flex flex-col gap-4">
@@ -85,7 +92,7 @@ export function LaborForm({ settings }: { settings: Settings }) {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="productiveHours">Horas produtivas no mês</Label>
+            <Label htmlFor="productiveHours">Total de horas produtivas no mês</Label>
             <Input
               id="productiveHours"
               name="productiveHours"
@@ -95,29 +102,47 @@ export function LaborForm({ settings }: { settings: Settings }) {
               max="744"
               value={hours}
               onChange={(e) => setHours(e.target.value)}
-              placeholder="100"
+              placeholder="130"
             />
+            {/* O exemplo com a conta explícita evita o erro de digitar a hora
+                diária: "5" no lugar de 130 multiplicaria o valor da hora por 26
+                e deixaria a peça impagável. */}
             <span className="text-xs text-muted-foreground">
-              Só o tempo com a peça na mão — não conte atendimento, fotos e correio.
+              O mês inteiro, não o dia. Ex.: 5h por dia × 6 dias por semana ≈ 130h/mês.
+              <br />
+              Só o tempo com a peça na mão — atendimento, fotos e correio não entram.
             </span>
           </div>
         </div>
 
         {rates.totalPerHourCents > 0 ? (
-          <dl className="flex flex-wrap gap-x-8 gap-y-2 rounded-[var(--radius)] bg-secondary/60 px-5 py-4 text-sm">
-            <div className="flex gap-2">
-              <dt className="text-muted-foreground">Mão de obra/hora</dt>
-              <dd className="tabular-nums">{formatBRL(rates.laborPerHourCents)}</dd>
-            </div>
-            <div className="flex gap-2">
-              <dt className="text-muted-foreground">Custo fixo/hora</dt>
-              <dd className="tabular-nums">{formatBRL(rates.fixedCostPerHourCents)}</dd>
-            </div>
-            <div className="flex gap-2 font-medium">
-              <dt>Hora produtiva</dt>
-              <dd className="tabular-nums">{formatBRL(rates.totalPerHourCents)}</dd>
-            </div>
-          </dl>
+          <div className="flex flex-col gap-2">
+            <dl className="flex flex-wrap gap-x-8 gap-y-2 rounded-[var(--radius)] bg-secondary/60 px-5 py-4 text-sm">
+              <div className="flex gap-2">
+                <dt className="text-muted-foreground">Mão de obra/hora</dt>
+                <dd className="tabular-nums">{formatBRL(rates.laborPerHourCents)}</dd>
+              </div>
+              <div className="flex gap-2">
+                <dt className="text-muted-foreground">Custo fixo/hora</dt>
+                <dd className="tabular-nums">{formatBRL(rates.fixedCostPerHourCents)}</dd>
+              </div>
+              <div className="flex gap-2 font-medium">
+                <dt>Hora produtiva</dt>
+                <dd className="tabular-nums">{formatBRL(rates.totalPerHourCents)}</dd>
+              </div>
+            </dl>
+
+            {/* Rede de proteção para quem não leu o apoio: um número baixo é
+                quase sempre a hora diária no lugar do total do mês, e o
+                resultado absurdo aparece aqui antes de contaminar as peças. */}
+            {looksLikeDailyHours ? (
+              <p className="rounded-[var(--radius)] border border-[var(--gold)] px-4 py-3 text-xs">
+                <strong>{hours}h no mês inteiro?</strong> Isso dá{" "}
+                {formatBRL(rates.totalPerHourCents)} por hora. Se você quis dizer {hours}h por dia,
+                o total do mês fica perto de {Math.round(Number(hours) * 26)}h.
+              </p>
+            ) : null}
+          </div>
         ) : (
           <p className="rounded-[var(--radius)] border border-dashed border-border px-5 py-4 text-xs text-muted-foreground">
             Preencha os três campos para ver quanto vale a sua hora.
