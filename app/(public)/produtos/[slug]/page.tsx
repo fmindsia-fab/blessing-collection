@@ -2,10 +2,14 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { getProductBySlug, getRelatedProducts } from "@/lib/products/queries";
+import { listPaymentMethods } from "@/lib/pricing/queries";
+import { calculateInstallmentOptions } from "@/lib/pricing/calculate";
+import { toCents } from "@/lib/pricing/money";
 import { ProductCard } from "@/components/catalog/product-card";
 import { SectionHeading } from "@/components/catalog/section-heading";
 import { ProductDetails } from "@/components/catalog/product-details";
 import { ProductGallery } from "@/components/catalog/product-gallery";
+import { InstallmentOptions } from "@/components/catalog/installment-options";
 import { WhatsappButton } from "@/components/catalog/whatsapp-button";
 import { SelectionToggleButton } from "@/components/catalog/selection-toggle-button";
 import { PageViewTracker } from "@/components/shared/page-view-tracker";
@@ -59,7 +63,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   const { product, images, variants } = result;
 
-  const related = await getRelatedProducts(store.id, product);
+  const [related, paymentMethods] = await Promise.all([
+    getRelatedProducts(store.id, product),
+    listPaymentMethods(store.id),
+  ]);
 
   const coverImage = images.find((img) => img.is_cover) ?? images[0] ?? null;
   // A capa abre a galeria; as demais seguem na ordem definida no painel.
@@ -98,7 +105,18 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <p className="flex items-baseline gap-2 text-xl">
               {hasVariantPricing ? <span className="kicker normal-case">a partir de</span> : null}
               {formatPrice(displayPrice)}
+              <span className="text-xs text-muted-foreground">à vista</span>
             </p>
+
+            {/* O preço da peça é o valor à vista; a taxa do cartão é repassada
+                a quem escolhe parcelar. */}
+            <InstallmentOptions
+              cashPriceCents={toCents(displayPrice)}
+              options={calculateInstallmentOptions({
+                cashPriceCents: toCents(displayPrice),
+                methods: paymentMethods,
+              })}
+            />
           </div>
 
           {product.description ? (

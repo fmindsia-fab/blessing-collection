@@ -222,6 +222,72 @@ export function calculatePaymentBreakdown({
   });
 }
 
+// ========== REPASSE DA TAXA AO CLIENTE ==========
+
+export type InstallmentOption = {
+  method: PaymentMethod;
+  /** Preço cobrado nesta modalidade, com a taxa repassada. */
+  priceCents: number;
+  installmentCents: number;
+  feeCents: number;
+  /** Quanto a proprietária recebe — igual ao preço à vista, por construção. */
+  netReceivedCents: number;
+  /** Quanto o cliente paga a mais que no Pix. */
+  surchargeCents: number;
+};
+
+/**
+ * Preço de cada modalidade quando a taxa é repassada ao cliente.
+ *
+ * Somar a taxa ao preço não funciona: a adquirente desconta o percentual sobre
+ * o valor cobrado, não sobre o valor à vista. Com R$ 359,90 e 5%, cobrar
+ * R$ 377,90 (+5%) deixa R$ 359,00 depois do desconto — faltam 90 centavos.
+ *
+ * A divisão resolve: `à vista / (1 - taxa)`. Com R$ 359,90 e 5%, o preço vira
+ * R$ 378,84; a taxa de R$ 18,94 sai e sobram exatamente os R$ 359,90. É a
+ * mesma estrutura da fórmula de margem, pelo mesmo motivo.
+ *
+ * O valor líquido é idêntico em todas as modalidades: a proprietária ganha o
+ * mesmo no Pix e no crédito em 12x, e quem paga a comodidade é quem a usa.
+ */
+export function calculateInstallmentOptions({
+  cashPriceCents,
+  methods,
+  taxBasisPoints = 0,
+}: {
+  /** Preço à vista, no Pix ou dinheiro. */
+  cashPriceCents: number;
+  methods: PaymentMethod[];
+  /** Imposto sobre a venda (Simples), em bp. Já embutido no preço à vista. */
+  taxBasisPoints?: number;
+}): InstallmentOption[] {
+  if (cashPriceCents <= 0) return [];
+
+  return methods
+    .filter((method) => method.feeBasisPoints + taxBasisPoints < FULL_BASIS_POINTS)
+    .map((method) => {
+      // O imposto já está embutido no preço à vista pela fórmula de margem;
+      // aqui repassa-se apenas a taxa da adquirente.
+      const netFactor = FULL_BASIS_POINTS - method.feeBasisPoints;
+      const priceCents =
+        method.feeBasisPoints === 0
+          ? cashPriceCents
+          : Math.round((cashPriceCents * FULL_BASIS_POINTS) / netFactor);
+
+      const feeCents = applyPercent(priceCents, method.feeBasisPoints);
+
+      return {
+        method,
+        priceCents,
+        installmentCents:
+          method.installments > 1 ? Math.ceil(priceCents / method.installments) : priceCents,
+        feeCents,
+        netReceivedCents: priceCents - feeCents,
+        surchargeCents: priceCents - cashPriceCents,
+      };
+    });
+}
+
 // ========== ARREDONDAMENTO COMERCIAL ==========
 
 /**

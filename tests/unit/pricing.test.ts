@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   calculateCost,
+  calculateInstallmentOptions,
   calculateLaborRates,
   calculateMaterialCost,
   calculatePaymentBreakdown,
@@ -329,6 +330,85 @@ describe("calculatePaymentBreakdown", () => {
 
     expect(pix.profitCents).toBeLessThan(0);
     expect(pix.netMarginBasisPoints).toBeLessThan(0);
+  });
+});
+
+describe("calculateInstallmentOptions — taxa repassada ao cliente", () => {
+  const methods = [
+    { id: "pix", label: "Pix", feeBasisPoints: 0, installments: 1 },
+    { id: "credito1", label: "Crédito 1x", feeBasisPoints: pct(3), installments: 1 },
+    { id: "credito3", label: "Crédito 3x", feeBasisPoints: pct(5), installments: 3 },
+    { id: "credito12", label: "Crédito 12x", feeBasisPoints: pct(15), installments: 12 },
+  ];
+
+  // Somar a taxa não basta: 359,90 + 5% = 377,90, mas a maquininha desconta 5%
+  // de 377,90 e sobram 359,00. A divisão é o que fecha a conta.
+  it("divide em vez de somar a taxa", () => {
+    const [, , credito3] = calculateInstallmentOptions({
+      cashPriceCents: 35_990,
+      methods,
+    });
+
+    expect(credito3.priceCents).toBe(37_884);
+    expect(credito3.priceCents).not.toBe(37_790); // o erro de somar 5%
+  });
+
+  // A razão de ser do repasse: a proprietária ganha o mesmo em qualquer forma.
+  it("preserva o valor líquido em todas as modalidades", () => {
+    const opcoes = calculateInstallmentOptions({ cashPriceCents: 35_990, methods });
+
+    for (const opcao of opcoes) {
+      // Um centavo de tolerância: o arredondamento da divisão pode variar.
+      expect(Math.abs(opcao.netReceivedCents - 35_990)).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it("mantém o preço à vista quando não há taxa", () => {
+    const [pix] = calculateInstallmentOptions({ cashPriceCents: 35_990, methods });
+
+    expect(pix.priceCents).toBe(35_990);
+    expect(pix.surchargeCents).toBe(0);
+    expect(pix.feeCents).toBe(0);
+  });
+
+  it("calcula o valor de cada parcela", () => {
+    const [, , credito3] = calculateInstallmentOptions({ cashPriceCents: 35_990, methods });
+
+    // 378,84 / 3 = 126,28
+    expect(credito3.installmentCents).toBe(12_628);
+  });
+
+  // Arredondar a parcela para baixo faria a soma das parcelas ficar abaixo do
+  // preço; para cima, o cliente nunca paga menos que o combinado.
+  it("nunca deixa a soma das parcelas abaixo do preço", () => {
+    for (const cash of [35_990, 10_000, 9_999, 33_333]) {
+      const opcoes = calculateInstallmentOptions({ cashPriceCents: cash, methods });
+
+      for (const opcao of opcoes) {
+        const soma = opcao.installmentCents * opcao.method.installments;
+        expect(soma).toBeGreaterThanOrEqual(opcao.priceCents);
+      }
+    }
+  });
+
+  it("mostra quanto o cliente paga a mais que no Pix", () => {
+    const [, , , credito12] = calculateInstallmentOptions({ cashPriceCents: 35_990, methods });
+
+    expect(credito12.priceCents).toBe(42_341);
+    expect(credito12.surchargeCents).toBe(6_351);
+  });
+
+  it("descarta modalidade com taxa impossível de repassar", () => {
+    const opcoes = calculateInstallmentOptions({
+      cashPriceCents: 35_990,
+      methods: [{ id: "absurdo", label: "Taxa 100%", feeBasisPoints: pct(100), installments: 1 }],
+    });
+
+    expect(opcoes).toEqual([]);
+  });
+
+  it("devolve lista vazia sem preço à vista", () => {
+    expect(calculateInstallmentOptions({ cashPriceCents: 0, methods })).toEqual([]);
   });
 });
 

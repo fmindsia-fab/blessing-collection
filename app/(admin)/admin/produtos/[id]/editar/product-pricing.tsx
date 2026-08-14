@@ -11,8 +11,8 @@ import {
 } from "@/lib/pricing/actions";
 import {
   calculateCost,
+  calculateInstallmentOptions,
   calculateMaterialCost,
-  calculatePaymentBreakdown,
   calculatePrice,
   marginToMarkup,
   markupToMargin,
@@ -158,13 +158,10 @@ export function ProductPricing({
   const finalCents = roundedCents ?? suggestedCents;
   const roundingOptions = priceResult.ok ? suggestRoundedPrices(suggestedCents) : [];
 
-  const breakdown = priceResult.ok
-    ? calculatePaymentBreakdown({
-        priceCents: finalCents,
-        totalCostCents: cost.totalCents,
-        methods: paymentMethods,
-        taxBasisPoints,
-      })
+  // O preço à vista é a base; cada modalidade recebe a taxa por cima, de modo
+  // que o líquido seja sempre o mesmo.
+  const installmentOptions = priceResult.ok
+    ? calculateInstallmentOptions({ cashPriceCents: finalCents, methods: paymentMethods })
     : [];
 
   // Mostra o indicador equivalente para não confundir os dois conceitos.
@@ -450,24 +447,35 @@ export function ProductPricing({
               </Button>
             </div>
 
-            {breakdown.length > 0 ? (
+            {installmentOptions.length > 0 ? (
               <div className="flex flex-col gap-2 border-t border-border pt-4">
-                <span className="kicker">Quanto sobra por forma de pagamento</span>
+                <span className="kicker">Preço por forma de pagamento</span>
+                <p className="text-xs text-muted-foreground">
+                  A taxa do cartão é repassada ao cliente, então o que você recebe é o mesmo em
+                  todas as modalidades.
+                </p>
                 <div className="-mx-1 overflow-x-auto">
-                  <table className="w-full min-w-[30rem] text-sm">
+                  <table className="w-full min-w-[28rem] text-sm">
                     <thead>
                       <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground">
                         <th className="px-1 py-2 font-normal">Forma</th>
+                        <th className="px-1 py-2 text-right font-normal">Cliente paga</th>
                         <th className="px-1 py-2 text-right font-normal">Parcela</th>
-                        <th className="px-1 py-2 text-right font-normal">Recebe</th>
-                        <th className="px-1 py-2 text-right font-normal">Lucro</th>
-                        <th className="px-1 py-2 text-right font-normal">Margem</th>
+                        <th className="px-1 py-2 text-right font-normal">Você recebe</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                      {breakdown.map((line) => (
+                      {installmentOptions.map((line) => (
                         <tr key={line.method.id}>
                           <td className="px-1 py-2">{line.method.label}</td>
+                          <td className="px-1 py-2 text-right tabular-nums">
+                            {formatBRL(line.priceCents)}
+                            {line.surchargeCents > 0 ? (
+                              <span className="ml-1 text-xs text-muted-foreground">
+                                +{formatBRL(line.surchargeCents)}
+                              </span>
+                            ) : null}
+                          </td>
                           <td className="px-1 py-2 text-right tabular-nums text-muted-foreground">
                             {line.method.installments > 1
                               ? `${line.method.installments}× ${formatBRL(line.installmentCents)}`
@@ -476,27 +484,18 @@ export function ProductPricing({
                           <td className="px-1 py-2 text-right tabular-nums">
                             {formatBRL(line.netReceivedCents)}
                           </td>
-                          <td
-                            className={cn(
-                              "px-1 py-2 text-right tabular-nums",
-                              line.profitCents < 0 && "text-destructive",
-                            )}
-                          >
-                            {formatBRL(line.profitCents)}
-                          </td>
-                          <td
-                            className={cn(
-                              "px-1 py-2 text-right tabular-nums",
-                              line.netMarginBasisPoints < 0 && "text-destructive",
-                            )}
-                          >
-                            {basisPointsToPercent(line.netMarginBasisPoints).toFixed(1)}%
-                          </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
+
+                <p className="text-xs text-muted-foreground">
+                  Lucro em qualquer forma:{" "}
+                  <strong className="text-foreground">
+                    {formatBRL(finalCents - cost.totalCents)}
+                  </strong>
+                </p>
               </div>
             ) : null}
           </>
