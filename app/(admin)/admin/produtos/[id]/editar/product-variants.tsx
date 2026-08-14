@@ -17,6 +17,7 @@ type ProductVariantsProps = {
     name: string;
     color: string | null;
     color_id: string | null;
+    variant_group: string | null;
     size: string | null;
     price: number | null;
     status: VariantStatus;
@@ -36,6 +37,9 @@ export function ProductVariants({ productId, variants, colors }: ProductVariants
   const [isToggling, startTransition] = useTransition();
 
   const colorById = new Map(colors.map((color) => [color.id, color]));
+  const existingGroups = [
+    ...new Set(variants.map((v) => v.variant_group).filter((g): g is string => Boolean(g))),
+  ];
 
   return (
     <div className="flex flex-col gap-4">
@@ -67,6 +71,7 @@ export function ProductVariants({ productId, variants, colors }: ProductVariants
                 <div className="flex min-w-0 flex-col">
                   <span className="truncate text-sm">{variant.name}</span>
                   <span className="text-xs text-zinc-500">
+                    {variant.variant_group ? `${variant.variant_group} · ` : ""}
                     {variant.price ? formatPrice(variant.price) : "Preço base"} ·{" "}
                     {variant.status === "available" ? "Disponível" : "Esgotado"}
                     {color ? ` · ${color.name}` : ""}
@@ -136,8 +141,29 @@ export function ProductVariants({ productId, variants, colors }: ProductVariants
           ) : null}
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="variant-size">Tamanho (opcional)</Label>
-          <Input id="variant-size" name="size" />
+          <Label htmlFor="variant-group">Grupo</Label>
+          <Input
+            id="variant-group"
+            name="variantGroup"
+            list="variant-groups"
+            maxLength={30}
+            placeholder="Cor"
+            defaultValue="Cor"
+          />
+          {/* Sugere os grupos já usados nesta peça, para não surgir "Cor" e
+              "cores" como eixos separados por diferença de digitação. */}
+          <datalist id="variant-groups">
+            {existingGroups.map((group) => (
+              <option key={group} value={group} />
+            ))}
+            <option value="Cor" />
+            <option value="Alça" />
+            <option value="Tamanho" />
+            <option value="Acabamento" />
+          </datalist>
+          <span className="text-xs text-muted-foreground">
+            A cliente escolhe uma opção de cada grupo.
+          </span>
         </div>
         <input type="hidden" name="status" value="available" />
         {state.error ? <p className="col-span-2 text-sm text-destructive">{state.error}</p> : null}

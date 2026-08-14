@@ -13,6 +13,9 @@ const variantSchema = z.object({
     .union([z.literal(""), z.uuid("Cor inválida")])
     .optional()
     .transform((value) => value || null),
+  // Eixo de escolha: variações do mesmo grupo são alternativas entre si, e a
+  // cliente escolhe uma de cada grupo (migration 0016).
+  variantGroup: z.string().trim().max(30).optional(),
   size: z.string().optional(),
   price: z.union([z.coerce.number().positive(), z.literal("")]).optional(),
   status: z.enum(["available", "sold_out"]),
@@ -49,6 +52,7 @@ export async function createVariant(
   const parsed = variantSchema.safeParse({
     name: formData.get("name"),
     colorId: formData.get("colorId") ?? "",
+    variantGroup: formData.get("variantGroup") ?? "",
     size: formData.get("size"),
     price: formData.get("price") || undefined,
     status: formData.get("status"),
@@ -78,6 +82,7 @@ export async function createVariant(
     product_id: productId,
     name: parsed.data.name,
     color_id: parsed.data.colorId,
+    variant_group: parsed.data.variantGroup || null,
     size: parsed.data.size || null,
     price: parsed.data.price || null,
     status: parsed.data.status,

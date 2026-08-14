@@ -370,6 +370,8 @@ export interface Database {
           /** Texto livre legado; `color_id` é a fonte a partir da migration 0013. */
           color: string | null;
           color_id: string | null;
+          /** Eixo de escolha: "Cor", "Alça"… (migration 0016). */
+          variant_group: string | null;
           size: string | null;
           sku: string | null;
           price: number | null;
@@ -384,6 +386,7 @@ export interface Database {
           name: string;
           color?: string | null;
           color_id?: string | null;
+          variant_group?: string | null;
           size?: string | null;
           sku?: string | null;
           price?: number | null;

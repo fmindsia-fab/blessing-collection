@@ -33,7 +33,7 @@ export async function getProductForAdmin(storeId: string, productId: string) {
       .order("sort_order", { ascending: true }),
     supabase
       .from("product_variants")
-      .select("id, name, color, color_id, size, price, status, sort_order")
+      .select("id, name, color, color_id, variant_group, size, price, status, sort_order")
       .eq("product_id", product.id)
       .neq("status", "archived")
       .order("sort_order", { ascending: true }),

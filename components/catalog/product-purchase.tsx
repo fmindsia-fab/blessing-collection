@@ -5,17 +5,17 @@ import { cn } from "@/lib/utils";
 import { calculateInstallmentOptions, type PaymentMethod } from "@/lib/pricing/calculate";
 import { toCents, toReais } from "@/lib/pricing/money";
 import { isPriceVariable, priceLabel, PRICE_VARIATION_NOTICE } from "@/lib/pricing/price-display";
+import {
+  describeSelection,
+  groupVariants,
+  priceWithVariants,
+  variantSurchargeCents,
+  type VariantOption,
+} from "@/lib/pricing/variants";
 import { InstallmentOptions } from "./installment-options";
 import { WhatsappButton } from "./whatsapp-button";
 import { SelectionToggleButton } from "./selection-toggle-button";
 import type { ProductStatus } from "@/types/database.types";
-
-type Variant = {
-  id: string;
-  name: string;
-  price: number | null;
-  status: string;
-};
 
 type Props = {
   storeId: string;
@@ -27,7 +27,7 @@ type Props = {
   productUrl: string;
   status: ProductStatus;
   basePrice: number;
-  variants: Variant[];
+  variants: VariantOption[];
   coverImageUrl: string | null;
   paymentMethods: PaymentMethod[];
 };
@@ -39,10 +39,11 @@ function formatPrice(price: number) {
 /**
  * Preço, variações e ações da peça, num componente só.
  *
- * Escolher a variação precisa atualizar o preço, o parcelamento, a mensagem do
- * WhatsApp e o que vai para a seleção. Como tudo depende da mesma escolha, o
- * estado vive aqui em vez de espalhado — separado, cada parte mostraria um
- * valor diferente.
+ * As escolhas atualizam o preço, o parcelamento, a mensagem do WhatsApp e o
+ * item da seleção. Como tudo depende do mesmo estado, ele vive aqui — separado,
+ * cada parte mostraria um valor diferente.
+ *
+ * Uma escolha por grupo, várias no total: cor e alça convivem, duas cores não.
  */
 export function ProductPurchase({
   storeId,
@@ -58,36 +59,60 @@ export function ProductPurchase({
   coverImageUrl,
   paymentMethods,
 }: Props) {
-  const sellable = variants.filter((v) => v.status !== "sold_out");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Uma entrada por grupo: {"Cor": "id-marrom", "Alça": "id-corrente"}.
+  const [chosen, setChosen] = useState<Record<string, string>>({});
 
-  const selected = sellable.find((v) => v.id === selectedId) ?? null;
+  const groups = groupVariants(variants);
+  const basePriceCents = toCents(basePrice);
 
-  // Sem escolha, mostra o menor preço com "a partir de" — o mesmo do card.
-  const variantPrices = variants.map((v) => v.price).filter((p): p is number => p != null);
-  const lowestPrice = variantPrices.length > 0 ? Math.min(basePrice, ...variantPrices) : basePrice;
+  const selected = groups
+    .map((group) => group.options.find((option) => option.id === chosen[group.name]))
+    .filter((option): option is VariantOption => option != null);
 
-  const currentPrice = selected ? (selected.price ?? basePrice) : lowestPrice;
-  const showFromPrefix = !selected && variantPrices.length > 0;
+  const currentCents = priceWithVariants(basePriceCents, selected);
 
-  const priceCents = toCents(currentPrice);
+  // Enquanto houver grupo por escolher cujas opções têm adicional, o preço
+  // ainda pode subir — daí o "a partir de".
+  const pendingPricedGroup = groups.some(
+    (group) =>
+      !chosen[group.name] &&
+      group.options.some((option) => variantSurchargeCents(option, basePriceCents) > 0),
+  );
+
   const variable = isPriceVariable(status);
+  const selectionLabel = describeSelection(selected);
+
+  function choose(groupName: string, optionId: string) {
+    setChosen((current) => {
+      // Clicar na opção ativa desmarca, para a cliente voltar atrás sem
+      // recarregar a página.
+      if (current[groupName] === optionId) {
+        const rest = { ...current };
+        delete rest[groupName];
+        return rest;
+      }
+      return { ...current, [groupName]: optionId };
+    });
+  }
 
   return (
     <>
       <div className="flex flex-col gap-1">
         <span className={cn("kicker", variable && "text-[var(--gold)]")}>{priceLabel(status)}</span>
         <p className="flex items-baseline gap-2 text-xl">
-          {showFromPrefix ? <span className="kicker normal-case">a partir de</span> : null}
-          {formatPrice(currentPrice)}
+          {pendingPricedGroup ? <span className="kicker normal-case">a partir de</span> : null}
+          {formatPrice(toReais(currentCents))}
           <span className="text-xs text-muted-foreground">à vista</span>
         </p>
       </div>
 
       <InstallmentOptions
-        cashPriceCents={priceCents}
-        options={calculateInstallmentOptions({ cashPriceCents: priceCents, methods: paymentMethods })}
-        isFromPrice={showFromPrefix}
+        cashPriceCents={currentCents}
+        options={calculateInstallmentOptions({
+          cashPriceCents: currentCents,
+          methods: paymentMethods,
+        })}
+        isFromPrice={pendingPricedGroup}
       />
 
       {variable ? (
@@ -98,47 +123,49 @@ export function ProductPurchase({
         </div>
       ) : null}
 
-      {variants.length > 0 ? (
-        <div className="flex flex-col gap-3">
-          <span className="kicker">Variações</span>
-          <div className="flex flex-wrap gap-2">
-            {variants.map((variant) => {
-              const soldOut = variant.status === "sold_out";
-              const isActive = selectedId === variant.id;
-              const extraCents =
-                variant.price != null ? toCents(variant.price) - toCents(lowestPrice) : 0;
+      {groups.length > 0 ? (
+        <div className="flex flex-col gap-5">
+          {groups.map((group) => (
+            <div key={group.name} className="flex flex-col gap-3">
+              <span className="kicker">{group.name}</span>
+              <div className="flex flex-wrap gap-2">
+                {group.options.map((option) => {
+                  const soldOut = option.status === "sold_out";
+                  const isActive = chosen[group.name] === option.id;
+                  const surcharge = variantSurchargeCents(option, basePriceCents);
 
-              return (
-                <button
-                  key={variant.id}
-                  type="button"
-                  disabled={soldOut}
-                  aria-pressed={isActive}
-                  // Clicar de novo desmarca: a cliente pode voltar a ver o
-                  // "a partir de" sem recarregar a página.
-                  onClick={() => setSelectedId(isActive ? null : variant.id)}
-                  className={cn(
-                    "inline-flex items-baseline gap-1.5 rounded-full border px-4 py-2 text-xs tracking-wide outline-none transition-all duration-300 focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                    soldOut
-                      ? "cursor-not-allowed border-border text-muted-foreground/60 line-through"
-                      : isActive
-                        ? "border-foreground bg-foreground text-background shadow-sm"
-                        : "border-foreground/25 text-foreground hover:border-foreground hover:bg-secondary",
-                  )}
-                >
-                  {variant.name}
-                  {extraCents > 0 ? (
-                    <span className={isActive ? "text-background/70" : "text-muted-foreground"}>
-                      +{formatPrice(toReais(extraCents))}
-                    </span>
-                  ) : null}
-                </button>
-              );
-            })}
-          </div>
-          {sellable.length > 1 && !selected ? (
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      disabled={soldOut}
+                      aria-pressed={isActive}
+                      onClick={() => choose(group.name, option.id)}
+                      className={cn(
+                        "inline-flex items-baseline gap-1.5 rounded-full border px-4 py-2 text-xs tracking-wide outline-none transition-all duration-300 focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                        soldOut
+                          ? "cursor-not-allowed border-border text-muted-foreground/60 line-through"
+                          : isActive
+                            ? "border-foreground bg-foreground text-background shadow-sm"
+                            : "border-foreground/25 text-foreground hover:border-foreground hover:bg-secondary",
+                      )}
+                    >
+                      {option.name}
+                      {surcharge > 0 ? (
+                        <span className={isActive ? "text-background/70" : "text-muted-foreground"}>
+                          +{formatPrice(toReais(surcharge))}
+                        </span>
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+
+          {pendingPricedGroup ? (
             <span className="text-xs text-muted-foreground">
-              Escolha uma variação para ver o valor exato.
+              Escolha as opções para ver o valor exato.
             </span>
           ) : null}
         </div>
@@ -153,18 +180,18 @@ export function ProductPurchase({
           productName={productName}
           productUrl={productUrl}
           status={status}
-          variantLabel={selected?.name ?? null}
+          variantLabel={selectionLabel}
         />
         <SelectionToggleButton
           item={{
             productId,
             slug: productSlug,
             name: productName,
-            price: currentPrice,
-            priceIsFrom: showFromPrefix,
+            price: toReais(currentCents),
+            priceIsFrom: pendingPricedGroup,
             status,
             coverImageUrl,
-            variantName: selected?.name ?? null,
+            variantName: selectionLabel,
           }}
         />
       </div>
