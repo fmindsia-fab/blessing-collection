@@ -16,6 +16,7 @@ import {
   calculatePrice,
   marginToMarkup,
   markupToMargin,
+  suggestRoundedPrices,
   type LaborRates,
   type PaymentMethod,
 } from "@/lib/pricing/calculate";
@@ -143,9 +144,23 @@ export function ProductPricing({
 
   const suggestedCents = priceResult.ok ? priceResult.priceCents : 0;
 
+  // Preço escolhido pela proprietária ao arredondar. Enquanto for null, vale a
+  // sugestão calculada — e ele é descartado quando os custos mudam, senão a
+  // tabela mostraria margens de um preço que não corresponde mais à conta.
+  const [roundedCents, setRoundedCents] = useState<number | null>(null);
+  const [roundedFor, setRoundedFor] = useState(suggestedCents);
+
+  if (roundedFor !== suggestedCents) {
+    setRoundedFor(suggestedCents);
+    setRoundedCents(null);
+  }
+
+  const finalCents = roundedCents ?? suggestedCents;
+  const roundingOptions = priceResult.ok ? suggestRoundedPrices(suggestedCents) : [];
+
   const breakdown = priceResult.ok
     ? calculatePaymentBreakdown({
-        priceCents: suggestedCents,
+        priceCents: finalCents,
         totalCostCents: cost.totalCents,
         methods: paymentMethods,
         taxBasisPoints,
@@ -354,9 +369,18 @@ export function ProductPricing({
           <>
             <div className="flex flex-col gap-2 border-t border-border pt-4">
               <div className="flex items-baseline justify-between gap-4">
-                <span className="text-sm">Sugestão de venda</span>
-                <span className="font-[family-name:var(--font-brand)] text-2xl tabular-nums">
-                  {formatBRL(suggestedCents)}
+                <span className="text-sm">
+                  {roundedCents ? "Preço arredondado" : "Sugestão de venda"}
+                </span>
+                <span className="flex items-baseline gap-2">
+                  {roundedCents ? (
+                    <span className="text-sm tabular-nums text-muted-foreground line-through">
+                      {formatBRL(suggestedCents)}
+                    </span>
+                  ) : null}
+                  <span className="font-[family-name:var(--font-brand)] text-2xl tabular-nums">
+                    {formatBRL(finalCents)}
+                  </span>
                 </span>
               </div>
 
@@ -374,7 +398,39 @@ export function ProductPricing({
                     ).toFixed(0)}% de margem sobre o preço`}
               </p>
 
-              {currentPrice > 0 && Math.abs(toCents(currentPrice) - suggestedCents) > 50 ? (
+              {/* Só valores acima da sugestão: arredondar para baixo devolveria
+                  um preço abaixo do que a margem pediu. */}
+              {roundingOptions.length > 0 ? (
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <span className="text-xs text-muted-foreground">Arredondar para</span>
+                  {roundingOptions.map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setRoundedCents(option)}
+                      className={cn(
+                        "rounded-full border px-3 py-1.5 text-xs tabular-nums outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--gold)]",
+                        finalCents === option
+                          ? "border-foreground bg-foreground text-background"
+                          : "border-border hover:border-foreground hover:bg-secondary",
+                      )}
+                    >
+                      {formatBRL(option)}
+                    </button>
+                  ))}
+                  {roundedCents ? (
+                    <button
+                      type="button"
+                      onClick={() => setRoundedCents(null)}
+                      className="text-xs text-muted-foreground underline underline-offset-2 outline-none transition-colors hover:text-foreground focus-visible:text-foreground"
+                    >
+                      Voltar ao calculado
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {currentPrice > 0 && Math.abs(toCents(currentPrice) - finalCents) > 50 ? (
                 <p className="text-xs text-muted-foreground">
                   Preço atual da peça: {formatBRL(toCents(currentPrice))}
                 </p>
@@ -386,7 +442,7 @@ export function ProductPricing({
                 size="sm"
                 disabled={isPending}
                 onClick={() =>
-                  startTransition(() => applySuggestedPrice(productId, toReais(suggestedCents)))
+                  startTransition(() => applySuggestedPrice(productId, toReais(finalCents)))
                 }
                 className="mt-1 w-fit"
               >

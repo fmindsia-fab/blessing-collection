@@ -8,6 +8,8 @@ import {
   marginToMarkup,
   markupToMargin,
   parseCurrencyInput,
+  roundToCommercialPrice,
+  suggestRoundedPrices,
 } from "@/lib/pricing/calculate";
 import {
   applyPercent,
@@ -327,6 +329,71 @@ describe("calculatePaymentBreakdown", () => {
 
     expect(pix.profitCents).toBeLessThan(0);
     expect(pix.netMarginBasisPoints).toBeLessThan(0);
+  });
+});
+
+describe("roundToCommercialPrice", () => {
+  // O caso que motivou a função: 357,56 -> 359,90.
+  it("sobe para a terminação ,90 mais próxima acima", () => {
+    expect(roundToCommercialPrice(35_756)).toBe(35_990);
+  });
+
+  // Arredondar para baixo devolveria um preço abaixo do que a margem pediu, e
+  // a perda passaria despercebida.
+  it("nunca desce abaixo do preço calculado", () => {
+    for (const centavos of [35_756, 10_001, 9_999, 12_395, 50_000, 100]) {
+      expect(roundToCommercialPrice(centavos)).toBeGreaterThanOrEqual(centavos);
+    }
+  });
+
+  // 359,90 já termina em ,90: subir para 369,90 seria aumento gratuito.
+  it("mantém o valor quando ele já está na terminação", () => {
+    expect(roundToCommercialPrice(35_990)).toBe(35_990);
+  });
+
+  // 359,91 passou de ,90 e precisa ir para o próximo.
+  it("avança um passo quando o valor passa da terminação", () => {
+    expect(roundToCommercialPrice(35_991)).toBe(36_990);
+  });
+
+  it("aceita terminação redonda", () => {
+    expect(roundToCommercialPrice(35_756, { ending: 0 })).toBe(36_000);
+    expect(roundToCommercialPrice(36_000, { ending: 0 })).toBe(36_000);
+  });
+
+  // step em centavos: 10.000 = cem reais.
+  it("aceita passo de cem reais para ticket alto", () => {
+    expect(roundToCommercialPrice(35_756, { ending: 9_900, step: 10_000 })).toBe(39_900);
+    expect(roundToCommercialPrice(35_756, { ending: 0, step: 10_000 })).toBe(40_000);
+  });
+
+  it("devolve zero para preço inexistente", () => {
+    expect(roundToCommercialPrice(0)).toBe(0);
+  });
+});
+
+describe("suggestRoundedPrices", () => {
+  it("oferece as opções acima do preço, em ordem", () => {
+    // O caso da tela: 357,56.
+    expect(suggestRoundedPrices(35_756)).toEqual([35_990, 36_000, 39_900, 40_000]);
+  });
+
+  it("nunca sugere valor abaixo do calculado", () => {
+    for (const centavos of [1_234, 35_756, 99_999]) {
+      const opcoes = suggestRoundedPrices(centavos);
+      expect(opcoes.every((v) => v >= centavos)).toBe(true);
+    }
+  });
+
+  // Em preços baixos as casas de 1 e 10 reais convergem para o mesmo valor.
+  it("não repete opções que coincidem", () => {
+    const opcoes = suggestRoundedPrices(500);
+
+    expect(new Set(opcoes).size).toBe(opcoes.length);
+  });
+
+  it("devolve lista vazia sem preço", () => {
+    expect(suggestRoundedPrices(0)).toEqual([]);
   });
 });
 

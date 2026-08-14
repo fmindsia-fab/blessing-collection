@@ -222,6 +222,59 @@ export function calculatePaymentBreakdown({
   });
 }
 
+// ========== ARREDONDAMENTO COMERCIAL ==========
+
+/**
+ * Arredonda o preço para uma terminação comercial, sempre PARA CIMA.
+ *
+ * R$ 357,56 vira R$ 359,90: mais fácil de comunicar e de cobrar que um valor
+ * quebrado. Nunca para baixo — arredondar para R$ 349,90 devolveria um preço
+ * abaixo do que a margem pedia, e a perda passaria despercebida.
+ *
+ * `step` é a casa do arredondamento e `ending` a terminação dentro dela, ambos
+ * em centavos. O ,90 clássico do varejo mora na casa dos dez reais
+ * (step 1.000, ending 990 → 359,90); na casa do real ele daria 357,90, que
+ * não é o que se entende por "preço arredondado".
+ */
+export function roundToCommercialPrice(
+  priceCents: number,
+  { ending = 990, step = 1_000 }: { ending?: number; step?: number } = {},
+): number {
+  if (priceCents <= 0) return 0;
+
+  // Sobe para o próximo múltiplo de `step` e acrescenta a terminação. Como o
+  // piso pode já vir acima do preço com a terminação somada, o laço avança um
+  // passo até superar o valor original.
+  const floor = Math.floor(priceCents / step) * step;
+  let candidate = floor + ending;
+
+  while (candidate < priceCents) {
+    candidate += step;
+  }
+
+  return candidate;
+}
+
+/**
+ * Opções de arredondamento para a proprietária escolher.
+ *
+ * Devolve só valores acima do preço calculado e sem repetir: com R$ 357,56, as
+ * casas de 1 e 10 reais podem convergir para o mesmo número.
+ */
+export function suggestRoundedPrices(priceCents: number): number[] {
+  if (priceCents <= 0) return [];
+
+  const candidates = [
+    // 357,56 → 359,90 · 360,00 · 399,90 · 400,00
+    roundToCommercialPrice(priceCents, { ending: 990, step: 1_000 }),
+    roundToCommercialPrice(priceCents, { ending: 0, step: 1_000 }),
+    roundToCommercialPrice(priceCents, { ending: 9_900, step: 10_000 }),
+    roundToCommercialPrice(priceCents, { ending: 0, step: 10_000 }),
+  ];
+
+  return [...new Set(candidates)].filter((value) => value >= priceCents).sort((a, b) => a - b);
+}
+
 /**
  * Markup equivalente a uma margem, e vice-versa.
  *
