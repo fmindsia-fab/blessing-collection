@@ -90,3 +90,47 @@ describe("aviso na seleção múltipla", () => {
     expect(message).toContain("(sob encomenda)");
   });
 });
+
+describe("variação escolhida na mensagem", () => {
+  // Sem a variação, a proprietária não sabe qual peça separar.
+  it("inclui a variação escolhida na peça avulsa", () => {
+    const message = buildWhatsappMessage({
+      storeName: "Blessing",
+      productName: "Clutch Bellagio",
+      variantLabel: "Alça de Corrente",
+      status: "available",
+      productUrl: "https://exemplo.com/c",
+    });
+
+    expect(message).toContain("Alça de Corrente");
+  });
+
+  it("inclui a variação de cada item da seleção", () => {
+    const message = buildSelectionWhatsappMessage("Blessing", [
+      {
+        name: "Clutch Bellagio",
+        url: "https://exemplo.com/c",
+        status: "available",
+        variantName: "Alça de Corrente",
+      },
+      { name: "Veneza", url: "https://exemplo.com/v", status: "available" },
+    ]);
+
+    expect(message).toContain("Clutch Bellagio — Alça de Corrente");
+    // Peça sem variação escolhida não ganha traço sobrando.
+    expect(message).toContain("• Veneza — https://exemplo.com/v");
+  });
+
+  it("mantém o sufixo de status junto da variação", () => {
+    const message = buildSelectionWhatsappMessage("Blessing", [
+      {
+        name: "Clutch Bellagio",
+        url: "https://exemplo.com/c",
+        status: "made_to_order",
+        variantName: "Alça de Corrente",
+      },
+    ]);
+
+    expect(message).toContain("Clutch Bellagio — Alça de Corrente (sob encomenda)");
+  });
+});

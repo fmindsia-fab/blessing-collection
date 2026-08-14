@@ -27,6 +27,8 @@ export type SelectedItem = {
   priceIsFrom?: boolean;
   status?: ProductStatus;
   coverImageUrl: string | null;
+  /** Variação escolhida na página da peça, se houver. */
+  variantName?: string | null;
 };
 
 type SelectionContextValue = {
@@ -83,11 +85,18 @@ export function SelectionProvider({ children }: { children: React.ReactNode }) {
   );
 
   const toggle = useCallback((item: SelectedItem) => {
-    setItems((current) =>
-      current.some((existing) => existing.productId === item.productId)
-        ? current.filter((existing) => existing.productId !== item.productId)
-        : [...current, item],
-    );
+    setItems((current) => {
+      const existing = current.find((entry) => entry.productId === item.productId);
+      if (!existing) return [...current, item];
+
+      // Trocar a variação de uma peça já selecionada atualiza o item em vez de
+      // removê-lo: remover seria interpretado como "desmarquei sem querer".
+      if ((existing.variantName ?? null) !== (item.variantName ?? null)) {
+        return current.map((entry) => (entry.productId === item.productId ? item : entry));
+      }
+
+      return current.filter((entry) => entry.productId !== item.productId);
+    });
   }, []);
 
   const remove = useCallback((productId: string) => {

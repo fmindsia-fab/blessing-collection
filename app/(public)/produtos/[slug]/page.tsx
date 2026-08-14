@@ -3,21 +3,11 @@ import { notFound } from "next/navigation";
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { getProductBySlug, getRelatedProducts } from "@/lib/products/queries";
 import { listPaymentMethods } from "@/lib/pricing/queries";
-import { calculateInstallmentOptions } from "@/lib/pricing/calculate";
-import { toCents, toReais } from "@/lib/pricing/money";
-import { cn } from "@/lib/utils";
-import {
-  isPriceVariable,
-  priceLabel,
-  PRICE_VARIATION_NOTICE,
-} from "@/lib/pricing/price-display";
 import { ProductCard } from "@/components/catalog/product-card";
 import { SectionHeading } from "@/components/catalog/section-heading";
 import { ProductDetails } from "@/components/catalog/product-details";
 import { ProductGallery } from "@/components/catalog/product-gallery";
-import { InstallmentOptions } from "@/components/catalog/installment-options";
-import { WhatsappButton } from "@/components/catalog/whatsapp-button";
-import { SelectionToggleButton } from "@/components/catalog/selection-toggle-button";
+import { ProductPurchase } from "@/components/catalog/product-purchase";
 import { PageViewTracker } from "@/components/shared/page-view-tracker";
 import { BackLink } from "@/components/shared/back-link";
 
@@ -80,10 +70,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     ? [coverImage, ...images.filter((img) => img.id !== coverImage.id)]
     : images;
 
-  const variantPrices = variants.map((v) => v.price).filter((p): p is number => p != null);
-  const hasVariantPricing = variantPrices.length > 0;
-  const displayPrice = hasVariantPricing ? Math.min(product.price, ...variantPrices) : product.price;
-
+  // O preço exibido depende da variação escolhida, então o cálculo vive em
+  // ProductPurchase, que é quem tem esse estado.
   const productUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/produtos/${product.slug}`;
 
   return (
@@ -108,48 +96,25 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <h1 className="font-[family-name:var(--font-brand)] text-[2.5rem] leading-[1.05] tracking-tight sm:text-5xl">
               {product.name}
             </h1>
-            <div className="flex flex-col gap-1">
-              {/* Sob encomenda o rótulo ganha a cor de destaque da marca: é o
-                  aviso de que aquele número ainda pode mudar. */}
-              <span
-                className={cn(
-                  "kicker",
-                  isPriceVariable(product.status) && "text-[var(--gold)]",
-                )}
-              >
-                {priceLabel(product.status)}
-              </span>
-              <p className="flex items-baseline gap-2 text-xl">
-                {hasVariantPricing ? <span className="kicker normal-case">a partir de</span> : null}
-                {formatPrice(displayPrice)}
-                <span className="text-xs text-muted-foreground">à vista</span>
-              </p>
-            </div>
-
-            {/* O preço da peça é o valor à vista; a taxa do cartão é repassada
-                a quem escolhe parcelar. */}
-            <InstallmentOptions
-              cashPriceCents={toCents(displayPrice)}
-              options={calculateInstallmentOptions({
-                cashPriceCents: toCents(displayPrice),
-                methods: paymentMethods,
-              })}
-              // Com variantes de preços diferentes, o parcelamento é calculado
-              // sobre o menor: precisa ficar dito, senão a cliente supõe que a
-              // parcela vale para qualquer variação.
-              isFromPrice={hasVariantPricing}
-            />
-
-            {/* Só sob encomenda: peça pronta tem preço firme, e a ressalva ali
-                enfraqueceria a confiança onde não há incerteza. */}
-            {isPriceVariable(product.status) ? (
-              <div className="max-w-prose rounded-[var(--radius)] border border-[var(--gold)]/40 bg-[var(--gold)]/[0.07] p-4">
-                <p className="text-[0.8125rem] leading-relaxed text-foreground/85">
-                  {PRICE_VARIATION_NOTICE}
-                </p>
-              </div>
-            ) : null}
           </div>
+
+          {/* Preço, variações e ações num componente só: escolher a variação
+              precisa atualizar o valor, o parcelamento, a mensagem do WhatsApp
+              e o que vai para a seleção — tudo depende da mesma escolha. */}
+          <ProductPurchase
+            storeId={store.id}
+            storeName={store.name}
+            storeWhatsapp={store.whatsapp_number}
+            productId={product.id}
+            productName={product.name}
+            productSlug={product.slug}
+            productUrl={productUrl}
+            status={product.status}
+            basePrice={product.price}
+            variants={variants}
+            coverImageUrl={coverImage?.url ?? null}
+            paymentMethods={paymentMethods}
+          />
 
           {product.description ? (
             <p className="max-w-prose text-[0.9375rem] leading-relaxed text-muted-foreground">
@@ -174,63 +139,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             widthCm={product.width_cm}
             heightCm={product.height_cm}
           />
-
-          {variants.length > 0 ? (
-            <div className="flex flex-col gap-3">
-              <span className="kicker">Variações</span>
-              <div className="flex flex-wrap gap-2">
-                {variants.map((variant) => {
-                  // Variação com preço próprio precisa mostrá-lo: sem isso a
-                  // cliente vê só "a partir de" e descobre o valor real no
-                  // WhatsApp, o que soa a surpresa.
-                  const extraCents =
-                    variant.price != null ? toCents(variant.price) - toCents(displayPrice) : 0;
-
-                  return (
-                    <span
-                      key={variant.id}
-                      className={`inline-flex items-baseline gap-1.5 rounded-full border px-4 py-2 text-xs tracking-wide ${
-                        variant.status === "sold_out"
-                          ? "border-border text-muted-foreground/60 line-through"
-                          : "border-foreground/25 text-foreground"
-                      }`}
-                    >
-                      {variant.name}
-                      {extraCents > 0 ? (
-                        <span className="text-muted-foreground">
-                          +{formatPrice(toReais(extraCents))}
-                        </span>
-                      ) : null}
-                    </span>
-                  );
-                })}
-              </div>
-            </div>
-          ) : null}
-
-          <div className="flex flex-wrap gap-3 pt-2">
-            <WhatsappButton
-              storeId={store.id}
-              storeName={store.name}
-              storeWhatsapp={store.whatsapp_number}
-              productId={product.id}
-              productName={product.name}
-              productUrl={productUrl}
-              status={product.status}
-            />
-            <SelectionToggleButton
-              item={{
-                productId: product.id,
-                slug: product.slug,
-                name: product.name,
-                // Mesmo "a partir de" do card: menor entre preço base e variantes.
-                price: displayPrice,
-                priceIsFrom: hasVariantPricing,
-                status: product.status,
-                coverImageUrl: coverImage?.url ?? null,
-              }}
-            />
-          </div>
         </div>
       </div>
 

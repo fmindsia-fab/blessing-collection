@@ -49,6 +49,7 @@ export function SelectionReview({ storeId, storeName, storeWhatsapp, siteUrl }: 
       name: item.name,
       url: `${siteUrl}/produtos/${item.slug}`,
       status: item.status,
+      variantName: item.variantName,
     })),
   );
   const whatsappHref = buildWhatsappLink(storeWhatsapp, message);

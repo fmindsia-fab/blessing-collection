@@ -62,6 +62,8 @@ type SelectionMessageItem = {
   name: string;
   url: string;
   status?: ProductStatus;
+  /** Variação escolhida na página da peça, se houver. */
+  variantName?: string | null;
 };
 
 // Sufixo por status: a peça esgotada/sob encomenda precisa chegar sinalizada
@@ -83,8 +85,13 @@ export function buildSelectionWhatsappMessage(storeName: string, items: Selectio
       ? `Olá! Tenho interesse nesta peça do catálogo da ${storeName}:`
       : `Olá! Tenho interesse nestas ${items.length} peças do catálogo da ${storeName}:`;
 
+  // A variação escolhida entra logo após o nome: é o que a proprietária
+  // precisa saber para separar a peça certa.
   const list = items
-    .map((item) => `• ${item.name}${selectionStatusSuffix(item.status)} — ${item.url}`)
+    .map((item) => {
+      const variant = item.variantName ? ` — ${item.variantName}` : "";
+      return `• ${item.name}${variant}${selectionStatusSuffix(item.status)} — ${item.url}`;
+    })
     .join("\n");
 
   // Uma única ressalva no fim, não uma por item: a lista já marca quais são
