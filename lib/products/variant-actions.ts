@@ -44,6 +44,26 @@ async function assertProductBelongsToStore(
   return data !== null;
 }
 
+// O id da cor vem do formulário: confirma que é da loja ativa antes de gravar.
+// A RLS bloquearia a leitura, mas a checagem explícita é a defesa da aplicação
+// (regra do CLAUDE.md).
+async function colorBelongsToStore(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  storeId: string,
+  colorId: string | null,
+) {
+  if (!colorId) return true;
+
+  const { data } = await supabase
+    .from("colors")
+    .select("id")
+    .eq("id", colorId)
+    .eq("store_id", storeId)
+    .maybeSingle();
+
+  return data !== null;
+}
+
 export async function createVariant(
   productId: string,
   _prevState: VariantFormState,
@@ -53,7 +73,9 @@ export async function createVariant(
     name: formData.get("name"),
     colorId: formData.get("colorId") ?? "",
     variantGroup: formData.get("variantGroup") ?? "",
-    size: formData.get("size"),
+    // `formData.get` devolve null para campo ausente, e null não satisfaz
+    // `z.string().optional()`.
+    size: formData.get("size") ?? "",
     price: formData.get("price") || undefined,
     status: formData.get("status"),
   });
@@ -65,17 +87,8 @@ export async function createVariant(
     return { error: "Produto não encontrado." };
   }
 
-  // O id da cor vem do formulário: confirma que é da loja ativa antes de
-  // gravar. A RLS bloquearia a leitura, mas a checagem é a defesa da aplicação.
-  if (parsed.data.colorId) {
-    const { data: color } = await supabase
-      .from("colors")
-      .select("id")
-      .eq("id", parsed.data.colorId)
-      .eq("store_id", store.id)
-      .maybeSingle();
-
-    if (!color) return { error: "Cor não encontrada." };
+  if (!(await colorBelongsToStore(supabase, store.id, parsed.data.colorId))) {
+    return { error: "Cor não encontrada." };
   }
 
   const { error } = await supabase.from("product_variants").insert({
@@ -91,6 +104,63 @@ export async function createVariant(
   if (error) return { error: "Não foi possível adicionar a variação." };
 
   revalidatePath(`/admin/produtos/${productId}/editar`);
+  return {};
+}
+
+/**
+ * Edita uma variação existente.
+ *
+ * Sem isto, mudar o preço ou o grupo exigia remover e recadastrar — e a
+ * remoção é arquivamento, então a variação antiga ficaria pendurada.
+ *
+ * O status não entra: já é alternado pelo botão "Marcar esgotado", e trazê-lo
+ * para cá criaria dois caminhos para a mesma mudança.
+ */
+export async function updateVariant(
+  productId: string,
+  variantId: string,
+  _prevState: VariantFormState,
+  formData: FormData,
+): Promise<VariantFormState> {
+  const parsed = variantSchema.omit({ status: true }).safeParse({
+    name: formData.get("name"),
+    colorId: formData.get("colorId") ?? "",
+    variantGroup: formData.get("variantGroup") ?? "",
+    // `formData.get` devolve null para campo ausente, e null não satisfaz
+    // `z.string().optional()`.
+    size: formData.get("size") ?? "",
+    price: formData.get("price") || undefined,
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+
+  const store = await getActiveStore();
+  const supabase = await createServerSupabaseClient();
+  if (!(await assertProductBelongsToStore(supabase, productId))) {
+    return { error: "Produto não encontrado." };
+  }
+
+  if (!(await colorBelongsToStore(supabase, store.id, parsed.data.colorId))) {
+    return { error: "Cor não encontrada." };
+  }
+
+  const { error } = await supabase
+    .from("product_variants")
+    .update({
+      name: parsed.data.name,
+      color_id: parsed.data.colorId,
+      variant_group: parsed.data.variantGroup || null,
+      size: parsed.data.size || null,
+      price: parsed.data.price || null,
+    })
+    .eq("id", variantId)
+    // Ancora no produto já validado: sem isto, um id de variação de outra loja
+    // passaria pela checagem de posse do produto.
+    .eq("product_id", productId);
+
+  if (error) return { error: "Não foi possível salvar a variação." };
+
+  revalidatePath(`/admin/produtos/${productId}/editar`);
+  revalidatePath("/produtos");
   return {};
 }
 

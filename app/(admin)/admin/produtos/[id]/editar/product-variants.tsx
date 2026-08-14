@@ -1,42 +1,25 @@
 "use client";
 
-import { useActionState, useTransition } from "react";
+import { useActionState } from "react";
 import Link from "next/link";
-import { createVariant, toggleVariantStatus, archiveVariant, type VariantFormState } from "@/lib/products/variant-actions";
+import { createVariant, type VariantFormState } from "@/lib/products/variant-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { VariantStatus } from "@/types/database.types";
-
-type StoreColor = { id: string; name: string; hex: string; hex_secondary: string | null };
+import { VariantRow, type StoreColor, type Variant } from "./variant-row";
 
 type ProductVariantsProps = {
   productId: string;
-  variants: {
-    id: string;
-    name: string;
-    color: string | null;
-    color_id: string | null;
-    variant_group: string | null;
-    size: string | null;
-    price: number | null;
-    status: VariantStatus;
-  }[];
+  variants: Variant[];
   colors: StoreColor[];
 };
 
 const initialState: VariantFormState = {};
 
-function formatPrice(price: number) {
-  return price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
 export function ProductVariants({ productId, variants, colors }: ProductVariantsProps) {
   const createAction = createVariant.bind(null, productId);
   const [state, formAction, isPending] = useActionState(createAction, initialState);
-  const [isToggling, startTransition] = useTransition();
 
-  const colorById = new Map(colors.map((color) => [color.id, color]));
   const existingGroups = [
     ...new Set(variants.map((v) => v.variant_group).filter((g): g is string => Boolean(g))),
   ];
@@ -50,60 +33,15 @@ export function ProductVariants({ productId, variants, colors }: ProductVariants
 
       {variants.length > 0 ? (
         <div className="flex flex-col divide-y divide-zinc-200 border-y border-zinc-200">
-          {variants.map((variant) => {
-            const color = variant.color_id ? colorById.get(variant.color_id) : undefined;
-
-            return (
-            <div key={variant.id} className="flex items-center justify-between gap-4 py-3">
-              <div className="flex min-w-0 items-center gap-3">
-                {color ? (
-                  <span
-                    aria-hidden
-                    title={color.name}
-                    className="size-6 shrink-0 rounded-full border border-foreground/15"
-                    style={
-                      color.hex_secondary
-                        ? { background: `linear-gradient(135deg, ${color.hex} 50%, ${color.hex_secondary} 50%)` }
-                        : { backgroundColor: color.hex }
-                    }
-                  />
-                ) : null}
-                <div className="flex min-w-0 flex-col">
-                  <span className="truncate text-sm">{variant.name}</span>
-                  <span className="text-xs text-zinc-500">
-                    {variant.variant_group ? `${variant.variant_group} · ` : ""}
-                    {variant.price ? formatPrice(variant.price) : "Preço base"} ·{" "}
-                    {variant.status === "available" ? "Disponível" : "Esgotado"}
-                    {color ? ` · ${color.name}` : ""}
-                    {/* Variante anterior à migration 0013 que não casou com
-                        nenhuma cor cadastrada: não aparece no filtro público. */}
-                    {!color && variant.color ? ` · ${variant.color} (sem cor cadastrada)` : ""}
-                  </span>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="xs"
-                  disabled={isToggling}
-                  onClick={() => startTransition(() => toggleVariantStatus(productId, variant.id, variant.status))}
-                >
-                  {variant.status === "available" ? "Marcar esgotado" : "Marcar disponível"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="xs"
-                  disabled={isToggling}
-                  onClick={() => startTransition(() => archiveVariant(productId, variant.id))}
-                >
-                  Remover
-                </Button>
-              </div>
-            </div>
-            );
-          })}
+          {variants.map((variant) => (
+            <VariantRow
+              key={variant.id}
+              productId={productId}
+              variant={variant}
+              colors={colors}
+              groups={existingGroups}
+            />
+          ))}
         </div>
       ) : null}
 
