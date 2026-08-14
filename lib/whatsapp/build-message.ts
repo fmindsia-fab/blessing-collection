@@ -1,3 +1,4 @@
+import { isPriceVariable, PRICE_VARIATION_WHATSAPP_NOTE } from "@/lib/pricing/price-display";
 import type { ProductStatus } from "@/types/database.types";
 
 type BuildWhatsappMessageParams = {
@@ -45,7 +46,11 @@ export function buildWhatsappMessage({
   productUrl,
 }: BuildWhatsappMessageParams): string {
   const intent = buildIntentSentence(status, productName, variantLabel);
-  return `Olá! ${intent} Vi o produto no catálogo da ${storeName}: ${productUrl}`;
+  const base = `Olá! ${intent} Vi o produto no catálogo da ${storeName}: ${productUrl}`;
+
+  // A ressalva chega junto do pedido, então a proprietária já responde com o
+  // valor vigente. Só sob encomenda: peça pronta tem preço firme.
+  return isPriceVariable(status) ? `${base}\n\n${PRICE_VARIATION_WHATSAPP_NOTE}` : base;
 }
 
 export function buildWhatsappLink(whatsappNumber: string, message: string): string {
@@ -82,5 +87,11 @@ export function buildSelectionWhatsappMessage(storeName: string, items: Selectio
     .map((item) => `• ${item.name}${selectionStatusSuffix(item.status)} — ${item.url}`)
     .join("\n");
 
-  return `${intro}\n\n${list}`;
+  // Uma única ressalva no fim, não uma por item: a lista já marca quais são
+  // sob encomenda, e repetir a observação em cada linha tornaria a mensagem
+  // ilegível.
+  const hasVariablePrice = items.some((item) => item.status && isPriceVariable(item.status));
+  const notice = hasVariablePrice ? `\n\n${PRICE_VARIATION_WHATSAPP_NOTE}` : "";
+
+  return `${intro}\n\n${list}${notice}`;
 }

@@ -6,6 +6,7 @@ import { XIcon } from "lucide-react";
 import { useSelection } from "@/lib/selection/selection-context";
 import { track } from "@/lib/analytics/track";
 import { buildSelectionWhatsappMessage, buildWhatsappLink } from "@/lib/whatsapp/build-message";
+import { isPriceVariable, PRICE_VARIATION_NOTICE } from "@/lib/pricing/price-display";
 import { ActionButton, ActionLink } from "@/components/ui/action";
 
 type SelectionReviewProps = {
@@ -40,6 +41,7 @@ export function SelectionReview({ storeId, storeName, storeWhatsapp, siteUrl }: 
   const total = items.reduce((sum, item) => sum + item.price, 0);
   // Se alguma peça tem variante com preço próprio, o total é um piso, não o valor final.
   const totalIsFrom = items.some((item) => item.priceIsFrom);
+  const hasMadeToOrder = items.some((item) => item.status && isPriceVariable(item.status));
 
   const message = buildSelectionWhatsappMessage(
     storeName,
@@ -109,6 +111,14 @@ export function SelectionReview({ storeId, storeName, storeWhatsapp, siteUrl }: 
             : "Valor de referência. "}
           Condições e frete são combinados diretamente pelo WhatsApp.
         </span>
+
+        {/* Uma ressalva para a seleção inteira: a lista já marca quais peças
+            são sob encomenda, e repeti-la por item tornaria a tela ilegível. */}
+        {hasMadeToOrder ? (
+          <span className="max-w-md border-l-2 border-[var(--gold)] pl-4 text-xs leading-relaxed text-muted-foreground">
+            {PRICE_VARIATION_NOTICE}
+          </span>
+        ) : null}
       </div>
 
       <div className="flex flex-wrap items-center gap-5">

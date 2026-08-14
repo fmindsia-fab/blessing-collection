@@ -5,6 +5,11 @@ import { getProductBySlug, getRelatedProducts } from "@/lib/products/queries";
 import { listPaymentMethods } from "@/lib/pricing/queries";
 import { calculateInstallmentOptions } from "@/lib/pricing/calculate";
 import { toCents } from "@/lib/pricing/money";
+import {
+  isPriceVariable,
+  priceLabel,
+  PRICE_VARIATION_NOTICE,
+} from "@/lib/pricing/price-display";
 import { ProductCard } from "@/components/catalog/product-card";
 import { SectionHeading } from "@/components/catalog/section-heading";
 import { ProductDetails } from "@/components/catalog/product-details";
@@ -102,11 +107,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <h1 className="font-[family-name:var(--font-brand)] text-[2.5rem] leading-[1.05] tracking-tight sm:text-5xl">
               {product.name}
             </h1>
-            <p className="flex items-baseline gap-2 text-xl">
-              {hasVariantPricing ? <span className="kicker normal-case">a partir de</span> : null}
-              {formatPrice(displayPrice)}
-              <span className="text-xs text-muted-foreground">à vista</span>
-            </p>
+            <div className="flex flex-col gap-1">
+              <span className="kicker">{priceLabel(product.status)}</span>
+              <p className="flex items-baseline gap-2 text-xl">
+                {hasVariantPricing ? <span className="kicker normal-case">a partir de</span> : null}
+                {formatPrice(displayPrice)}
+                <span className="text-xs text-muted-foreground">à vista</span>
+              </p>
+            </div>
 
             {/* O preço da peça é o valor à vista; a taxa do cartão é repassada
                 a quem escolhe parcelar. */}
@@ -117,6 +125,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 methods: paymentMethods,
               })}
             />
+
+            {/* Só sob encomenda: peça pronta tem preço firme, e a ressalva ali
+                enfraqueceria a confiança onde não há incerteza. */}
+            {isPriceVariable(product.status) ? (
+              <p className="max-w-prose border-l-2 border-[var(--gold)] pl-4 text-xs leading-relaxed text-muted-foreground">
+                {PRICE_VARIATION_NOTICE}
+              </p>
+            ) : null}
           </div>
 
           {product.description ? (
