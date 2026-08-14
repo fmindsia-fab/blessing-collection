@@ -4,7 +4,8 @@ import { getActiveStore } from "@/lib/store/get-active-store";
 import { getProductBySlug, getRelatedProducts } from "@/lib/products/queries";
 import { listPaymentMethods } from "@/lib/pricing/queries";
 import { calculateInstallmentOptions } from "@/lib/pricing/calculate";
-import { toCents } from "@/lib/pricing/money";
+import { toCents, toReais } from "@/lib/pricing/money";
+import { cn } from "@/lib/utils";
 import {
   isPriceVariable,
   priceLabel,
@@ -108,7 +109,16 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               {product.name}
             </h1>
             <div className="flex flex-col gap-1">
-              <span className="kicker">{priceLabel(product.status)}</span>
+              {/* Sob encomenda o rótulo ganha a cor de destaque da marca: é o
+                  aviso de que aquele número ainda pode mudar. */}
+              <span
+                className={cn(
+                  "kicker",
+                  isPriceVariable(product.status) && "text-[var(--gold)]",
+                )}
+              >
+                {priceLabel(product.status)}
+              </span>
               <p className="flex items-baseline gap-2 text-xl">
                 {hasVariantPricing ? <span className="kicker normal-case">a partir de</span> : null}
                 {formatPrice(displayPrice)}
@@ -124,14 +134,20 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 cashPriceCents: toCents(displayPrice),
                 methods: paymentMethods,
               })}
+              // Com variantes de preços diferentes, o parcelamento é calculado
+              // sobre o menor: precisa ficar dito, senão a cliente supõe que a
+              // parcela vale para qualquer variação.
+              isFromPrice={hasVariantPricing}
             />
 
             {/* Só sob encomenda: peça pronta tem preço firme, e a ressalva ali
                 enfraqueceria a confiança onde não há incerteza. */}
             {isPriceVariable(product.status) ? (
-              <p className="max-w-prose border-l-2 border-[var(--gold)] pl-4 text-xs leading-relaxed text-muted-foreground">
-                {PRICE_VARIATION_NOTICE}
-              </p>
+              <div className="max-w-prose rounded-[var(--radius)] border border-[var(--gold)]/40 bg-[var(--gold)]/[0.07] p-4">
+                <p className="text-[0.8125rem] leading-relaxed text-foreground/85">
+                  {PRICE_VARIATION_NOTICE}
+                </p>
+              </div>
             ) : null}
           </div>
 
@@ -163,18 +179,31 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <div className="flex flex-col gap-3">
               <span className="kicker">Variações</span>
               <div className="flex flex-wrap gap-2">
-                {variants.map((variant) => (
-                  <span
-                    key={variant.id}
-                    className={`rounded-full border px-4 py-2 text-xs tracking-wide ${
-                      variant.status === "sold_out"
-                        ? "border-border text-muted-foreground/60 line-through"
-                        : "border-foreground/25 text-foreground"
-                    }`}
-                  >
-                    {variant.name}
-                  </span>
-                ))}
+                {variants.map((variant) => {
+                  // Variação com preço próprio precisa mostrá-lo: sem isso a
+                  // cliente vê só "a partir de" e descobre o valor real no
+                  // WhatsApp, o que soa a surpresa.
+                  const extraCents =
+                    variant.price != null ? toCents(variant.price) - toCents(displayPrice) : 0;
+
+                  return (
+                    <span
+                      key={variant.id}
+                      className={`inline-flex items-baseline gap-1.5 rounded-full border px-4 py-2 text-xs tracking-wide ${
+                        variant.status === "sold_out"
+                          ? "border-border text-muted-foreground/60 line-through"
+                          : "border-foreground/25 text-foreground"
+                      }`}
+                    >
+                      {variant.name}
+                      {extraCents > 0 ? (
+                        <span className="text-muted-foreground">
+                          +{formatPrice(toReais(extraCents))}
+                        </span>
+                      ) : null}
+                    </span>
+                  );
+                })}
               </div>
             </div>
           ) : null}

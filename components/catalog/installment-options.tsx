@@ -16,9 +16,12 @@ import type { InstallmentOption } from "@/lib/pricing/calculate";
 export function InstallmentOptions({
   cashPriceCents,
   options,
+  isFromPrice = false,
 }: {
   cashPriceCents: number;
   options: InstallmentOption[];
+  /** Peça com variantes de preços diferentes: os valores partem do menor. */
+  isFromPrice?: boolean;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -28,13 +31,26 @@ export function InstallmentOptions({
   if (withSurcharge.length === 0) return null;
 
   // A maior parcela é a chamada: é o número que responde "cabe no meu mês?".
-  const longest = withSurcharge[withSurcharge.length - 1];
+  const longest = withSurcharge.reduce((max, option) =>
+    option.method.installments > max.method.installments ? option : max,
+  );
 
   return (
     <div className="flex flex-col gap-3">
+      {/* "em até" sinaliza que 12x é o teto, não a única opção — sem isso, a
+          frase sugere que só existe aquele parcelamento. Com uma parcela só,
+          "até" não faz sentido. */}
       <p className="text-sm text-muted-foreground">
-        ou {longest.method.installments}× de{" "}
-        <span className="text-foreground">{formatBRL(longest.installmentCents)}</span> no cartão
+        {longest.method.installments > 1 ? (
+          <>
+            ou em até {longest.method.installments}× de{" "}
+            <span className="text-foreground">{formatBRL(longest.installmentCents)}</span> no cartão
+          </>
+        ) : (
+          <>
+            ou <span className="text-foreground">{formatBRL(longest.priceCents)}</span> no cartão
+          </>
+        )}
       </p>
 
       <button
@@ -51,6 +67,12 @@ export function InstallmentOptions({
 
       {open ? (
         <dl className="flex flex-col divide-y divide-border border-y border-border text-sm">
+          {isFromPrice ? (
+            <p className="py-2.5 text-xs text-muted-foreground">
+              Valores calculados sobre a variação de menor preço.
+            </p>
+          ) : null}
+
           <div className="flex items-baseline justify-between gap-4 py-2.5">
             <dt>À vista no Pix</dt>
             <dd className="tabular-nums">{formatBRL(cashPriceCents)}</dd>

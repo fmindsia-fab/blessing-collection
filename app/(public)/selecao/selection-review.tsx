@@ -115,9 +115,11 @@ export function SelectionReview({ storeId, storeName, storeWhatsapp, siteUrl }: 
         {/* Uma ressalva para a seleção inteira: a lista já marca quais peças
             são sob encomenda, e repeti-la por item tornaria a tela ilegível. */}
         {hasMadeToOrder ? (
-          <span className="max-w-md border-l-2 border-[var(--gold)] pl-4 text-xs leading-relaxed text-muted-foreground">
-            {PRICE_VARIATION_NOTICE}
-          </span>
+          <div className="mt-1 max-w-md rounded-[var(--radius)] border border-[var(--gold)]/40 bg-[var(--gold)]/[0.07] p-4">
+            <p className="text-[0.8125rem] leading-relaxed text-foreground/85">
+              {PRICE_VARIATION_NOTICE}
+            </p>
+          </div>
         ) : null}
       </div>
 
