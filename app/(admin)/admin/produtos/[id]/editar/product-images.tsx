@@ -56,6 +56,17 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
     }
   }, [isUploading]);
 
+  // `cancel` dispara quando o seletor fecha sem escolha. Sem ele, "abriu e não
+  // selecionou" e "nem abriu" são indistinguíveis no diagnóstico. Vai por
+  // addEventListener porque o React não tipa `onCancel` em <input>.
+  useEffect(() => {
+    const input = inputRef.current;
+    if (!input) return;
+    const onCancel = () => log("seletor fechado sem escolher arquivo");
+    input.addEventListener("cancel", onCancel);
+    return () => input.removeEventListener("cancel", onCancel);
+  }, []);
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
@@ -166,10 +177,12 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
               id="product-image-input"
               type="file"
               name="file"
-              // `image/*` em vez da lista de MIMEs: alguns Androids escondem a
-              // câmera e filtram demais a galeria quando o accept é restrito.
-              // O servidor rejeita formato inválido de qualquer forma.
-              accept="image/*"
+              // Sem `accept`: no Chrome Android o `accept="image/*"` faz o
+              // seletor ser aberto via intent do sistema, e quando esse intent
+              // falha ou volta vazio o evento `change` simplesmente nunca é
+              // emitido — o toque é registrado e nada mais acontece. Sem o
+              // atributo o Chrome usa o seletor de arquivos padrão, que sempre
+              // responde. O servidor valida o formato de qualquer forma.
               // Sem `disabled` aqui: um input de arquivo desabilitado não abre o
               // seletor, e se `isBusy` travar (um envio que nunca completa) o
               // botão morre de vez. O onChange já ignora toques durante o envio.
