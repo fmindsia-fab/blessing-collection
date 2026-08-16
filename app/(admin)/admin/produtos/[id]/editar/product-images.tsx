@@ -125,66 +125,77 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
       ) : null}
 
       {images.length < 8 ? (
-        <form action={formAction} className="relative flex flex-col gap-2">
-          {/* O input é acionado por um <label> que o envolve, não por
-              `.click()` a partir de um <button>. No celular (Safari iOS e
-              WebViews do Android) o `.click()` programático é ignorado quando o
-              input está com `opacity: 0` ou fora da viewport — o navegador o
-              trata como não-interativo e o seletor nunca abre. Com o label, o
-              toque é um gesto nativo do usuário e não passa por JavaScript.
+        <form action={formAction} className="flex flex-col gap-2">
+          {/* `relative` fica neste wrapper, não no <form>: o input é
+              `inset-0` e cobriria a mensagem de erro logo abaixo. */}
+          <div className="relative">
+          {/* O input cobre toda a área do bloco e recebe o toque diretamente,
+              em vez de ficar escondido atrás de um label ou ser acionado por
+              `.click()`. No Chrome Android um input de arquivo sem área de
+              renderização (`size-0`, `opacity: 0`, fora da viewport) não abre o
+              seletor de forma confiável, seja por clique programático ou por
+              encaminhamento do label — no desktop os mesmos truques funcionam,
+              o que faz o bug parecer exclusivo do celular.
 
-              Por isso o input também não pode usar `hidden`, `display: none`
-              nem `opacity: 0`: fica com tamanho zero e `overflow-hidden` no
-              label, que o mantém elegível ao clique.
+              Aqui ele é um alvo de toque real: ocupa a mesma caixa do visual,
+              fica por cima (`z-10`) e só o texto é transparente. O conteúdo
+              exibido vive numa camada `pointer-events-none` embaixo.
 
-              Sem `required`: num input invisível o navegador tentaria exibir
-              "Preencha este campo" apontando para um elemento que não existe
-              na tela. O servidor já recusa envio sem arquivo. */}
-          <input
-            ref={inputRef}
-            id="product-image-input"
-            type="file"
-            name="file"
-            // `image/*` em vez da lista de MIMEs: alguns Androids escondem a
-            // câmera e filtram demais a galeria quando o accept é restrito.
-            // O servidor rejeita formato inválido de qualquer forma.
-            accept="image/*"
-            // Sem `disabled` aqui: um input de arquivo desabilitado deixa o
-            // label inerte, e se `isBusy` travar (um envio que nunca completa)
-            // o botão morre de vez. O onChange já ignora toques durante o envio.
-            onChange={async (e) => {
-              const file = e.target.files?.[0];
-              if (!file || isBusy) return;
-              // Envia o arquivo comprimido em vez de deixar o form serializar o
-              // original: foto de celular passa de 10MB e a Server Action seria
-              // abortada sem mensagem nenhuma na tela.
-              setIsCompressing(true);
-              const compressed = await compressImage(file);
-              setIsCompressing(false);
-              const data = new FormData();
-              data.set("file", compressed);
-              startTransition(() => formAction(data));
-            }}
-            className="absolute size-0 overflow-hidden border-0 p-0"
-          />
-          <label
-            htmlFor="product-image-input"
-            className="flex min-h-32 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-[var(--radius)] border border-dashed border-input px-6 py-8 text-center transition-colors hover:border-foreground/40 hover:bg-secondary/50 focus-within:border-foreground/40 focus-within:ring-2 focus-within:ring-[var(--gold)]/40"
-          >
-            <span className="flex size-11 items-center justify-center rounded-full bg-secondary text-foreground">
-              {isBusy ? (
-                <Loader2Icon className="size-5 animate-spin" />
-              ) : (
-                <ImagePlusIcon className="size-5" />
-              )}
-            </span>
-            <span className="text-sm font-medium">
-              {isCompressing ? "Preparando foto…" : isUploading ? "Enviando…" : "Toque para adicionar uma foto"}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {images.length}/8 · JPEG, PNG ou WebP, até 10MB
-            </span>
-          </label>
+              Sem `required`: o navegador tentaria exibir "Preencha este campo"
+              apontando para um controle sem texto visível. O servidor já
+              recusa envio sem arquivo. */}
+            <input
+              ref={inputRef}
+              id="product-image-input"
+              type="file"
+              name="file"
+              // `image/*` em vez da lista de MIMEs: alguns Androids escondem a
+              // câmera e filtram demais a galeria quando o accept é restrito.
+              // O servidor rejeita formato inválido de qualquer forma.
+              accept="image/*"
+              // Sem `disabled` aqui: um input de arquivo desabilitado não abre o
+              // seletor, e se `isBusy` travar (um envio que nunca completa) o
+              // botão morre de vez. O onChange já ignora toques durante o envio.
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file || isBusy) return;
+                // Envia o arquivo comprimido em vez de deixar o form serializar
+                // o original: foto de celular passa de 10MB e a Server Action
+                // seria abortada sem mensagem nenhuma na tela.
+                setIsCompressing(true);
+                const compressed = await compressImage(file);
+                setIsCompressing(false);
+                const data = new FormData();
+                data.set("file", compressed);
+                startTransition(() => formAction(data));
+              }}
+              aria-label="Adicionar uma foto do produto"
+              // Invisível por cor, não por `opacity: 0` nem `size-0`: o elemento
+              // continua com área e pintura reais, que é o que o Chrome Android
+              // exige para abrir o seletor.
+              className="peer absolute inset-0 z-10 size-full cursor-pointer bg-transparent text-[0px] text-transparent file:hidden"
+            />
+            <div
+              aria-hidden="true"
+              // O input está por cima, então hover/foco são espelhados dele
+              // via `peer-*` — sem isso o bloco não daria retorno visual.
+              className="pointer-events-none flex min-h-32 w-full flex-col items-center justify-center gap-2 rounded-[var(--radius)] border border-dashed border-input px-6 py-8 text-center transition-colors peer-hover:border-foreground/40 peer-hover:bg-secondary/50 peer-focus-visible:border-foreground/40 peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--gold)]/40"
+            >
+              <span className="flex size-11 items-center justify-center rounded-full bg-secondary text-foreground">
+                {isBusy ? (
+                  <Loader2Icon className="size-5 animate-spin" />
+                ) : (
+                  <ImagePlusIcon className="size-5" />
+                )}
+              </span>
+              <span className="text-sm font-medium">
+                {isCompressing ? "Preparando foto…" : isUploading ? "Enviando…" : "Toque para adicionar uma foto"}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {images.length}/8 · JPEG, PNG ou WebP, até 10MB
+              </span>
+            </div>
+          </div>
           {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
         </form>
       ) : null}
