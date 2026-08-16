@@ -126,23 +126,30 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
 
       {images.length < 8 ? (
         <form action={formAction} className="relative flex flex-col gap-2">
-          {/* O input fica fora de tela em vez de `sr-only` (width:1px +
-              clip-path), que impede o Safari iOS de abrir o seletor, e é
-              acionado por `.click()` a partir de um <button> real.
+          {/* O input é acionado por um <label> que o envolve, não por
+              `.click()` a partir de um <button>. No celular (Safari iOS e
+              WebViews do Android) o `.click()` programático é ignorado quando o
+              input está com `opacity: 0` ou fora da viewport — o navegador o
+              trata como não-interativo e o seletor nunca abre. Com o label, o
+              toque é um gesto nativo do usuário e não passa por JavaScript.
+
+              Por isso o input também não pode usar `hidden`, `display: none`
+              nem `opacity: 0`: fica com tamanho zero e `overflow-hidden` no
+              label, que o mantém elegível ao clique.
 
               Sem `required`: num input invisível o navegador tentaria exibir
               "Preencha este campo" apontando para um elemento que não existe
               na tela. O servidor já recusa envio sem arquivo. */}
           <input
             ref={inputRef}
+            id="product-image-input"
             type="file"
             name="file"
             // `image/*` em vez da lista de MIMEs: alguns Androids escondem a
             // câmera e filtram demais a galeria quando o accept é restrito.
             // O servidor rejeita formato inválido de qualquer forma.
             accept="image/*"
-            tabIndex={-1}
-            aria-hidden="true"
+            disabled={isBusy}
             onChange={async (e) => {
               const file = e.target.files?.[0];
               if (!file) return;
@@ -156,13 +163,11 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
               data.set("file", compressed);
               startTransition(() => formAction(data));
             }}
-            className="absolute left-[-9999px] size-px opacity-0"
+            className="absolute size-0 overflow-hidden border-0 p-0"
           />
-          <button
-            type="button"
-            disabled={isBusy}
-            onClick={() => inputRef.current?.click()}
-            className="flex min-h-32 w-full flex-col items-center justify-center gap-2 rounded-[var(--radius)] border border-dashed border-input px-6 py-8 text-center outline-none transition-colors hover:border-foreground/40 hover:bg-secondary/50 focus-visible:border-foreground/40 focus-visible:ring-2 focus-visible:ring-[var(--gold)]/40 disabled:opacity-60"
+          <label
+            htmlFor="product-image-input"
+            className="flex min-h-32 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-[var(--radius)] border border-dashed border-input px-6 py-8 text-center transition-colors hover:border-foreground/40 hover:bg-secondary/50 focus-within:border-foreground/40 focus-within:ring-2 focus-within:ring-[var(--gold)]/40 has-[:disabled]:cursor-default has-[:disabled]:opacity-60"
           >
             <span className="flex size-11 items-center justify-center rounded-full bg-secondary text-foreground">
               {isBusy ? (
@@ -177,7 +182,7 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
             <span className="text-xs text-muted-foreground">
               {images.length}/8 · JPEG, PNG ou WebP, até 10MB
             </span>
-          </button>
+          </label>
           {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
         </form>
       ) : null}
