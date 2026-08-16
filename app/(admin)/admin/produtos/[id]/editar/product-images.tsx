@@ -149,10 +149,12 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
             // câmera e filtram demais a galeria quando o accept é restrito.
             // O servidor rejeita formato inválido de qualquer forma.
             accept="image/*"
-            disabled={isBusy}
+            // Sem `disabled` aqui: um input de arquivo desabilitado deixa o
+            // label inerte, e se `isBusy` travar (um envio que nunca completa)
+            // o botão morre de vez. O onChange já ignora toques durante o envio.
             onChange={async (e) => {
               const file = e.target.files?.[0];
-              if (!file) return;
+              if (!file || isBusy) return;
               // Envia o arquivo comprimido em vez de deixar o form serializar o
               // original: foto de celular passa de 10MB e a Server Action seria
               // abortada sem mensagem nenhuma na tela.
@@ -167,7 +169,7 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
           />
           <label
             htmlFor="product-image-input"
-            className="flex min-h-32 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-[var(--radius)] border border-dashed border-input px-6 py-8 text-center transition-colors hover:border-foreground/40 hover:bg-secondary/50 focus-within:border-foreground/40 focus-within:ring-2 focus-within:ring-[var(--gold)]/40 has-[:disabled]:cursor-default has-[:disabled]:opacity-60"
+            className="flex min-h-32 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-[var(--radius)] border border-dashed border-input px-6 py-8 text-center transition-colors hover:border-foreground/40 hover:bg-secondary/50 focus-within:border-foreground/40 focus-within:ring-2 focus-within:ring-[var(--gold)]/40"
           >
             <span className="flex size-11 items-center justify-center rounded-full bg-secondary text-foreground">
               {isBusy ? (
