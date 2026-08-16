@@ -33,10 +33,27 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const isBusy = isCompressing || isUploading;
 
+  // Diagnóstico temporário: o upload falha em Chrome Android sem erro visível e
+  // sem acesso ao console do aparelho. Mostra na tela em que ponto o fluxo para.
+  // Remover assim que a causa estiver identificada.
+  const [debug, setDebug] = useState<string[]>([]);
+  const log = (message: string) =>
+    setDebug((entries) => [...entries, `${new Date().toLocaleTimeString()} · ${message}`]);
+
   // Limpa o input ao terminar o envio: sem isso o arquivo continua selecionado
-  // e escolher a mesma foto de novo não dispara `change`.
+  // e escolher a mesma foto de novo não dispara `change`. Só age depois de um
+  // envio de verdade — mexer no input na montagem é desnecessário e, em alguns
+  // navegadores, atrapalha a abertura do seletor.
+  const wasUploading = useRef(false);
   useEffect(() => {
-    if (!isUploading && inputRef.current) inputRef.current.value = "";
+    if (isUploading) {
+      wasUploading.current = true;
+      return;
+    }
+    if (wasUploading.current && inputRef.current) {
+      inputRef.current.value = "";
+      wasUploading.current = false;
+    }
   }, [isUploading]);
 
   return (
@@ -156,17 +173,26 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
               // Sem `disabled` aqui: um input de arquivo desabilitado não abre o
               // seletor, e se `isBusy` travar (um envio que nunca completa) o
               // botão morre de vez. O onChange já ignora toques durante o envio.
+              onClick={() => log("toque recebido no input")}
               onChange={async (e) => {
                 const file = e.target.files?.[0];
+                log(`change: ${file ? `${file.name} · ${(file.size / 1024 / 1024).toFixed(1)}MB · ${file.type || "sem tipo"}` : "sem arquivo"}`);
                 if (!file || isBusy) return;
                 // Envia o arquivo comprimido em vez de deixar o form serializar
                 // o original: foto de celular passa de 10MB e a Server Action
                 // seria abortada sem mensagem nenhuma na tela.
                 setIsCompressing(true);
-                const compressed = await compressImage(file);
+                let compressed = file;
+                try {
+                  compressed = await compressImage(file);
+                  log(`comprimida: ${(compressed.size / 1024 / 1024).toFixed(1)}MB · ${compressed.type}`);
+                } catch (error) {
+                  log(`erro ao comprimir: ${error instanceof Error ? error.message : String(error)}`);
+                }
                 setIsCompressing(false);
                 const data = new FormData();
                 data.set("file", compressed);
+                log("enviando para o servidor…");
                 startTransition(() => formAction(data));
               }}
               aria-label="Adicionar uma foto do produto"
@@ -197,6 +223,27 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
             </div>
           </div>
           {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
+
+          {/* Diagnóstico temporário — remover quando o bug estiver resolvido. */}
+          {debug.length > 0 ? (
+            <div className="flex flex-col gap-1 rounded-[var(--radius)] bg-secondary p-3">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-medium">Diagnóstico</span>
+                <button
+                  type="button"
+                  onClick={() => setDebug([])}
+                  className="text-xs text-muted-foreground underline"
+                >
+                  limpar
+                </button>
+              </div>
+              {debug.map((entry, i) => (
+                <p key={i} className="break-all font-mono text-[0.6875rem] leading-relaxed">
+                  {entry}
+                </p>
+              ))}
+            </div>
+          ) : null}
         </form>
       ) : null}
     </div>
