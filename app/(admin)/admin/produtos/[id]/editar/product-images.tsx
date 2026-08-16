@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import Image from "next/image";
-import { ImagePlusIcon, Loader2Icon } from "lucide-react";
+import { CameraIcon, ImagePlusIcon, Loader2Icon } from "lucide-react";
 import {
   uploadProductImage,
   setCoverImage,
@@ -31,6 +31,7 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
   // que é justamente o mais longo no celular.
   const [isCompressing, setIsCompressing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
   const isBusy = isCompressing || isUploading;
 
   // Diagnóstico temporário: o upload falha em Chrome Android sem erro visível e
@@ -65,6 +66,47 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
     const onCancel = () => log("seletor fechado sem escolher arquivo");
     input.addEventListener("cancel", onCancel);
     return () => input.removeEventListener("cancel", onCancel);
+  }, []);
+
+  // Caminho único de envio: o seletor de arquivos, a câmera, o colar e o
+  // arrastar chamam esta função. Assim uma origem que falhe num aparelho não
+  // impede as outras de funcionarem.
+  async function submitFile(file: File, origin: string) {
+    if (isBusy) return;
+    log(`${origin}: ${file.name || "sem nome"} · ${(file.size / 1024 / 1024).toFixed(1)}MB · ${file.type || "sem tipo"}`);
+
+    setIsCompressing(true);
+    let payload = file;
+    try {
+      payload = await compressImage(file);
+      log(`comprimida: ${(payload.size / 1024 / 1024).toFixed(1)}MB · ${payload.type}`);
+    } catch (error) {
+      log(`erro ao comprimir: ${error instanceof Error ? error.message : String(error)}`);
+    }
+    setIsCompressing(false);
+
+    const data = new FormData();
+    data.set("file", payload);
+    log("enviando para o servidor…");
+    startTransition(() => formAction(data));
+  }
+
+  // Colar (Ctrl+V ou "colar" do teclado Android) é um caminho que não passa
+  // pelo seletor de arquivos — funciona mesmo quando o intent do sistema falha.
+  // O handler vai numa ref para o listener ser registrado uma vez só, já que
+  // `submitFile` é recriada a cada render.
+  const submitFileRef = useRef(submitFile);
+  useEffect(() => {
+    submitFileRef.current = submitFile;
+  });
+
+  useEffect(() => {
+    const onPaste = (event: ClipboardEvent) => {
+      const file = Array.from(event.clipboardData?.files ?? [])[0];
+      if (file) void submitFileRef.current(file, "colado");
+    };
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
   }, []);
 
   return (
@@ -187,26 +229,13 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
               // seletor, e se `isBusy` travar (um envio que nunca completa) o
               // botão morre de vez. O onChange já ignora toques durante o envio.
               onClick={() => log("toque recebido no input")}
-              onChange={async (e) => {
+              onChange={(e) => {
                 const file = e.target.files?.[0];
-                log(`change: ${file ? `${file.name} · ${(file.size / 1024 / 1024).toFixed(1)}MB · ${file.type || "sem tipo"}` : "sem arquivo"}`);
-                if (!file || isBusy) return;
-                // Envia o arquivo comprimido em vez de deixar o form serializar
-                // o original: foto de celular passa de 10MB e a Server Action
-                // seria abortada sem mensagem nenhuma na tela.
-                setIsCompressing(true);
-                let compressed = file;
-                try {
-                  compressed = await compressImage(file);
-                  log(`comprimida: ${(compressed.size / 1024 / 1024).toFixed(1)}MB · ${compressed.type}`);
-                } catch (error) {
-                  log(`erro ao comprimir: ${error instanceof Error ? error.message : String(error)}`);
+                if (!file) {
+                  log("change disparou sem arquivo");
+                  return;
                 }
-                setIsCompressing(false);
-                const data = new FormData();
-                data.set("file", compressed);
-                log("enviando para o servidor…");
-                startTransition(() => formAction(data));
+                void submitFile(file, "selecionado");
               }}
               aria-label="Adicionar uma foto do produto"
               // Invisível por cor, não por `opacity: 0` nem `size-0`: o elemento
@@ -235,6 +264,38 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
               </span>
             </div>
           </div>
+
+          {/* Caminho alternativo: `capture` pede a câmera diretamente, por um
+              intent diferente do seletor de galeria. Se um dos dois falhar no
+              aparelho, o outro ainda resolve. */}
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <input
+              ref={cameraRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) void submitFile(file, "foto da câmera");
+                e.target.value = "";
+              }}
+              className="hidden"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="xs"
+              disabled={isBusy}
+              onClick={() => cameraRef.current?.click()}
+            >
+              <CameraIcon className="size-3.5" />
+              Tirar foto agora
+            </Button>
+            <span className="text-xs text-muted-foreground">
+              ou cole uma imagem copiada
+            </span>
+          </div>
+
           {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
 
           {/* Diagnóstico temporário — remover quando o bug estiver resolvido. */}
