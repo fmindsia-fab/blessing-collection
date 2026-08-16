@@ -12,9 +12,11 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     serverActions: {
-      // Acima do limite de 5MB do PRD para imagens de produto (seção 13.1),
-      // com folga para o overhead do multipart/form-data.
-      bodySizeLimit: "6mb",
+      // Precisa ficar acima do MAX_FILE_SIZE de 10MB de
+      // lib/products/image-actions.ts, com folga para o overhead do
+      // multipart/form-data. Se ficar abaixo, o Next aborta a Server Action
+      // antes de ela rodar e o usuário não vê erro nenhum.
+      bodySizeLimit: "12mb",
     },
   },
 };

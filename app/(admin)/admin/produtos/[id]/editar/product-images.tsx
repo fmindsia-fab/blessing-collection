@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useTransition } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import { ImagePlusIcon, Loader2Icon } from "lucide-react";
 import {
@@ -13,6 +13,7 @@ import {
 } from "@/lib/products/image-actions";
 import { Button } from "@/components/ui/button";
 import { ReorderButtons } from "@/components/admin/reorder-buttons";
+import { compressImage } from "@/lib/images/compress-image";
 
 type ProductImagesProps = {
   productId: string;
@@ -25,8 +26,12 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
   const uploadAction = uploadProductImage.bind(null, productId);
   const [state, formAction, isUploading] = useActionState(uploadAction, initialState);
   const [isPending, startTransition] = useTransition();
-  const formRef = useRef<HTMLFormElement>(null);
+  // A compressão acontece antes do `formAction`, então `isUploading` ainda é
+  // falso enquanto ela roda — sem este estado o botão fica mudo nesse intervalo,
+  // que é justamente o mais longo no celular.
+  const [isCompressing, setIsCompressing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const isBusy = isCompressing || isUploading;
 
   // Limpa o input ao terminar o envio: sem isso o arquivo continua selecionado
   // e escolher a mesma foto de novo não dispara `change`.
@@ -120,7 +125,7 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
       ) : null}
 
       {images.length < 8 ? (
-        <form ref={formRef} action={formAction} className="relative flex flex-col gap-2">
+        <form action={formAction} className="relative flex flex-col gap-2">
           {/* O input fica fora de tela em vez de `sr-only` (width:1px +
               clip-path), que impede o Safari iOS de abrir o seletor, e é
               acionado por `.click()` a partir de um <button> real.
@@ -138,26 +143,36 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
             accept="image/*"
             tabIndex={-1}
             aria-hidden="true"
-            onChange={(e) => {
-              if (e.target.files?.length) formRef.current?.requestSubmit();
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              // Envia o arquivo comprimido em vez de deixar o form serializar o
+              // original: foto de celular passa de 10MB e a Server Action seria
+              // abortada sem mensagem nenhuma na tela.
+              setIsCompressing(true);
+              const compressed = await compressImage(file);
+              setIsCompressing(false);
+              const data = new FormData();
+              data.set("file", compressed);
+              startTransition(() => formAction(data));
             }}
             className="absolute left-[-9999px] size-px opacity-0"
           />
           <button
             type="button"
-            disabled={isUploading}
+            disabled={isBusy}
             onClick={() => inputRef.current?.click()}
             className="flex min-h-32 w-full flex-col items-center justify-center gap-2 rounded-[var(--radius)] border border-dashed border-input px-6 py-8 text-center outline-none transition-colors hover:border-foreground/40 hover:bg-secondary/50 focus-visible:border-foreground/40 focus-visible:ring-2 focus-visible:ring-[var(--gold)]/40 disabled:opacity-60"
           >
             <span className="flex size-11 items-center justify-center rounded-full bg-secondary text-foreground">
-              {isUploading ? (
+              {isBusy ? (
                 <Loader2Icon className="size-5 animate-spin" />
               ) : (
                 <ImagePlusIcon className="size-5" />
               )}
             </span>
             <span className="text-sm font-medium">
-              {isUploading ? "Enviando…" : "Toque para adicionar uma foto"}
+              {isCompressing ? "Preparando foto…" : isUploading ? "Enviando…" : "Toque para adicionar uma foto"}
             </span>
             <span className="text-xs text-muted-foreground">
               {images.length}/8 · JPEG, PNG ou WebP, até 10MB
