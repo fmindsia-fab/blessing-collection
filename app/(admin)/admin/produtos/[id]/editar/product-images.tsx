@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import Image from "next/image";
-import { CameraIcon, ImagePlusIcon, Loader2Icon } from "lucide-react";
+import { ImagePlusIcon, Loader2Icon } from "lucide-react";
 import {
   uploadProductImage,
   setCoverImage,
@@ -31,15 +31,7 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
   // que é justamente o mais longo no celular.
   const [isCompressing, setIsCompressing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const cameraRef = useRef<HTMLInputElement>(null);
   const isBusy = isCompressing || isUploading;
-
-  // Diagnóstico temporário: o upload falha em Chrome Android sem erro visível e
-  // sem acesso ao console do aparelho. Mostra na tela em que ponto o fluxo para.
-  // Remover assim que a causa estiver identificada.
-  const [debug, setDebug] = useState<string[]>([]);
-  const log = (message: string) =>
-    setDebug((entries) => [...entries, `${new Date().toLocaleTimeString()} · ${message}`]);
 
   // Limpa o input ao terminar o envio: sem isso o arquivo continua selecionado
   // e escolher a mesma foto de novo não dispara `change`. Só age depois de um
@@ -57,57 +49,20 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
     }
   }, [isUploading]);
 
-  // `cancel` dispara quando o seletor fecha sem escolha. Sem ele, "abriu e não
-  // selecionou" e "nem abriu" são indistinguíveis no diagnóstico. Vai por
-  // addEventListener porque o React não tipa `onCancel` em <input>.
-  useEffect(() => {
-    const input = inputRef.current;
-    if (!input) return;
-    const onCancel = () => log("seletor fechado sem escolher arquivo");
-    input.addEventListener("cancel", onCancel);
-    return () => input.removeEventListener("cancel", onCancel);
-  }, []);
-
-  // Caminho único de envio: o seletor de arquivos, a câmera, o colar e o
-  // arrastar chamam esta função. Assim uma origem que falhe num aparelho não
-  // impede as outras de funcionarem.
-  async function submitFile(file: File, origin: string) {
-    if (isBusy) return;
-    log(`${origin}: ${file.name || "sem nome"} · ${(file.size / 1024 / 1024).toFixed(1)}MB · ${file.type || "sem tipo"}`);
-
+  async function submitFile(file: File) {
     setIsCompressing(true);
     let payload = file;
     try {
       payload = await compressImage(file);
-      log(`comprimida: ${(payload.size / 1024 / 1024).toFixed(1)}MB · ${payload.type}`);
-    } catch (error) {
-      log(`erro ao comprimir: ${error instanceof Error ? error.message : String(error)}`);
+    } catch {
+      // best-effort — envia o original se a compressão falhar
     }
     setIsCompressing(false);
 
     const data = new FormData();
     data.set("file", payload);
-    log("enviando para o servidor…");
     startTransition(() => formAction(data));
   }
-
-  // Colar (Ctrl+V ou "colar" do teclado Android) é um caminho que não passa
-  // pelo seletor de arquivos — funciona mesmo quando o intent do sistema falha.
-  // O handler vai numa ref para o listener ser registrado uma vez só, já que
-  // `submitFile` é recriada a cada render.
-  const submitFileRef = useRef(submitFile);
-  useEffect(() => {
-    submitFileRef.current = submitFile;
-  });
-
-  useEffect(() => {
-    const onPaste = (event: ClipboardEvent) => {
-      const file = Array.from(event.clipboardData?.files ?? [])[0];
-      if (file) void submitFileRef.current(file, "colado");
-    };
-    window.addEventListener("paste", onPaste);
-    return () => window.removeEventListener("paste", onPaste);
-  }, []);
 
   return (
     <div className="flex flex-col gap-4">
@@ -196,16 +151,10 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
 
       {images.length < 8 ? (
         <form action={formAction} className="flex flex-col gap-2">
-          {/* O input aparece na tela como um controle de arquivo comum, sem
-              nenhum truque de CSS. Cada tentativa de escondê-lo — `size-0`,
-              `opacity: 0`, `font-size: 0`, posicionar fora da viewport, delegar
-              o toque a um `<label>` ou a um `.click()` programático — resultou
-              no Chrome Android abrir o seletor e aborta-lo na sequência (o
-              diagnóstico mostrava o toque seguido de `cancel` imediato).
-
-              É menos elegante que a área tracejada, mas é o controle nativo que
-              o navegador sabe abrir. Só voltar a escondê-lo depois de confirmar
-              num aparelho real que o seletor continua funcionando. */}
+          {/* Input de arquivo nativo, sem CSS escondendo-o e sem nenhuma lógica
+              no caminho do clique — nem log, nem setState antes do onChange.
+              É o mínimo que o HTML garante: tocar aqui abre a escolha do
+              sistema (câmera, galeria ou arquivos), sem exigir nada do site. */}
           <div className="flex flex-col items-center gap-3 rounded-[var(--radius)] border border-dashed border-input px-6 py-6 text-center">
             <span className="flex size-11 items-center justify-center rounded-full bg-secondary text-foreground">
               {isBusy ? (
@@ -222,21 +171,10 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
               id="product-image-input"
               type="file"
               name="file"
-              // `accept="image/*"` é necessário: sem ele o Chrome Android abre o
-              // seletor de documentos genérico, que não lista as fotos da
-              // galeria — a tela abre vazia e fechar devolve `cancel`.
               accept="image/*"
-              // Sem `disabled` aqui: um input de arquivo desabilitado não abre o
-              // seletor, e se `isBusy` travar (um envio que nunca completa) o
-              // botão morre de vez. O onChange já ignora toques durante o envio.
-              onClick={() => log("toque recebido no input")}
               onChange={(e) => {
                 const file = e.target.files?.[0];
-                if (!file) {
-                  log("change disparou sem arquivo");
-                  return;
-                }
-                void submitFile(file, "selecionado");
+                if (file) void submitFile(file);
               }}
               aria-label="Adicionar uma foto do produto"
               className="max-w-full text-sm"
@@ -246,59 +184,7 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
             </span>
           </div>
 
-          {/* Caminho alternativo: `capture` pede a câmera diretamente, por um
-              intent diferente do seletor de galeria. Se um dos dois falhar no
-              aparelho, o outro ainda resolve. */}
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <input
-              ref={cameraRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) void submitFile(file, "foto da câmera");
-                e.target.value = "";
-              }}
-              className="hidden"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="xs"
-              disabled={isBusy}
-              onClick={() => cameraRef.current?.click()}
-            >
-              <CameraIcon className="size-3.5" />
-              Tirar foto agora
-            </Button>
-            <span className="text-xs text-muted-foreground">
-              ou cole uma imagem copiada
-            </span>
-          </div>
-
           {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
-
-          {/* Diagnóstico temporário — remover quando o bug estiver resolvido. */}
-          {debug.length > 0 ? (
-            <div className="flex flex-col gap-1 rounded-[var(--radius)] bg-secondary p-3">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-medium">Diagnóstico</span>
-                <button
-                  type="button"
-                  onClick={() => setDebug([])}
-                  className="text-xs text-muted-foreground underline"
-                >
-                  limpar
-                </button>
-              </div>
-              {debug.map((entry, i) => (
-                <p key={i} className="break-all font-mono text-[0.6875rem] leading-relaxed">
-                  {entry}
-                </p>
-              ))}
-            </div>
-          ) : null}
         </form>
       ) : null}
     </div>
