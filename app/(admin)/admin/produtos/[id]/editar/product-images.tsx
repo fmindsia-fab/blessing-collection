@@ -196,24 +196,27 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
 
       {images.length < 8 ? (
         <form action={formAction} className="flex flex-col gap-2">
-          {/* `relative` fica neste wrapper, não no <form>: o input é
-              `inset-0` e cobriria a mensagem de erro logo abaixo. */}
-          <div className="relative">
-          {/* O input cobre toda a área do bloco e recebe o toque diretamente,
-              em vez de ficar escondido atrás de um label ou ser acionado por
-              `.click()`. No Chrome Android um input de arquivo sem área de
-              renderização (`size-0`, `opacity: 0`, fora da viewport) não abre o
-              seletor de forma confiável, seja por clique programático ou por
-              encaminhamento do label — no desktop os mesmos truques funcionam,
-              o que faz o bug parecer exclusivo do celular.
+          {/* O input aparece na tela como um controle de arquivo comum, sem
+              nenhum truque de CSS. Cada tentativa de escondê-lo — `size-0`,
+              `opacity: 0`, `font-size: 0`, posicionar fora da viewport, delegar
+              o toque a um `<label>` ou a um `.click()` programático — resultou
+              no Chrome Android abrir o seletor e aborta-lo na sequência (o
+              diagnóstico mostrava o toque seguido de `cancel` imediato).
 
-              Aqui ele é um alvo de toque real: ocupa a mesma caixa do visual,
-              fica por cima (`z-10`) e só o texto é transparente. O conteúdo
-              exibido vive numa camada `pointer-events-none` embaixo.
-
-              Sem `required`: o navegador tentaria exibir "Preencha este campo"
-              apontando para um controle sem texto visível. O servidor já
-              recusa envio sem arquivo. */}
+              É menos elegante que a área tracejada, mas é o controle nativo que
+              o navegador sabe abrir. Só voltar a escondê-lo depois de confirmar
+              num aparelho real que o seletor continua funcionando. */}
+          <div className="flex flex-col items-center gap-3 rounded-[var(--radius)] border border-dashed border-input px-6 py-6 text-center">
+            <span className="flex size-11 items-center justify-center rounded-full bg-secondary text-foreground">
+              {isBusy ? (
+                <Loader2Icon className="size-5 animate-spin" />
+              ) : (
+                <ImagePlusIcon className="size-5" />
+              )}
+            </span>
+            <span className="text-sm font-medium">
+              {isCompressing ? "Preparando foto…" : isUploading ? "Enviando…" : "Escolha uma foto do produto"}
+            </span>
             <input
               ref={inputRef}
               id="product-image-input"
@@ -236,31 +239,11 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
                 void submitFile(file, "selecionado");
               }}
               aria-label="Adicionar uma foto do produto"
-              // Invisível por cor, não por `opacity: 0` nem `size-0`: o elemento
-              // continua com área e pintura reais, que é o que o Chrome Android
-              // exige para abrir o seletor.
-              className="peer absolute inset-0 z-10 size-full cursor-pointer bg-transparent text-[0px] text-transparent file:hidden"
+              className="max-w-full text-sm"
             />
-            <div
-              aria-hidden="true"
-              // O input está por cima, então hover/foco são espelhados dele
-              // via `peer-*` — sem isso o bloco não daria retorno visual.
-              className="pointer-events-none flex min-h-32 w-full flex-col items-center justify-center gap-2 rounded-[var(--radius)] border border-dashed border-input px-6 py-8 text-center transition-colors peer-hover:border-foreground/40 peer-hover:bg-secondary/50 peer-focus-visible:border-foreground/40 peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--gold)]/40"
-            >
-              <span className="flex size-11 items-center justify-center rounded-full bg-secondary text-foreground">
-                {isBusy ? (
-                  <Loader2Icon className="size-5 animate-spin" />
-                ) : (
-                  <ImagePlusIcon className="size-5" />
-                )}
-              </span>
-              <span className="text-sm font-medium">
-                {isCompressing ? "Preparando foto…" : isUploading ? "Enviando…" : "Toque para adicionar uma foto"}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {images.length}/8 · JPEG, PNG ou WebP, até 10MB
-              </span>
-            </div>
+            <span className="text-xs text-muted-foreground">
+              {images.length}/8 · JPEG, PNG ou WebP, até 10MB
+            </span>
           </div>
 
           {/* Caminho alternativo: `capture` pede a câmera diretamente, por um
