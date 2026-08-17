@@ -3,8 +3,7 @@ import { listAllProductsForAdmin } from "@/lib/products/admin-queries";
 import { listAllCategoriesForAdmin } from "@/lib/categories/queries";
 import { PageHeading } from "@/components/admin/page-heading";
 import { ActionLink } from "@/components/ui/action";
-import { CategoryGroup } from "./category-group";
-import { SortableList } from "./sortable-list";
+import { ProductSearch } from "./product-search";
 
 const STATUS_LABEL: Record<string, string> = {
   available: "Disponível",
@@ -13,37 +12,12 @@ const STATUS_LABEL: Record<string, string> = {
   inactive: "Inativo",
 };
 
-const SEM_CATEGORIA = "__sem_categoria__";
-
 export default async function AdminProductsPage() {
   const store = await getActiveStore();
   const [products, categories] = await Promise.all([
     listAllProductsForAdmin(store.id),
     listAllCategoriesForAdmin(store.id),
   ]);
-
-  // Agrupa preservando a ordem de `sort_order` dentro de cada categoria — é a
-  // ordem que as setas manipulam e a que o catálogo público exibe.
-  const byCategory = new Map<string, typeof products>();
-  for (const product of products) {
-    const key = product.category_id ?? SEM_CATEGORIA;
-    byCategory.set(key, [...(byCategory.get(key) ?? []), product]);
-  }
-
-  // Segue a ordem definida em Categorias; "Sem categoria" fecha a lista por ser
-  // pendência de cadastro, não uma seção do catálogo.
-  const groups = [
-    ...categories
-      .filter((category) => byCategory.has(category.id))
-      .map((category) => ({
-        key: category.id,
-        name: category.name,
-        items: byCategory.get(category.id)!,
-      })),
-    ...(byCategory.has(SEM_CATEGORIA)
-      ? [{ key: SEM_CATEGORIA, name: "Sem categoria", items: byCategory.get(SEM_CATEGORIA)! }]
-      : []),
-  ];
 
   return (
     <div className="flex flex-col gap-6">
@@ -66,22 +40,7 @@ export default async function AdminProductsPage() {
           </ActionLink>
         </div>
       ) : (
-        <div className="flex flex-col gap-6">
-          {groups.map((group) => (
-            <CategoryGroup
-              key={group.key}
-              name={group.name}
-              count={group.items.length}
-              // "Sem categoria" abre fechado: é lembrete de pendência, não
-              // conteúdo que a proprietária precisa ver toda vez.
-              defaultOpen={group.key !== SEM_CATEGORIA}
-            >
-              {/* Arrastar acontece dentro do grupo: as peças de uma categoria
-                  trocam de posição entre si, sem afetar as outras seções. */}
-              <SortableList items={group.items} statusLabels={STATUS_LABEL} />
-            </CategoryGroup>
-          ))}
-        </div>
+        <ProductSearch products={products} categories={categories} statusLabels={STATUS_LABEL} />
       )}
     </div>
   );
