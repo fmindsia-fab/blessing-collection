@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import Image from "next/image";
-import { ImagePlusIcon, Loader2Icon } from "lucide-react";
+import { CameraIcon, ImagePlusIcon, Loader2Icon } from "lucide-react";
 import {
   uploadProductImage,
   setCoverImage,
@@ -151,11 +151,16 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
 
       {images.length < 8 ? (
         <form action={formAction} className="flex flex-col gap-2">
-          {/* Input de arquivo nativo, sem CSS escondendo-o e sem nenhuma lógica
-              no caminho do clique — nem log, nem setState antes do onChange.
-              É o mínimo que o HTML garante: tocar aqui abre a escolha do
-              sistema (câmera, galeria ou arquivos), sem exigir nada do site. */}
-          <div className="flex flex-col items-center gap-3 rounded-[var(--radius)] border border-dashed border-input px-6 py-6 text-center">
+          {/* O <label> envolve o input inteiro: é o próprio navegador que
+              encaminha o clique em qualquer ponto do label para o input,
+              sem `.click()` programático nem CSS escondendo o input (foi
+              exatamente essa combinação que quebrava o seletor antes). O
+              input continua visível e compacto, só o texto acima é que amplia
+              a área de toque. */}
+          <label
+            htmlFor="product-image-input"
+            className="flex cursor-pointer flex-col items-center gap-3 rounded-[var(--radius)] border border-dashed border-input px-6 py-6 text-center transition-colors hover:border-foreground/40 hover:bg-secondary/50"
+          >
             <span className="flex size-11 items-center justify-center rounded-full bg-secondary text-foreground">
               {isBusy ? (
                 <Loader2Icon className="size-5 animate-spin" />
@@ -164,7 +169,7 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
               )}
             </span>
             <span className="text-sm font-medium">
-              {isCompressing ? "Preparando foto…" : isUploading ? "Enviando…" : "Escolha uma foto do produto"}
+              {isCompressing ? "Preparando foto…" : isUploading ? "Enviando…" : "Toque para adicionar uma foto"}
             </span>
             <input
               ref={inputRef}
@@ -176,13 +181,39 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
                 const file = e.target.files?.[0];
                 if (file) void submitFile(file);
               }}
-              aria-label="Adicionar uma foto do produto"
               className="max-w-full text-sm"
             />
             <span className="text-xs text-muted-foreground">
               {images.length}/8 · JPEG, PNG ou WebP, até 10MB
             </span>
-          </div>
+          </label>
+
+          {/* Caminho separado para câmera: `capture` força um app específico
+              e no mesmo seletor de galeria isso costuma restringir demais as
+              opções em alguns Androids. O input fica visível (não `sr-only`
+              nem escondido por CSS) pelo mesmo motivo do input principal: foi
+              justamente esconder o input por CSS que quebrava o seletor. */}
+          <label
+            htmlFor="product-image-camera"
+            className="flex w-fit cursor-pointer flex-col items-center gap-1 self-center rounded-[var(--radius)] border border-input px-3 py-2 text-center text-xs transition-colors hover:border-foreground/40 hover:bg-secondary/50"
+          >
+            <span className="flex items-center gap-1.5">
+              <CameraIcon className="size-3.5" />
+              Tirar foto agora
+            </span>
+            <input
+              id="product-image-camera"
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) void submitFile(file);
+                e.target.value = "";
+              }}
+              className="max-w-full text-[0.6875rem]"
+            />
+          </label>
 
           {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
         </form>
