@@ -219,12 +219,10 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
               id="product-image-input"
               type="file"
               name="file"
-              // Sem `accept`: no Chrome Android o `accept="image/*"` faz o
-              // seletor ser aberto via intent do sistema, e quando esse intent
-              // falha ou volta vazio o evento `change` simplesmente nunca é
-              // emitido — o toque é registrado e nada mais acontece. Sem o
-              // atributo o Chrome usa o seletor de arquivos padrão, que sempre
-              // responde. O servidor valida o formato de qualquer forma.
+              // `accept="image/*"` é necessário: sem ele o Chrome Android abre o
+              // seletor de documentos genérico, que não lista as fotos da
+              // galeria — a tela abre vazia e fechar devolve `cancel`.
+              accept="image/*"
               // Sem `disabled` aqui: um input de arquivo desabilitado não abre o
               // seletor, e se `isBusy` travar (um envio que nunca completa) o
               // botão morre de vez. O onChange já ignora toques durante o envio.
