@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export function LoginForm({ redirectTo }: { redirectTo?: string }) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -51,7 +53,25 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="password">Senha</Label>
-        <Input id="password" type="password" autoComplete="current-password" {...register("password")} />
+        <div className="relative">
+          <Input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            autoComplete="current-password"
+            className="pr-10"
+            {...register("password")}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+            aria-pressed={showPassword}
+            tabIndex={-1}
+            className="absolute right-1 top-1/2 flex size-7 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
+          >
+            {showPassword ? <EyeOffIcon className="size-4" /> : <EyeIcon className="size-4" />}
+          </button>
+        </div>
         {errors.password ? <p className="text-xs text-destructive">{errors.password.message}</p> : null}
       </div>
 
