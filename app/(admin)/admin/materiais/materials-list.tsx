@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useTransition } from "react";
+import { TrashIcon } from "lucide-react";
 import {
   createMaterial,
   toggleMaterial,
@@ -30,8 +31,9 @@ export function MaterialsList({ materials }: { materials: Material[] }) {
   return (
     <div className="flex flex-col gap-5">
       <p className="text-xs text-muted-foreground">
-        O preço unitário aqui alimenta a formação de preço de toda peça que usar este material —
-        reajustar uma vez atualiza todas de uma vez.
+        Clique em nome, unidade ou preço para editar — salva ao sair do campo. O preço aqui alimenta
+        a formação de preço de toda peça que usar este material: reajustar uma vez atualiza todas de
+        uma vez.
       </p>
 
       {materials.length > 0 ? (
@@ -58,7 +60,7 @@ export function MaterialsList({ materials }: { materials: Material[] }) {
                 </div>
 
                 <div className="flex shrink-0 items-center gap-3">
-                  {isArchived ? <StatusPill tone="muted">Oculto</StatusPill> : null}
+                  {isArchived ? <StatusPill tone="muted">Removido</StatusPill> : null}
 
                   <div className="flex items-center gap-1">
                     <Input
@@ -94,15 +96,33 @@ export function MaterialsList({ materials }: { materials: Material[] }) {
                     />
                   </div>
 
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="xs"
-                    disabled={isSaving}
-                    onClick={() => startTransition(() => toggleMaterial(material.id, material.status))}
-                  >
-                    {isArchived ? "Usar" : "Ocultar"}
-                  </Button>
+                  {isArchived ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="xs"
+                      disabled={isSaving}
+                      onClick={() => startTransition(() => toggleMaterial(material.id, material.status))}
+                    >
+                      Restaurar
+                    </Button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={isSaving}
+                      onClick={() => {
+                        // Soft delete (regra do projeto: sem exclusão definitiva)
+                        // — o material some do seletor de peça nova, mas as
+                        // peças que já o usam continuam com o vínculo intacto.
+                        if (!confirm(`Remover "${material.name}" do catálogo de materiais?`)) return;
+                        startTransition(() => toggleMaterial(material.id, material.status));
+                      }}
+                      aria-label={`Remover ${material.name}`}
+                      className="flex size-7 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:bg-secondary hover:text-destructive focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
+                    >
+                      <TrashIcon className="size-3.5" />
+                    </button>
+                  )}
                 </div>
               </div>
             );
