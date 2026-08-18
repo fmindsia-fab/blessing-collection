@@ -60,7 +60,21 @@ export function ProductForm({ categories, collections, models, product }: Produc
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="price">Preço base (R$)</Label>
-          <Input id="price" name="price" type="number" step="0.01" min="0" defaultValue={product?.price} required />
+          {/* `key` força remontar quando o preço muda por fora deste form —
+              "Usar como preço da peça" (em Formação de preço) grava direto no
+              banco e revalida a página, mas `defaultValue` num input não
+              controlado é ignorado em updates: sem a `key`, o campo continuaria
+              mostrando o valor antigo até a página recarregar de verdade. */}
+          <Input
+            key={product?.price}
+            id="price"
+            name="price"
+            type="number"
+            step="0.01"
+            min="0"
+            defaultValue={product?.price}
+            required
+          />
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="status">Status</Label>
