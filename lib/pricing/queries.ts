@@ -90,13 +90,59 @@ export async function listAllPaymentMethodsForAdmin(storeId: string) {
   return data ?? [];
 }
 
+/**
+ * Materiais da peça, com o custo unitário do catálogo prevalecendo quando a
+ * linha está vinculada — reajustar o material uma vez atualiza a formação de
+ * preço de toda peça que o usa, sem precisar editar peça por peça.
+ */
 export async function listProductMaterials(productId: string) {
   const supabase = await createServerSupabaseClient();
 
   const { data } = await supabase
     .from("product_materials")
-    .select("id, description, quantity, unit, unit_cost, sort_order")
+    .select(
+      "id, description, quantity, unit, unit_cost, sort_order, material_id, materials(name, unit, unit_cost)",
+    )
     .eq("product_id", productId)
+    .order("sort_order", { ascending: true });
+
+  return (data ?? []).map((row) => {
+    const catalogMaterial = Array.isArray(row.materials) ? row.materials[0] : row.materials;
+
+    return {
+      id: row.id,
+      description: catalogMaterial?.name ?? row.description,
+      quantity: row.quantity,
+      unit: catalogMaterial?.unit ?? row.unit,
+      unit_cost: catalogMaterial?.unit_cost ?? row.unit_cost,
+      material_id: row.material_id,
+    };
+  });
+}
+
+// Catálogo de materiais da loja (nome, unidade, preço unitário) — reutilizado
+// entre peças, para o mesmo fio/fecho não ser redigitado a cada cadastro.
+export async function listMaterialsForAdmin(storeId: string) {
+  const supabase = await createServerSupabaseClient();
+
+  const { data } = await supabase
+    .from("materials")
+    .select("id, name, unit, unit_cost, status")
+    .eq("store_id", storeId)
+    .order("sort_order", { ascending: true });
+
+  return data ?? [];
+}
+
+// Só materiais ativos — uso no seletor do formulário da peça.
+export async function listActiveMaterials(storeId: string) {
+  const supabase = await createServerSupabaseClient();
+
+  const { data } = await supabase
+    .from("materials")
+    .select("id, name, unit, unit_cost")
+    .eq("store_id", storeId)
+    .eq("status", "active")
     .order("sort_order", { ascending: true });
 
   return data ?? [];

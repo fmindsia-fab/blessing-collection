@@ -39,6 +39,14 @@ type Material = {
   quantity: number;
   unit: string;
   unit_cost: number;
+  material_id: string | null;
+};
+
+type CatalogMaterial = {
+  id: string;
+  name: string;
+  unit: string;
+  unit_cost: number;
 };
 
 type Props = {
@@ -49,6 +57,7 @@ type Props = {
   pricingMethod: PricingMethodValue | null;
   pricingRatePercent: number | null;
   materials: Material[];
+  catalogMaterials: CatalogMaterial[];
   rates: LaborRates;
   paymentMethods: PaymentMethod[];
   taxBasisPoints: number;
@@ -94,6 +103,7 @@ export function ProductPricing({
   pricingMethod,
   pricingRatePercent,
   materials,
+  catalogMaterials,
   rates,
   paymentMethods,
   taxBasisPoints,
@@ -110,6 +120,21 @@ export function ProductPricing({
     initialState,
   );
   const [isPending, startTransition] = useTransition();
+
+  // Vazio ("Outro") mostra os campos de item avulso; um id do catálogo os
+  // esconde, já que nome/unidade/preço vêm do material escolhido.
+  const [selectedMaterialId, setSelectedMaterialId] = useState("");
+  const isAvulso = selectedMaterialId === "";
+
+  // Volta para "Outro" após adicionar: sem isso o <select> continuaria
+  // apontando para o mesmo material catalogado, e reenviar sem trocar a
+  // seleção não dispara `onChange` para resetar os campos escondidos.
+  const materialsSignature = materials.length;
+  const [syncedMaterialsCount, setSyncedMaterialsCount] = useState(materialsSignature);
+  if (materialsSignature !== syncedMaterialsCount) {
+    setSyncedMaterialsCount(materialsSignature);
+    setSelectedMaterialId("");
+  }
 
   // Prévia ao vivo enquanto digita — salvar é só para persistir.
   const [hours, setHours] = useState(String(productionHours || ""));
@@ -236,30 +261,66 @@ export function ProductPricing({
           </p>
         )}
 
-        <form action={addMaterialAction} className="grid gap-2 sm:grid-cols-[1fr_5rem_4rem_6rem_auto]">
-          <Input name="description" required maxLength={80} placeholder="Fio" aria-label="Material" />
-          <Input
-            name="quantity"
-            type="number"
-            step="0.001"
-            min="0"
-            defaultValue="1"
-            aria-label="Quantidade"
-          />
-          <Input name="unit" maxLength={10} defaultValue="un" aria-label="Unidade" />
-          <Input
-            name="unitCost"
-            type="number"
-            step="0.01"
-            min="0"
-            placeholder="0,00"
-            aria-label="Custo unitário"
-          />
-          <Button type="submit" variant="outline" size="sm" disabled={isAddingMaterial}>
-            {isAddingMaterial ? "..." : "Somar"}
-          </Button>
+        <form action={addMaterialAction} className="flex flex-col gap-2">
+          <div className="grid gap-2 sm:grid-cols-[1fr_5rem_4rem_6rem_auto]">
+            <select
+              name="materialId"
+              value={selectedMaterialId}
+              onChange={(e) => setSelectedMaterialId(e.target.value)}
+              aria-label="Material"
+              className="h-9 rounded-[var(--radius)] border border-input bg-background px-3 text-sm outline-none transition-colors focus-visible:border-foreground/40 focus-visible:ring-2 focus-visible:ring-[var(--gold)]/40"
+            >
+              <option value="">Outro (digitar)…</option>
+              {catalogMaterials.map((material) => (
+                <option key={material.id} value={material.id}>
+                  {material.name} — {formatBRL(toCents(material.unit_cost))}/{material.unit}
+                </option>
+              ))}
+            </select>
+
+            {isAvulso ? (
+              <Input name="description" required maxLength={80} placeholder="Fio" aria-label="Nome do material" />
+            ) : null}
+
+            <Input
+              name="quantity"
+              type="number"
+              step="0.001"
+              min="0"
+              defaultValue="1"
+              aria-label="Quantidade"
+            />
+
+            {isAvulso ? (
+              <>
+                <Input name="unit" maxLength={10} defaultValue="un" aria-label="Unidade" />
+                <Input
+                  name="unitCost"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0,00"
+                  aria-label="Custo unitário"
+                />
+              </>
+            ) : null}
+
+            <Button type="submit" variant="outline" size="sm" disabled={isAddingMaterial}>
+              {isAddingMaterial ? "..." : "Somar"}
+            </Button>
+          </div>
+
+          {catalogMaterials.length === 0 ? (
+            <p className="text-xs text-muted-foreground">
+              Sem materiais cadastrados ainda.{" "}
+              <a href="/admin/materiais" className="underline underline-offset-2">
+                Cadastrar em Materiais
+              </a>
+            </p>
+          ) : null}
+
           {materialState.error ? (
-            <p className="text-sm text-destructive sm:col-span-5">{materialState.error}</p>
+            <p className="text-sm text-destructive">{materialState.error}</p>
           ) : null}
         </form>
       </section>

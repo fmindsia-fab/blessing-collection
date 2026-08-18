@@ -218,6 +218,7 @@ export interface Database {
         Row: {
           id: string;
           product_id: string;
+          material_id: string | null;
           description: string;
           quantity: number;
           unit: string;
@@ -229,6 +230,7 @@ export interface Database {
         Insert: {
           id?: string;
           product_id: string;
+          material_id?: string | null;
           description: string;
           quantity?: number;
           unit?: string;
@@ -238,6 +240,39 @@ export interface Database {
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["product_materials"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "product_materials_material_id_fkey";
+            columns: ["material_id"];
+            referencedRelation: "materials";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      materials: {
+        Row: {
+          id: string;
+          store_id: string;
+          name: string;
+          unit: string;
+          unit_cost: number;
+          status: ArchivableStatus;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          store_id: string;
+          name: string;
+          unit?: string;
+          unit_cost?: number;
+          status?: ArchivableStatus;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["materials"]["Insert"]>;
         Relationships: [];
       };
       colors: {

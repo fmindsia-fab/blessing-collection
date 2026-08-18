@@ -177,8 +177,11 @@ async function assertProductBelongsToStore(
   return data !== null;
 }
 
+// `materialId` vindo do <select> do catálogo, ou vazio para item avulso —
+// nesse caso description/unit/unitCost são obrigatórios, preenchidos à mão.
 const materialSchema = z.object({
-  description: z.string().trim().min(1, "Informe o material").max(80),
+  materialId: z.string().uuid().optional().or(z.literal("")),
+  description: z.string().trim().max(80).optional().default(""),
   quantity: z.coerce.number().min(0, "Quantidade não pode ser negativa").max(99_999),
   unit: z.string().trim().max(10).default("un"),
   unitCost: optionalNumber("O custo"),
@@ -190,6 +193,7 @@ export async function addProductMaterial(
   formData: FormData,
 ): Promise<PricingFormState> {
   const parsed = materialSchema.safeParse({
+    materialId: formData.get("materialId") || "",
     description: formData.get("description"),
     quantity: formData.get("quantity") || 1,
     unit: formData.get("unit") || "un",
@@ -198,9 +202,35 @@ export async function addProductMaterial(
 
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
+  const data = parsed.data;
+  const materialId = data.materialId || null;
+  const isCatalogMaterial = materialId !== null;
+
+  // Item avulso (fora do catálogo) exige nome digitado — o do catálogo já tem
+  // nome e preço próprios, herdados via join na leitura.
+  if (!isCatalogMaterial && !data.description.trim()) {
+    return { error: "Informe o material ou escolha um do catálogo." };
+  }
+
   const supabase = await createServerSupabaseClient();
   if (!(await assertProductBelongsToStore(supabase, productId))) {
     return { error: "Produto não encontrado." };
+  }
+
+  // Vínculo com o catálogo confirma a loja antes de gravar — defesa da
+  // aplicação, igual à checagem de produto acima (RLS já bloquearia).
+  let catalogSnapshot: { name: string; unit: string; unit_cost: number } | null = null;
+  if (isCatalogMaterial) {
+    const store = await getActiveStore();
+    const { data: material } = await supabase
+      .from("materials")
+      .select("name, unit, unit_cost")
+      .eq("id", materialId)
+      .eq("store_id", store.id)
+      .maybeSingle();
+
+    if (!material) return { error: "Material não encontrado no catálogo." };
+    catalogSnapshot = material;
   }
 
   const { count } = await supabase
@@ -210,10 +240,15 @@ export async function addProductMaterial(
 
   const { error } = await supabase.from("product_materials").insert({
     product_id: productId,
-    description: parsed.data.description,
-    quantity: parsed.data.quantity,
-    unit: parsed.data.unit,
-    unit_cost: parsed.data.unitCost,
+    material_id: materialId,
+    // Grava um retrato do nome/unidade/custo mesmo para item de catálogo: se o
+    // material for arquivado ou excluído depois, a linha na peça continua
+    // legível em vez de virar "sem nome, R$ 0,00". Enquanto o vínculo existir,
+    // a leitura (listProductMaterials) prioriza o valor atual do catálogo.
+    description: isCatalogMaterial ? catalogSnapshot!.name : data.description.trim(),
+    quantity: data.quantity,
+    unit: isCatalogMaterial ? catalogSnapshot!.unit : data.unit,
+    unit_cost: isCatalogMaterial ? catalogSnapshot!.unit_cost : data.unitCost,
     sort_order: count ?? 0,
   });
 
@@ -300,4 +335,94 @@ export async function applySuggestedPrice(productId: string, priceReais: number)
   revalidatePath(`/admin/produtos/${productId}/editar`);
   revalidatePath("/produtos");
   revalidatePath("/");
+}
+
+// ========== CATÁLOGO DE MATERIAIS ==========
+
+const catalogMaterialSchema = z.object({
+  name: z.string().trim().min(1, "Informe o nome do material").max(80),
+  unit: z.string().trim().min(1, "Informe a unidade").max(10).default("un"),
+  unitCost: optionalNumber("O custo"),
+});
+
+export async function createMaterial(
+  _prevState: PricingFormState,
+  formData: FormData,
+): Promise<PricingFormState> {
+  const parsed = catalogMaterialSchema.safeParse({
+    name: formData.get("name"),
+    unit: formData.get("unit") || "un",
+    unitCost: formData.get("unitCost"),
+  });
+
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+
+  const store = await getActiveStore();
+  const supabase = await createServerSupabaseClient();
+
+  const { count } = await supabase
+    .from("materials")
+    .select("id", { count: "exact", head: true })
+    .eq("store_id", store.id);
+
+  const { error } = await supabase.from("materials").insert({
+    store_id: store.id,
+    name: parsed.data.name,
+    unit: parsed.data.unit,
+    unit_cost: parsed.data.unitCost,
+    sort_order: count ?? 0,
+  });
+
+  if (error) return { error: "Não foi possível adicionar o material." };
+
+  revalidatePath("/admin/materiais");
+  return { success: true };
+}
+
+/** Edita nome/unidade/preço — reajustar aqui atualiza toda peça vinculada. */
+export async function updateMaterial(
+  id: string,
+  fields: { name?: string; unit?: string; unitCost?: number },
+) {
+  const store = await getActiveStore();
+  const supabase = await createServerSupabaseClient();
+
+  const update: Partial<{ name: string; unit: string; unit_cost: number }> = {};
+  if (fields.name !== undefined) {
+    const name = fields.name.trim();
+    if (!name || name.length > 80) return;
+    update.name = name;
+  }
+  if (fields.unit !== undefined) {
+    const unit = fields.unit.trim();
+    if (!unit || unit.length > 10) return;
+    update.unit = unit;
+  }
+  if (fields.unitCost !== undefined) {
+    if (!Number.isFinite(fields.unitCost) || fields.unitCost < 0) return;
+    update.unit_cost = fields.unitCost;
+  }
+  if (Object.keys(update).length === 0) return;
+
+  await supabase.from("materials").update(update).eq("id", id).eq("store_id", store.id);
+
+  revalidatePath("/admin/materiais");
+  // Peças com este material vinculado herdam o novo preço na próxima leitura.
+  revalidatePath("/admin/produtos", "layout");
+}
+
+// "Excluir" no painel é sempre soft delete via status (regra do CLAUDE.md).
+// Arquivar tira o material do seletor de peça nova, mas não desfaz o vínculo
+// das peças que já o usam.
+export async function toggleMaterial(id: string, currentStatus: string) {
+  const store = await getActiveStore();
+  const supabase = await createServerSupabaseClient();
+
+  await supabase
+    .from("materials")
+    .update({ status: currentStatus === "active" ? "archived" : "active" })
+    .eq("id", id)
+    .eq("store_id", store.id);
+
+  revalidatePath("/admin/materiais");
 }

@@ -7,6 +7,7 @@ import { listAllModelsForAdmin } from "@/lib/models/queries";
 import { listColors } from "@/lib/colors/queries";
 import {
   getStorePricingSettings,
+  listActiveMaterials,
   listPaymentMethods,
   listProductMaterials,
 } from "@/lib/pricing/queries";
@@ -21,17 +22,27 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
   const { id } = await params;
   const store = await getActiveStore();
 
-  const [result, categories, collections, models, colors, pricing, paymentMethods, materials] =
-    await Promise.all([
-      getProductForAdmin(store.id, id),
-      listAllCategoriesForAdmin(store.id),
-      listAllCollectionsForAdmin(store.id),
-      listAllModelsForAdmin(store.id),
-      listColors(store.id),
-      getStorePricingSettings(store.id),
-      listPaymentMethods(store.id),
-      listProductMaterials(id),
-    ]);
+  const [
+    result,
+    categories,
+    collections,
+    models,
+    colors,
+    pricing,
+    paymentMethods,
+    materials,
+    catalogMaterials,
+  ] = await Promise.all([
+    getProductForAdmin(store.id, id),
+    listAllCategoriesForAdmin(store.id),
+    listAllCollectionsForAdmin(store.id),
+    listAllModelsForAdmin(store.id),
+    listColors(store.id),
+    getStorePricingSettings(store.id),
+    listPaymentMethods(store.id),
+    listProductMaterials(id),
+    listActiveMaterials(store.id),
+  ]);
 
   if (!result) notFound();
 
@@ -63,6 +74,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
           pricingMethod={product.pricing_method}
           pricingRatePercent={product.pricing_rate_percent}
           materials={materials}
+          catalogMaterials={catalogMaterials}
           rates={pricing.rates}
           paymentMethods={paymentMethods}
           taxBasisPoints={pricing.taxBasisPoints}
