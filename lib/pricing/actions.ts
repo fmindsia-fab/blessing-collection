@@ -194,10 +194,13 @@ export async function addProductMaterial(
 ): Promise<PricingFormState> {
   const parsed = materialSchema.safeParse({
     materialId: formData.get("materialId") || "",
-    description: formData.get("description"),
+    // Ausentes do formulário quando um material do catálogo está selecionado
+    // (o <Input> correspondente nem é renderizado nesse modo) — `FormData.get`
+    // devolve `null`, que o schema não aceita, então caem para o default.
+    description: formData.get("description") ?? "",
     quantity: formData.get("quantity") || 1,
-    unit: formData.get("unit") || "un",
-    unitCost: formData.get("unitCost"),
+    unit: formData.get("unit") ?? "un",
+    unitCost: formData.get("unitCost") ?? "",
   });
 
   if (!parsed.success) return { error: parsed.error.issues[0].message };
