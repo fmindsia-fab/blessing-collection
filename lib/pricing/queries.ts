@@ -122,6 +122,9 @@ export async function listProductMaterials(productId: string) {
 
 // Catálogo de materiais da loja (nome, unidade, preço unitário) — reutilizado
 // entre peças, para o mesmo fio/fecho não ser redigitado a cada cadastro.
+// Ordem alfabética (pedido do usuário): facilita achar o material tanto aqui
+// quanto no seletor da peça, já que a lista cresce e sort_order não reflete
+// nenhuma ordem intencional (materiais não são reordenáveis no painel).
 export async function listMaterialsForAdmin(storeId: string) {
   const supabase = await createServerSupabaseClient();
 
@@ -129,7 +132,7 @@ export async function listMaterialsForAdmin(storeId: string) {
     .from("materials")
     .select("id, name, unit, unit_cost, status")
     .eq("store_id", storeId)
-    .order("sort_order", { ascending: true });
+    .order("name", { ascending: true });
 
   return data ?? [];
 }
@@ -143,7 +146,7 @@ export async function listActiveMaterials(storeId: string) {
     .select("id, name, unit, unit_cost")
     .eq("store_id", storeId)
     .eq("status", "active")
-    .order("sort_order", { ascending: true });
+    .order("name", { ascending: true });
 
   return data ?? [];
 }
