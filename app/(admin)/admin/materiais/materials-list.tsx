@@ -11,19 +11,20 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { StatusPill } from "@/components/admin/status-pill";
-import type { ArchivableStatus } from "@/types/database.types";
 
 type Material = {
   id: string;
   name: string;
   unit: string;
   unit_cost: number;
-  status: ArchivableStatus;
 };
 
 const initialState: PricingFormState = {};
 
+// Recebe só materiais ativos (a página já filtra na query): "removido" é soft
+// delete no banco (regra do projeto: sem exclusão definitiva), mas some da
+// tela — a proprietária pediu a lista limpa, sem os removidos misturados. Sem
+// opção de restaurar pela lista; recadastrar é mais simples que reviver.
 export function MaterialsList({ materials }: { materials: Material[] }) {
   const [state, formAction, isPending] = useActionState(createMaterial, initialState);
   const [isSaving, startTransition] = useTransition();
@@ -38,95 +39,74 @@ export function MaterialsList({ materials }: { materials: Material[] }) {
 
       {materials.length > 0 ? (
         <div className="flex flex-col divide-y divide-border border-y border-border">
-          {materials.map((material) => {
-            const isArchived = material.status === "archived";
+          {materials.map((material) => (
+            <div key={material.id} className="flex items-center justify-between gap-4 py-3">
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
+                {/* Salva ao sair do campo: evita um botão por linha. */}
+                <Input
+                  defaultValue={material.name}
+                  maxLength={80}
+                  aria-label={`Nome do material ${material.name}`}
+                  disabled={isSaving}
+                  onBlur={(e) => {
+                    const value = e.target.value.trim();
+                    if (!value || value === material.name) return;
+                    startTransition(() => updateMaterial(material.id, { name: value }));
+                  }}
+                  className="h-8 text-sm"
+                />
+              </div>
 
-            return (
-              <div key={material.id} className="flex items-center justify-between gap-4 py-3">
-                <div className="flex min-w-0 flex-1 flex-col gap-1">
-                  {/* Salva ao sair do campo: evita um botão por linha. */}
+              <div className="flex shrink-0 items-center gap-3">
+                <div className="flex items-center gap-1">
                   <Input
-                    defaultValue={material.name}
-                    maxLength={80}
-                    aria-label={`Nome do material ${material.name}`}
+                    defaultValue={material.unit}
+                    maxLength={10}
+                    aria-label={`Unidade de ${material.name}`}
                     disabled={isSaving}
                     onBlur={(e) => {
                       const value = e.target.value.trim();
-                      if (!value || value === material.name) return;
-                      startTransition(() => updateMaterial(material.id, { name: value }));
+                      if (!value || value === material.unit) return;
+                      startTransition(() => updateMaterial(material.id, { unit: value }));
                     }}
-                    className="h-8 text-sm"
+                    className="h-8 w-16 text-center text-xs"
                   />
                 </div>
 
-                <div className="flex shrink-0 items-center gap-3">
-                  {isArchived ? <StatusPill tone="muted">Removido</StatusPill> : null}
-
-                  <div className="flex items-center gap-1">
-                    <Input
-                      defaultValue={material.unit}
-                      maxLength={10}
-                      aria-label={`Unidade de ${material.name}`}
-                      disabled={isSaving}
-                      onBlur={(e) => {
-                        const value = e.target.value.trim();
-                        if (!value || value === material.unit) return;
-                        startTransition(() => updateMaterial(material.id, { unit: value }));
-                      }}
-                      className="h-8 w-16 text-center text-xs"
-                    />
-                  </div>
-
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs text-muted-foreground">R$</span>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      defaultValue={material.unit_cost || ""}
-                      placeholder="0,00"
-                      aria-label={`Preço unitário de ${material.name}`}
-                      disabled={isSaving}
-                      onBlur={(e) => {
-                        const value = Number(e.target.value) || 0;
-                        if (value === material.unit_cost) return;
-                        startTransition(() => updateMaterial(material.id, { unitCost: value }));
-                      }}
-                      className="h-8 w-24 text-right tabular-nums"
-                    />
-                  </div>
-
-                  {isArchived ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="xs"
-                      disabled={isSaving}
-                      onClick={() => startTransition(() => toggleMaterial(material.id, material.status))}
-                    >
-                      Restaurar
-                    </Button>
-                  ) : (
-                    <button
-                      type="button"
-                      disabled={isSaving}
-                      onClick={() => {
-                        // Soft delete (regra do projeto: sem exclusão definitiva)
-                        // — o material some do seletor de peça nova, mas as
-                        // peças que já o usam continuam com o vínculo intacto.
-                        if (!confirm(`Remover "${material.name}" do catálogo de materiais?`)) return;
-                        startTransition(() => toggleMaterial(material.id, material.status));
-                      }}
-                      aria-label={`Remover ${material.name}`}
-                      className="flex size-7 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:bg-secondary hover:text-destructive focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
-                    >
-                      <TrashIcon className="size-3.5" />
-                    </button>
-                  )}
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-muted-foreground">R$</span>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    defaultValue={material.unit_cost || ""}
+                    placeholder="0,00"
+                    aria-label={`Preço unitário de ${material.name}`}
+                    disabled={isSaving}
+                    onBlur={(e) => {
+                      const value = Number(e.target.value) || 0;
+                      if (value === material.unit_cost) return;
+                      startTransition(() => updateMaterial(material.id, { unitCost: value }));
+                    }}
+                    className="h-8 w-24 text-right tabular-nums"
+                  />
                 </div>
+
+                <button
+                  type="button"
+                  disabled={isSaving}
+                  onClick={() => {
+                    if (!confirm(`Remover "${material.name}" do catálogo de materiais?`)) return;
+                    startTransition(() => toggleMaterial(material.id, "active"));
+                  }}
+                  aria-label={`Remover ${material.name}`}
+                  className="flex size-7 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:bg-secondary hover:text-destructive focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
+                >
+                  <TrashIcon className="size-3.5" />
+                </button>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       ) : (
         <p className="rounded-[var(--radius)] border border-dashed border-border py-6 text-center text-xs text-muted-foreground">
