@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import Image from "next/image";
-import { CameraIcon, ImagePlusIcon, Loader2Icon } from "lucide-react";
+import { CameraIcon, ExpandIcon, ImagePlusIcon, Loader2Icon } from "lucide-react";
 import {
   uploadProductImage,
   setCoverImage,
@@ -13,6 +13,7 @@ import {
 } from "@/lib/products/image-actions";
 import { Button } from "@/components/ui/button";
 import { ReorderButtons } from "@/components/admin/reorder-buttons";
+import { MediaLightbox } from "@/components/catalog/media-lightbox";
 import { compressImage } from "@/lib/images/compress-image";
 
 type ProductImagesProps = {
@@ -32,6 +33,10 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
   const [isCompressing, setIsCompressing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const isBusy = isCompressing || isUploading;
+
+  // Ampliar foto ao clicar, igual à visualização do cliente (pedido do
+  // usuário) — mesmo MediaLightbox usado na galeria pública.
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   // Limpa o input ao terminar o envio: sem isso o arquivo continua selecionado
   // e escolher a mesma foto de novo não dispara `change`. Só age depois de um
@@ -77,14 +82,24 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {images.map((image, index) => (
             <div key={image.id} className="flex flex-col gap-2">
-              <div className="relative aspect-square overflow-hidden rounded-[var(--radius)] bg-secondary shadow-sm">
-                <Image
-                  src={image.url}
-                  alt={image.alt_text ?? "Foto do produto"}
-                  fill
-                  className="object-cover"
-                  sizes="150px"
-                />
+              <div className="group relative aspect-square overflow-hidden rounded-[var(--radius)] bg-secondary shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => setLightboxIndex(index)}
+                  aria-label={`Ampliar ${image.alt_text || `imagem ${index + 1}`}`}
+                  className="absolute inset-0 cursor-zoom-in outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
+                >
+                  <Image
+                    src={image.url}
+                    alt={image.alt_text ?? "Foto do produto"}
+                    fill
+                    className="object-cover"
+                    sizes="150px"
+                  />
+                  <span className="absolute bottom-1.5 right-1.5 flex size-6 items-center justify-center rounded-full bg-background/90 text-foreground opacity-0 shadow-sm backdrop-blur-sm transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
+                    <ExpandIcon className="size-3" />
+                  </span>
+                </button>
                 {image.is_cover ? (
                   <span className="absolute left-2 top-2 rounded-full bg-background/92 px-2.5 py-1 text-[0.625rem] uppercase tracking-wider shadow-sm backdrop-blur-sm">
                     Capa
@@ -217,6 +232,20 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
 
           {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
         </form>
+      ) : null}
+
+      {lightboxIndex !== null ? (
+        <MediaLightbox
+          items={images.map((image, index) => ({
+            id: image.id,
+            url: image.url,
+            alt: image.alt_text || `Imagem ${index + 1}`,
+          }))}
+          activeIndex={lightboxIndex}
+          onIndexChange={setLightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+          label="Fotos do produto"
+        />
       ) : null}
     </div>
   );
