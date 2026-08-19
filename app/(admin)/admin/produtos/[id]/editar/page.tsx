@@ -66,6 +66,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
 
       <ProductVideo
         productId={product.id}
+        storeId={store.id}
         videoUrl={product.video_url}
         videoPosterUrl={product.video_poster_url}
       />
