@@ -336,6 +336,10 @@ export interface Database {
           /** null herda o padrão da loja. */
           pricing_method: PricingMethodValue | null;
           pricing_rate_percent: number | null;
+          /** Vídeo curto opcional (migration 0021), separado do limite de imagens. */
+          video_url: string | null;
+          /** Frame do vídeo capturado no navegador, para a miniatura da galeria. */
+          video_poster_url: string | null;
           archived_at: string | null;
           created_at: string;
           updated_at: string;
@@ -366,6 +370,8 @@ export interface Database {
           other_costs?: number;
           pricing_method?: PricingMethodValue | null;
           pricing_rate_percent?: number | null;
+          video_url?: string | null;
+          video_poster_url?: string | null;
           archived_at?: string | null;
           created_at?: string;
           updated_at?: string;

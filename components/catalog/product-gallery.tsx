@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { ExpandIcon } from "lucide-react";
-import { MediaLightbox } from "./media-lightbox";
+import { ExpandIcon, PlayIcon } from "lucide-react";
+import { MediaLightbox, type LightboxItem } from "./media-lightbox";
 
 type GalleryImage = {
   id: string;
@@ -11,18 +11,45 @@ type GalleryImage = {
   alt_text: string | null;
 };
 
+type GalleryVideo = {
+  url: string;
+  posterUrl: string | null;
+};
+
 /**
- * Galeria da peça: clicar numa miniatura troca a foto principal; clicar na
- * foto principal abre em tela cheia, com navegação por setas e Esc.
+ * Galeria da peça: clicar numa miniatura troca a mídia principal; clicar na
+ * mídia principal abre em tela cheia, com navegação por setas e Esc.
  *
- * Antes as miniaturas eram estáticas — a cliente via a foto pequena e não
- * tinha como ampliar, o que pesa num catálogo onde a foto é o produto.
+ * O vídeo (pedido do usuário) entra como o último item, junto das fotos —
+ * mesma miniatura, mesmo lightbox, sem seção separada. Nunca é a mídia
+ * inicial: a capa (primeira foto) segue sendo o que abre a página e alimenta
+ * o preview de link (Open Graph).
  */
-export function ProductGallery({ images, productName }: { images: GalleryImage[]; productName: string }) {
+export function ProductGallery({
+  images,
+  video,
+  productName,
+}: {
+  images: GalleryImage[];
+  video?: GalleryVideo | null;
+  productName: string;
+}) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
 
-  const active = images[activeIndex] ?? images[0];
+  const items: LightboxItem[] = [
+    ...images.map((image, index) => ({
+      id: image.id,
+      type: "image" as const,
+      url: image.url,
+      alt: image.alt_text ?? `${productName} — foto ${index + 1}`,
+    })),
+    ...(video
+      ? [{ id: "video", type: "video" as const, url: video.url, alt: `Vídeo de ${productName}` }]
+      : []),
+  ];
+
+  const active = items[activeIndex] ?? items[0];
 
   if (!active) return null;
 
@@ -31,30 +58,32 @@ export function ProductGallery({ images, productName }: { images: GalleryImage[]
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        aria-label={`Ampliar foto de ${productName}`}
+        aria-label={active.type === "video" ? `Ver vídeo de ${productName}` : `Ampliar foto de ${productName}`}
         className="group relative aspect-[4/5] w-full cursor-zoom-in overflow-hidden rounded-[var(--radius-image)] bg-secondary shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-4 focus-visible:ring-offset-background"
       >
         <Image
-          src={active.url}
-          alt={active.alt_text ?? productName}
+          src={active.type === "video" ? video?.posterUrl || images[0]?.url || "" : active.url}
+          alt={active.alt}
           fill
           priority
           className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
           sizes="(min-width: 1024px) 55vw, 100vw"
         />
         <span className="absolute bottom-3 right-3 flex size-9 items-center justify-center rounded-full bg-background/90 text-foreground opacity-0 shadow-sm backdrop-blur-sm transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
-          <ExpandIcon className="size-4" />
+          {active.type === "video" ? <PlayIcon className="size-4" /> : <ExpandIcon className="size-4" />}
         </span>
       </button>
 
-      {images.length > 1 ? (
+      {items.length > 1 ? (
         <div className="grid grid-cols-4 gap-3">
-          {images.map((image, index) => (
+          {items.map((item, index) => (
             <button
-              key={image.id}
+              key={item.id}
               type="button"
               onClick={() => setActiveIndex(index)}
-              aria-label={`Ver foto ${index + 1} de ${images.length}`}
+              aria-label={
+                item.type === "video" ? `Ver vídeo de ${productName}` : `Ver foto ${index + 1} de ${productName}`
+              }
               aria-current={index === activeIndex}
               className={`relative aspect-square overflow-hidden rounded-[var(--radius)] bg-secondary outline-none transition-all duration-300 focus-visible:ring-2 focus-visible:ring-[var(--gold)] ${
                 index === activeIndex
@@ -63,12 +92,17 @@ export function ProductGallery({ images, productName }: { images: GalleryImage[]
               }`}
             >
               <Image
-                src={image.url}
-                alt={image.alt_text ?? `${productName} — foto ${index + 1}`}
+                src={item.type === "video" ? video?.posterUrl || images[0]?.url || "" : item.url}
+                alt={item.alt}
                 fill
                 className="object-cover"
                 sizes="14vw"
               />
+              {item.type === "video" ? (
+                <span className="absolute inset-0 flex items-center justify-center bg-foreground/20">
+                  <PlayIcon className="size-4 text-background" />
+                </span>
+              ) : null}
             </button>
           ))}
         </div>
@@ -76,15 +110,11 @@ export function ProductGallery({ images, productName }: { images: GalleryImage[]
 
       {isOpen ? (
         <MediaLightbox
-          items={images.map((image, index) => ({
-            id: image.id,
-            url: image.url,
-            alt: image.alt_text ?? `${productName} — foto ${index + 1}`,
-          }))}
+          items={items}
           activeIndex={activeIndex}
           onIndexChange={setActiveIndex}
           onClose={() => setIsOpen(false)}
-          label={`Fotos de ${productName}`}
+          label={`Fotos e vídeo de ${productName}`}
         />
       ) : null}
     </div>

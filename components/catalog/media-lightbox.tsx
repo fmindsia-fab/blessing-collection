@@ -9,6 +9,8 @@ export type LightboxItem = {
   id: string;
   url: string;
   alt: string;
+  /** Padrão "image" — mantém quem só usa foto (admin) sem precisar do campo. */
+  type?: "image" | "video";
 };
 
 /**
@@ -103,7 +105,17 @@ export function MediaLightbox({
 
       {/* stopPropagation: clicar na própria mídia não fecha o lightbox. */}
       <div onClick={(e) => e.stopPropagation()} className="relative h-full max-h-[85vh] w-full max-w-4xl">
-        <Image src={active.url} alt={active.alt} fill className="object-contain" sizes="90vw" />
+        {active.type === "video" ? (
+          <video
+            src={active.url}
+            controls
+            autoPlay
+            playsInline
+            className="size-full object-contain"
+          />
+        ) : (
+          <Image src={active.url} alt={active.alt} fill className="object-contain" sizes="90vw" />
+        )}
       </div>
 
       {items.length > 1 ? (

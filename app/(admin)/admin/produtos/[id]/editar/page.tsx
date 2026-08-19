@@ -14,6 +14,7 @@ import {
 import { ProductForm } from "../../product-form";
 import { PageHeading } from "@/components/admin/page-heading";
 import { ProductImages } from "./product-images";
+import { ProductVideo } from "./product-video";
 import { ProductSlug } from "./product-slug";
 import { ProductVariants } from "./product-variants";
 import { ProductPricing } from "./product-pricing";
@@ -62,6 +63,12 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
       />
 
       <ProductImages productId={product.id} images={images} />
+
+      <ProductVideo
+        productId={product.id}
+        videoUrl={product.video_url}
+        videoPosterUrl={product.video_poster_url}
+      />
 
       <ProductVariants productId={product.id} variants={variants} colors={colors} />
 

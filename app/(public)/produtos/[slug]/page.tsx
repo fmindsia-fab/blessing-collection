@@ -82,7 +82,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
         <div className="reveal">
-          <ProductGallery images={galleryImages} productName={product.name} />
+          <ProductGallery
+            images={galleryImages}
+            video={product.video_url ? { url: product.video_url, posterUrl: product.video_poster_url } : null}
+            productName={product.name}
+          />
         </div>
 
         <div
