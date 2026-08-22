@@ -61,7 +61,7 @@ export function ProductCard({
         )}
 
         {badge ? (
-          <span className="absolute left-3 top-3 rounded-full bg-background/92 px-3.5 py-1.5 text-[0.625rem] font-medium uppercase tracking-[0.14em] text-foreground shadow-sm backdrop-blur-sm">
+          <span className="absolute left-2.5 top-2.5 rounded-full bg-background/92 px-2.5 py-1 text-[0.5625rem] font-medium uppercase tracking-[0.08em] text-foreground shadow-sm backdrop-blur-sm">
             {badge}
           </span>
         ) : null}
