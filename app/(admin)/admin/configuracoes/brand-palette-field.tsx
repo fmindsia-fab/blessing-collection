@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { WandSparklesIcon } from "lucide-react";
 import { MAX_BRAND_COLORS, isValidHexColor, normalizeHexInput } from "@/lib/store/branding";
+import { generateHarmoniousPalette } from "@/lib/store/color-harmony";
+import { isLight } from "@/lib/store/theme";
 
 // Sugestões alinhadas à direção visual do catálogo (nude/argila/dourado).
 const SUGGESTED = ["#1C1917", "#FAF8F5", "#C9A227", "#B08D57", "#D9C5B2", "#8A6F5C", "#EFE6DA"];
@@ -26,13 +29,22 @@ export function BrandPaletteField({ initialColors }: { initialColors: string[] }
     setColors((current) => current.filter((_, i) => i !== index));
   }
 
+  // Recalcula fundo/destaque/apoio a partir da primária — substitui as 4
+  // posições seguintes por completo (pedido do usuário), preservando só a
+  // primária que a proprietária escolheu.
+  function generateFromPrimary() {
+    const primary = colors[0];
+    if (!isValidHexColor(primary)) return;
+    setColors(generateHarmoniousPalette(primary).slice(0, Math.max(colors.length, 3)));
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
         <span className="text-sm font-medium">Paleta da marca</span>
         <span className="text-xs text-muted-foreground">
           Até {MAX_BRAND_COLORS} cores. A 1ª é a primária, a 2ª o fundo e a 3ª o destaque. Escolha no seletor
-          ou cole o código hexadecimal.
+          ou cole o código hexadecimal — ou gere as demais automaticamente a partir da primária.
         </span>
       </div>
 
@@ -43,43 +55,71 @@ export function BrandPaletteField({ initialColors }: { initialColors: string[] }
         {colors.map((color, index) => {
           const valid = isValidHexColor(color);
           const role = ["Primária", "Fundo", "Destaque", "Apoio", "Apoio"][index] ?? "Apoio";
+          // A 2ª cor só vira fundo de fato se for clara (buildStoreTheme, em
+          // lib/store/theme.ts, ignora silenciosamente uma cor de fundo
+          // escura pra não deixar o texto ilegível) — avisa aqui em vez de a
+          // proprietária escolher uma cor e não ver nenhuma mudança no site.
+          const backgroundWontApply = index === 1 && valid && !isLight(color);
 
           return (
-            <div key={index} className="flex items-center gap-3">
-              <span className="w-16 shrink-0 text-[0.6875rem] uppercase tracking-wider text-muted-foreground">
-                {role}
-              </span>
+            <div key={index} className="flex flex-col gap-1">
+              <div className="flex items-center gap-3">
+                <span className="w-16 shrink-0 text-[0.6875rem] uppercase tracking-wider text-muted-foreground">
+                  {role}
+                </span>
 
-              <input
-                type="color"
-                aria-label={`Seletor visual da cor ${index + 1}`}
-                value={valid ? color : "#000000"}
-                onChange={(e) => updateColor(index, e.target.value.toUpperCase())}
-                className="size-10 shrink-0 cursor-pointer border border-border bg-transparent p-1"
-              />
+                <input
+                  type="color"
+                  aria-label={`Seletor visual da cor ${index + 1}`}
+                  value={valid ? color : "#000000"}
+                  onChange={(e) => updateColor(index, e.target.value.toUpperCase())}
+                  className="size-10 shrink-0 cursor-pointer border border-border bg-transparent p-1"
+                />
 
-              <input
-                type="text"
-                aria-label={`Código hexadecimal da cor ${index + 1}`}
-                value={color}
-                onChange={(e) => updateColor(index, normalizeHexInput(e.target.value))}
-                placeholder="#C9A227"
-                spellCheck={false}
-                className={`h-10 w-32 border bg-transparent px-3 font-mono text-sm uppercase outline-none transition-colors ${
-                  valid ? "border-border focus:border-foreground" : "border-destructive"
-                }`}
-              />
+                <input
+                  type="text"
+                  aria-label={`Código hexadecimal da cor ${index + 1}`}
+                  value={color}
+                  onChange={(e) => updateColor(index, normalizeHexInput(e.target.value))}
+                  placeholder="#C9A227"
+                  spellCheck={false}
+                  className={`h-10 w-32 border bg-transparent px-3 font-mono text-sm uppercase outline-none transition-colors ${
+                    valid ? "border-border focus:border-foreground" : "border-destructive"
+                  }`}
+                />
 
-              {!valid ? <span className="text-xs text-destructive">Use #RRGGBB</span> : null}
+                {!valid ? <span className="text-xs text-destructive">Use #RRGGBB</span> : null}
 
-              {colors.length > 1 ? (
-                <button
-                  type="button"
-                  onClick={() => removeColor(index)}
-                  className="ml-auto text-xs uppercase tracking-wider text-muted-foreground transition-colors hover:text-destructive"
-                >
-                  Remover
-                </button>
+                <div className="ml-auto flex items-center gap-3">
+                  {index === 0 ? (
+                    <button
+                      type="button"
+                      onClick={generateFromPrimary}
+                      disabled={!isValidHexColor(colors[0])}
+                      className="flex items-center gap-1.5 text-xs uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <WandSparklesIcon className="size-3.5" />
+                      Gerar paleta a partir desta cor
+                    </button>
+                  ) : null}
+
+                  {colors.length > 1 ? (
+                    <button
+                      type="button"
+                      onClick={() => removeColor(index)}
+                      className="text-xs uppercase tracking-wider text-muted-foreground transition-colors hover:text-destructive"
+                    >
+                      Remover
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+
+              {backgroundWontApply ? (
+                <p className="pl-[4.75rem] text-xs text-[var(--gold)]">
+                  Essa cor é escura demais para virar o fundo do catálogo — o site mantém o fundo padrão até
+                  você escolher um tom mais claro aqui.
+                </p>
               ) : null}
             </div>
           );
