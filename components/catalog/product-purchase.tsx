@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { InfoIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { calculateInstallmentOptions, type PaymentMethod } from "@/lib/pricing/calculate";
 import { toCents, toReais } from "@/lib/pricing/money";
@@ -98,7 +99,9 @@ export function ProductPurchase({
   return (
     <>
       <div className="flex flex-col gap-1">
-        <span className={cn("kicker", variable && "text-[var(--gold)]")}>{priceLabel(status)}</span>
+        <span className={cn("kicker", variable && "font-semibold tracking-[0.16em] text-[var(--gold)]")}>
+          {priceLabel(status)}
+        </span>
         <p className="flex items-baseline gap-2 text-xl">
           {pendingPricedGroup ? <span className="kicker normal-case">a partir de</span> : null}
           {formatPrice(toReais(currentCents))}
@@ -116,8 +119,9 @@ export function ProductPurchase({
       />
 
       {variable ? (
-        <div className="max-w-prose rounded-[var(--radius)] border border-[var(--gold)]/40 bg-[var(--gold)]/[0.07] p-4">
-          <p className="text-[0.8125rem] leading-relaxed text-foreground/85">
+        <div className="flex max-w-prose gap-2.5 rounded-[var(--radius)] border border-[var(--gold)]/70 bg-[var(--gold)]/[0.14] p-4">
+          <InfoIcon className="mt-0.5 size-4 shrink-0 text-[var(--gold)]" aria-hidden />
+          <p className="text-[0.8125rem] font-medium leading-relaxed text-foreground">
             {PRICE_VARIATION_NOTICE}
           </p>
         </div>
