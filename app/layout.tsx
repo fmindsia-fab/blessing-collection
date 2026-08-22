@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { getActiveStore } from "@/lib/store/get-active-store";
+import { buildStoreTheme } from "@/lib/store/theme";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -18,17 +20,28 @@ export const metadata: Metadata = {
   description: "Catálogo digital de bolsas e acessórios artesanais.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // O tema precisa ir no <body>, não num <div> mais abaixo na árvore: CSS
+  // custom properties só herdam de pai para filho, e o body pinta seu próprio
+  // fundo com var(--background) resolvido no PRÓPRIO escopo (globals.css,
+  // `body { @apply bg-background }`). Um filho reescrevendo --background não
+  // repinta um ancestral que já resolveu a variável — por isso a cor de fundo
+  // configurada em Configurações nunca aparecia, mesmo depois de salva.
+  const store = await getActiveStore();
+  const theme = buildStoreTheme(store);
+
   return (
     <html
       lang="pt-BR"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col" style={theme}>
+        {children}
+      </body>
     </html>
   );
 }

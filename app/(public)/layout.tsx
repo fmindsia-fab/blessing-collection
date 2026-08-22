@@ -4,8 +4,11 @@ import { SiteFooter } from "@/components/catalog/site-footer";
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { getBrandFontVariable } from "@/lib/store/fonts";
 import { isSafeBrandFontUrl } from "@/lib/store/branding";
-import { buildStoreTheme } from "@/lib/store/theme";
 
+// O tema de cores (buildStoreTheme) é aplicado no <body>, em app/layout.tsx —
+// precisa estar lá, não aqui, porque --background só pinta o body se for
+// definido no próprio body ou num ancestral dele (CSS custom properties
+// herdam de pai para filho, nunca o contrário).
 export default async function PublicLayout({
   children,
 }: Readonly<{
@@ -13,9 +16,6 @@ export default async function PublicLayout({
 }>) {
   const store = await getActiveStore();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
-  // A paleta configurada no painel vira tokens do tema, aplicados a todas as
-  // páginas públicas de uma vez.
-  const theme = buildStoreTheme(store);
 
   // Fonte própria enviada pela proprietária tem precedência sobre a curada —
   // desde que a URL seja comprovadamente do nosso bucket de fontes.
@@ -36,12 +36,7 @@ export default async function PublicLayout({
 
       <div
         className={`${fontVariable} flex flex-1 flex-col`}
-        style={
-          {
-            ...theme,
-            ...(customFontUrl ? { "--font-brand": "'BrandCustom', Georgia, serif" } : {}),
-          } as React.CSSProperties
-        }
+        style={customFontUrl ? ({ "--font-brand": "'BrandCustom', Georgia, serif" } as React.CSSProperties) : undefined}
       >
         {children}
         <SiteFooter
