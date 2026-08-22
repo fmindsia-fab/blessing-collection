@@ -12,16 +12,25 @@ type ProductVariantsProps = {
   productId: string;
   variants: Variant[];
   colors: StoreColor[];
+  /** Grupos cadastrados em Grupos de variação (/admin/grupos-variacao). */
+  catalogGroups: string[];
 };
 
 const initialState: VariantFormState = {};
 
-export function ProductVariants({ productId, variants, colors }: ProductVariantsProps) {
+export function ProductVariants({ productId, variants, colors, catalogGroups }: ProductVariantsProps) {
   const createAction = createVariant.bind(null, productId);
   const [state, formAction, isPending] = useActionState(createAction, initialState);
 
+  // Grupos já usados nesta peça + os cadastrados no catálogo da loja, sem
+  // repetir. O catálogo é a fonte principal (pedido do usuário: gerenciar os
+  // grupos numa tela própria); os já usados na peça cobrem um grupo digitado
+  // antes de existir uma tela de catálogo, ou já arquivado nela.
   const existingGroups = [
-    ...new Set(variants.map((v) => v.variant_group).filter((g): g is string => Boolean(g))),
+    ...new Set([
+      ...catalogGroups,
+      ...variants.map((v) => v.variant_group).filter((g): g is string => Boolean(g)),
+    ]),
   ];
 
   return (
@@ -88,8 +97,10 @@ export function ProductVariants({ productId, variants, colors }: ProductVariants
             placeholder="Cor"
             defaultValue="Cor"
           />
-          {/* Sugere os grupos já usados nesta peça, para não surgir "Cor" e
-              "cores" como eixos separados por diferença de digitação. */}
+          {/* Sugere os grupos do catálogo (/admin/grupos-variacao) + os já
+              usados nesta peça, para não surgir "Cor" e "cores" como eixos
+              separados por diferença de digitação. Os 4 fixos abaixo cobrem o
+              catálogo vazio; o navegador ignora repetição no datalist. */}
           <datalist id="variant-groups">
             {existingGroups.map((group) => (
               <option key={group} value={group} />
@@ -100,7 +111,10 @@ export function ProductVariants({ productId, variants, colors }: ProductVariants
             <option value="Acabamento" />
           </datalist>
           <span className="text-xs text-muted-foreground">
-            A cliente escolhe uma opção de cada grupo.
+            A cliente escolhe uma opção de cada grupo.{" "}
+            <Link href="/admin/grupos-variacao" className="underline underline-offset-2">
+              Gerenciar grupos
+            </Link>
           </span>
         </div>
         <input type="hidden" name="status" value="available" />

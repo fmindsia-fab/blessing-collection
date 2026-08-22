@@ -5,6 +5,7 @@ import { listAllCategoriesForAdmin } from "@/lib/categories/queries";
 import { listAllCollectionsForAdmin } from "@/lib/collections/queries";
 import { listAllModelsForAdmin } from "@/lib/models/queries";
 import { listColors } from "@/lib/colors/queries";
+import { listVariantGroups } from "@/lib/variant-groups/queries";
 import {
   getStorePricingSettings,
   listActiveMaterials,
@@ -29,6 +30,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
     collections,
     models,
     colors,
+    variantGroups,
     pricing,
     paymentMethods,
     materials,
@@ -39,6 +41,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
     listAllCollectionsForAdmin(store.id),
     listAllModelsForAdmin(store.id),
     listColors(store.id),
+    listVariantGroups(store.id),
     getStorePricingSettings(store.id),
     listPaymentMethods(store.id),
     listProductMaterials(id),
@@ -71,7 +74,12 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
         videoPosterUrl={product.video_poster_url}
       />
 
-      <ProductVariants productId={product.id} variants={variants} colors={colors} />
+      <ProductVariants
+        productId={product.id}
+        variants={variants}
+        colors={colors}
+        catalogGroups={variantGroups.map((g) => g.name)}
+      />
 
       <div className="border-t border-border pt-10">
         <ProductPricing

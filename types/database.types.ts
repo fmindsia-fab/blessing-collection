@@ -303,6 +303,28 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["colors"]["Insert"]>;
         Relationships: [];
       };
+      variant_groups: {
+        Row: {
+          id: string;
+          store_id: string;
+          name: string;
+          status: ArchivableStatus;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          store_id: string;
+          name: string;
+          status?: ArchivableStatus;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["variant_groups"]["Insert"]>;
+        Relationships: [];
+      };
       products: {
         Row: {
           id: string;

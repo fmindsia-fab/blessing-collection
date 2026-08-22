@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: "/admin/modelos", label: "Modelos" },
   { href: "/admin/cores", label: "Cores" },
   { href: "/admin/materiais", label: "Materiais" },
+  { href: "/admin/grupos-variacao", label: "Grupos" },
   { href: "/admin/precificacao", label: "Precificação" },
   { href: "/admin/analytics", label: "Analytics" },
   { href: "/admin/configuracoes", label: "Configurações" },
