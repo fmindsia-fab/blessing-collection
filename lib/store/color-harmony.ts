@@ -2,9 +2,9 @@
 // usuário: escolher a primária e ter fundo/destaque/apoio sugeridos de forma
 // coerente, sem precisar entender teoria de cor pra montar a paleta na mão.
 
-type HSL = { h: number; s: number; l: number };
+export type HSL = { h: number; s: number; l: number };
 
-function hexToHsl(hex: string): HSL | null {
+export function hexToHsl(hex: string): HSL | null {
   const match = /^#([0-9a-fA-F]{6})$/.exec(hex);
   if (!match) return null;
 
@@ -37,7 +37,7 @@ function hexToHsl(hex: string): HSL | null {
   return { h: h * 360, s, l };
 }
 
-function hslToHex({ h, s, l }: HSL): string {
+export function hslToHex({ h, s, l }: HSL): string {
   const hue = ((h % 360) + 360) % 360;
   const sat = clamp01(s);
   const lig = clamp01(l);
@@ -99,4 +99,20 @@ export function generateHarmoniousPalette(baseHex: string): string[] {
   const support2 = hslToHex({ h: base.h - 30, s: base.s * 0.5, l: Math.min(base.l + 0.35, 0.9) });
 
   return [baseHex.toUpperCase(), background, accent, support1, support2];
+}
+
+/**
+ * Clareia uma cor (mantendo o matiz) até atingir a luminância mínima pedida,
+ * sem nunca escurecer. Usada para a cor de fundo do catálogo: em vez de
+ * ignorar em silêncio uma cor escura demais para virar `--background` (o
+ * texto ficaria ilegível por cima dela), sobe a luminância até funcionar.
+ */
+export function ensureLightEnough(hex: string, minLightness = 0.94): string {
+  const hsl = hexToHsl(hex);
+  if (!hsl) return hex;
+  if (hsl.l >= minLightness) return hex.toUpperCase();
+
+  // Reduz um pouco a saturação junto: um tom muito saturado clareado até
+  // quase-branco fica com aparência de neon; suavizar evita isso.
+  return hslToHex({ h: hsl.h, s: hsl.s * 0.5, l: minLightness });
 }

@@ -46,6 +46,21 @@ describe("buildStoreTheme", () => {
     const theme = buildStoreTheme({ brand_colors: [] }) as Theme;
     expect(theme["--brand-1"]).toBeTruthy();
   });
+
+  it("usa a 2ª cor como fundo real da página quando já é clara", () => {
+    const theme = buildStoreTheme({ brand_colors: ["#1C1917", "#FAF8F5", "#C9A227"] }) as Theme;
+    expect(theme["--background"]).toBe("#FAF8F5");
+    expect(theme["--secondary"]).toBe("#FAF8F5");
+  });
+
+  // Antes, uma 2ª cor escura era ignorada em silêncio e o fundo não mudava
+  // nada — a proprietária escolhia a cor e não via efeito nenhum no site.
+  it("clareia a 2ª cor em vez de descartá-la quando é escura demais para fundo", () => {
+    const theme = buildStoreTheme({ brand_colors: ["#1C1917", "#9691B3", "#C9A227"] }) as Theme;
+    expect(theme["--background"]).toBeDefined();
+    expect(theme["--background"]).not.toBe("#9691B3");
+    expect(isLight(theme["--background"]!)).toBe(true);
+  });
 });
 
 describe("contraste", () => {

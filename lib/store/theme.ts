@@ -1,4 +1,5 @@
 import { resolveBrandColors } from "./branding";
+import { ensureLightEnough } from "./color-harmony";
 
 /**
  * Converte a paleta da loja em variáveis CSS do tema.
@@ -43,11 +44,16 @@ export function buildStoreTheme(store: {
     vars["--primary"] = primary;
   }
 
-  // A segunda cor costuma ser o fundo da marca; usamos como superfície suave
-  // (cards, chips) em vez de fundo da página, para não perder o contraste.
-  if (background && isLight(background)) {
-    vars["--secondary"] = background;
-    vars["--muted"] = background;
+  // A segunda cor é o fundo real da página (pedido do usuário) — antes só
+  // virava superfície de cards/chips, e uma cor escura era ignorada em
+  // silêncio, sem nenhuma mudança visível no catálogo. Agora ela sempre se
+  // aplica: se for escura demais para o texto continuar legível por cima,
+  // `ensureLightEnough` clareia mantendo o matiz em vez de descartar a cor.
+  if (background) {
+    const bg = ensureLightEnough(background);
+    vars["--background"] = bg;
+    vars["--secondary"] = bg;
+    vars["--muted"] = bg;
   }
 
   // Cores de apoio viram superfícies decorativas.

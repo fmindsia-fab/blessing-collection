@@ -55,11 +55,12 @@ export function BrandPaletteField({ initialColors }: { initialColors: string[] }
         {colors.map((color, index) => {
           const valid = isValidHexColor(color);
           const role = ["Primária", "Fundo", "Destaque", "Apoio", "Apoio"][index] ?? "Apoio";
-          // A 2ª cor só vira fundo de fato se for clara (buildStoreTheme, em
-          // lib/store/theme.ts, ignora silenciosamente uma cor de fundo
-          // escura pra não deixar o texto ilegível) — avisa aqui em vez de a
-          // proprietária escolher uma cor e não ver nenhuma mudança no site.
-          const backgroundWontApply = index === 1 && valid && !isLight(color);
+          // A 2ª cor sempre vira o fundo real do catálogo (buildStoreTheme, em
+          // lib/store/theme.ts) — mas se for escura demais para o texto
+          // continuar legível por cima, é clareada automaticamente antes de
+          // aplicar. Avisa aqui pra proprietária não estranhar o fundo sair
+          // mais claro do que a cor que ela escolheu.
+          const backgroundWillLighten = index === 1 && valid && !isLight(color);
 
           return (
             <div key={index} className="flex flex-col gap-1">
@@ -115,10 +116,10 @@ export function BrandPaletteField({ initialColors }: { initialColors: string[] }
                 </div>
               </div>
 
-              {backgroundWontApply ? (
+              {backgroundWillLighten ? (
                 <p className="pl-[4.75rem] text-xs text-[var(--gold)]">
-                  Essa cor é escura demais para virar o fundo do catálogo — o site mantém o fundo padrão até
-                  você escolher um tom mais claro aqui.
+                  Essa cor é escura para servir de fundo — o catálogo vai usar uma versão mais clara dela,
+                  pra manter o texto legível por cima.
                 </p>
               ) : null}
             </div>
