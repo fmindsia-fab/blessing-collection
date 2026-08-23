@@ -106,13 +106,21 @@ export function generateHarmoniousPalette(baseHex: string): string[] {
  * sem nunca escurecer. Usada para a cor de fundo do catálogo: em vez de
  * ignorar em silêncio uma cor escura demais para virar `--background` (o
  * texto ficaria ilegível por cima dela), sobe a luminância até funcionar.
+ *
+ * minLightness de 0.85 (não 0.94+): mais alto que isso e a cor perde toda
+ * identidade — um roxo (#9691B3) virava #EFEEF1, um cinza quase idêntico ao
+ * fundo padrão do tema, e a proprietária via a mudança de cor "não fazer
+ * nada". Em 0.85 o mesmo roxo vira #D5D3DF: ainda claro o bastante pro texto
+ * escuro (--foreground) continuar legível, mas reconhecível como o tom
+ * escolhido.
  */
-export function ensureLightEnough(hex: string, minLightness = 0.94): string {
+export function ensureLightEnough(hex: string, minLightness = 0.85): string {
   const hsl = hexToHsl(hex);
   if (!hsl) return hex;
   if (hsl.l >= minLightness) return hex.toUpperCase();
 
-  // Reduz um pouco a saturação junto: um tom muito saturado clareado até
-  // quase-branco fica com aparência de neon; suavizar evita isso.
-  return hslToHex({ h: hsl.h, s: hsl.s * 0.5, l: minLightness });
+  // Reduz um pouco a saturação junto (não pela metade): um tom muito saturado
+  // clareado sem ajuste fica com aparência de neon, mas cortar demais é o que
+  // apagava a cor no minLightness antigo.
+  return hslToHex({ h: hsl.h, s: hsl.s * 0.85, l: minLightness });
 }

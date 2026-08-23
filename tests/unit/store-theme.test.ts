@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildStoreTheme, isDarkEnoughForText, isLight } from "@/lib/store/theme";
+import { buildStoreTheme, contrastRatio, isDarkEnoughForText, isLight } from "@/lib/store/theme";
 
 type Theme = Record<string, string>;
 
@@ -55,11 +55,34 @@ describe("buildStoreTheme", () => {
 
   // Antes, uma 2ª cor escura era ignorada em silêncio e o fundo não mudava
   // nada — a proprietária escolhia a cor e não via efeito nenhum no site.
-  it("clareia a 2ª cor em vez de descartá-la quando é escura demais para fundo", () => {
+  //
+  // Verifica contraste real (WCAG), não isLight(): isLight tem limiar alto
+  // (luminância > 0.7) pensado para decidir se uma cor "parece clara" como
+  // superfície — usá-lo aqui levou a clarear demais (minLightness 0.94), a
+  // ponto de a cor de fundo perder toda identidade visual e parecer que
+  // "nada mudou". O critério certo para --background é ter contraste
+  // suficiente com o texto escuro por cima, não bater um limiar arbitrário.
+  it("clareia a 2ª cor o mínimo necessário para o texto continuar legível", () => {
     const theme = buildStoreTheme({ brand_colors: ["#1C1917", "#9691B3", "#C9A227"] }) as Theme;
     expect(theme["--background"]).toBeDefined();
     expect(theme["--background"]).not.toBe("#9691B3");
-    expect(isLight(theme["--background"]!)).toBe(true);
+    expect(contrastRatio(theme["--foreground"] ?? "#1C1917", theme["--background"]!)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("mantém a identidade da cor escolhida em vez de clarear até virar cinza neutro", () => {
+    const theme = buildStoreTheme({ brand_colors: ["#1C1917", "#4671B9", "#C9A227"] }) as Theme;
+    const bg = theme["--background"]!;
+
+    // R, G e B bem próximos = cinza neutro (a cor perdeu a identidade azul).
+    // O bug relatado pela usuária era exatamente isso: um roxo virava
+    // #F6F5F4, quase idêntico ao bege padrão do tema.
+    const int = parseInt(bg.slice(1), 16);
+    const r = (int >> 16) & 255;
+    const g = (int >> 8) & 255;
+    const b = int & 255;
+    const spread = Math.max(r, g, b) - Math.min(r, g, b);
+
+    expect(spread).toBeGreaterThan(10);
   });
 });
 

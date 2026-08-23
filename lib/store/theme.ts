@@ -140,3 +140,14 @@ export function isLight(hex: string): boolean {
   const l = luminance(hex);
   return l !== null && l > 0.7;
 }
+
+/** Razão de contraste WCAG entre duas cores (1 a 21). AA para texto normal exige >= 4.5. */
+export function contrastRatio(hexA: string, hexB: string): number | null {
+  const lA = luminance(hexA);
+  const lB = luminance(hexB);
+  if (lA === null || lB === null) return null;
+
+  const lighter = Math.max(lA, lB);
+  const darker = Math.min(lA, lB);
+  return (lighter + 0.05) / (darker + 0.05);
+}
