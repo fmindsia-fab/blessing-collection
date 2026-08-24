@@ -48,7 +48,7 @@ export default async function AdminAreaLayout({ children }: { children: React.Re
             <ShareButton
               url={siteUrl}
               title={storeName}
-              message={`Conheça o catálogo da ${storeName}:`}
+              message={`Olha o catálogo da ${storeName}, que peças lindas!`}
               label="Compartilhar"
               variant="ghost"
               className="hidden sm:inline-flex"

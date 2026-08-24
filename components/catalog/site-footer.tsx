@@ -86,7 +86,7 @@ export function SiteFooter({ storeName, instagramUrl, whatsappNumber, siteUrl }:
           <ShareButton
             url={siteUrl}
             title={storeName}
-            message={`Conheça o catálogo da ${storeName}:`}
+            message={`Olha o catálogo da ${storeName}, que peças lindas!`}
             label="Compartilhar"
           />
         </div>

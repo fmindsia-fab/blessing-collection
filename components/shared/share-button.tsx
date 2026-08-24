@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { CheckIcon, LinkIcon, Share2Icon } from "lucide-react";
+import { LinkIcon, Share2Icon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type ShareButtonProps = {
@@ -29,54 +28,44 @@ export function ShareButton({
   className,
   variant = "outline",
 }: ShareButtonProps) {
-  const [copied, setCopied] = useState(false);
-
   async function handleShare() {
+    // Sem `url` (ex: NEXT_PUBLIC_SITE_URL não configurada em produção), cai
+    // para a URL da própria página em vez de compartilhar um link vazio —
+    // pior um link relativo ao ambiente do que nenhum link.
+    const effectiveUrl = url || window.location.href;
     const shareText = message ?? title;
 
     // Web Share API: no celular abre a folha nativa (WhatsApp, Instagram…).
     // Só existe em contexto seguro e nem todo desktop implementa.
-    if (typeof navigator !== "undefined" && navigator.share) {
+    if (navigator.share) {
       try {
-        await navigator.share({ title, text: shareText, url });
+        await navigator.share({ title, text: shareText, url: effectiveUrl });
         return;
       } catch {
-        // Usuário cancelou ou o navegador recusou: cai para a cópia do link.
+        // Usuário cancelou ou o navegador recusou: cai para o WhatsApp Web.
       }
     }
 
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2200);
-    } catch {
-      // clipboard bloqueado (http, permissão negada): abre o link em prompt.
-      window.prompt("Copie o link do catálogo:", url);
-    }
+    // Sem Web Share API (a maioria dos navegadores desktop): abre o
+    // WhatsApp Web/app direto com a mensagem e o link já prontos — é o canal
+    // que a loja mais usa para falar com cliente, então adianta o passo de
+    // colar em vez de só copiar para a área de transferência.
+    const text = `${shareText}\n${effectiveUrl}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
   }
 
   return (
     <button
       type="button"
       onClick={handleShare}
-      aria-live="polite"
       className={cn(
         "group inline-flex items-center justify-center gap-2.5 whitespace-nowrap text-[0.6875rem] uppercase tracking-[0.16em] outline-none transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-4 focus-visible:ring-offset-background",
         VARIANTS[variant],
         className,
       )}
     >
-      {copied ? (
-        <>
-          <CheckIcon className="size-3.5" />
-          Link copiado
-        </>
-      ) : (
-        <>
-          {variant === "ghost" ? <LinkIcon className="size-3.5" /> : <Share2Icon className="size-3.5" />}
-          {label}
-        </>
-      )}
+      {variant === "ghost" ? <LinkIcon className="size-3.5" /> : <Share2Icon className="size-3.5" />}
+      {label}
     </button>
   );
 }

@@ -35,7 +35,7 @@ export default async function AdminSettingsPage() {
         <ShareButton
           url={siteUrl}
           title={store.name}
-          message={`Conheça o catálogo da ${store.name}:`}
+          message={`Olha o catálogo da ${store.name}, que peças lindas!`}
           label="Compartilhar catálogo"
           className="w-fit"
         />
