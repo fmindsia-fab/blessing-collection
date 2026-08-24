@@ -38,16 +38,17 @@ export function ShareButton({
     // Web Share API: no celular abre a folha nativa (WhatsApp, Instagram…).
     // Só existe em contexto seguro e nem todo desktop implementa.
     //
-    // `text` e `url` vão juntos num campo só, sem separar em `url:`: alguns
-    // apps Android (WhatsApp incluso, em determinadas versões/aparelhos) não
-    // combinam os dois campos corretamente e cancelam o compartilhamento sem
-    // aviso — a folha abre, o app é escolhido, e o controle volta pro
-    // navegador como se o usuário tivesse cancelado. Web Share API não expõe
-    // essa falha como erro distinguível de "usuário cancelou", então a única
-    // forma confiável de evitar é nunca separar os dois campos.
+    // Manda só `text` (mensagem + link concatenados), sem `title` nem `url`
+    // separados: confirmado num aparelho real que `{ title, text, url }` e
+    // `{ title, text }` faziam o WhatsApp nem abrir — a folha aparecia, o
+    // WhatsApp era escolhido, e voltava direto pro navegador sem erro
+    // (compartilhar a mesma foto/link direto do app de Fotos do Android, pelo
+    // "compartilhar" nativo, funcionou normalmente no mesmo aparelho — ou
+    // seja, o WhatsApp dela funciona, é o formato do payload que falhava). Só
+    // `text` isolado é o formato mais universalmente aceito entre apps.
     if (navigator.share) {
       try {
-        await navigator.share({ title, text: `${shareText}\n${effectiveUrl}` });
+        await navigator.share({ text: `${shareText}\n${effectiveUrl}` });
         return;
       } catch {
         // Usuário cancelou de verdade, ou o navegador recusou: cai para o
