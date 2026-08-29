@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOwnerStore } from "@/lib/store/get-owner-store";
+import { revalidateStorePaths } from "@/lib/store/revalidate-store-paths";
 
 const BUCKET = "product-videos";
 const POSTER_BUCKET = "product-images";
@@ -45,6 +46,7 @@ export async function confirmProductVideo(
 ): Promise<VideoUploadState> {
   if (!videoUrl) return { error: "Vídeo não encontrado." };
 
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
   if (!(await assertProductBelongsToStore(supabase, productId))) {
     // O arquivo já subiu ao Storage nesse ponto — sem o vínculo ao produto
@@ -74,11 +76,12 @@ export async function confirmProductVideo(
   await removeVideoFiles(supabase, current?.video_url, current?.video_poster_url);
 
   revalidatePath(`/admin/produtos/${productId}/editar`);
-  revalidatePath("/produtos");
+  revalidateStorePaths(store.slug);
   return {};
 }
 
 export async function deleteProductVideo(productId: string) {
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
   if (!(await assertProductBelongsToStore(supabase, productId))) return;
 
@@ -96,7 +99,7 @@ export async function deleteProductVideo(productId: string) {
   await removeVideoFiles(supabase, current?.video_url, current?.video_poster_url);
 
   revalidatePath(`/admin/produtos/${productId}/editar`);
-  revalidatePath("/produtos");
+  revalidateStorePaths(store.slug);
 }
 
 async function removeVideoFiles(

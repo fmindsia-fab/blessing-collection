@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getActiveStore } from "@/lib/store/get-active-store";
+import { getStoreBySlug } from "@/lib/store/get-store-by-slug";
 import { getCategoryBySlug } from "@/lib/categories/queries";
 import { listProducts } from "@/lib/products/queries";
 import { ProductCard } from "@/components/catalog/product-card";
@@ -10,10 +10,10 @@ import type { Metadata } from "next";
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ storeSlug: string; slug: string }>;
 }): Promise<Metadata> {
-  const { slug } = await params;
-  const store = await getActiveStore();
+  const { storeSlug, slug } = await params;
+  const store = await getStoreBySlug(storeSlug);
   const category = await getCategoryBySlug(store.id, slug);
 
   if (!category) return { title: "Categoria não encontrada" };
@@ -28,14 +28,14 @@ export default async function CategoryPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ storeSlug: string; slug: string }>;
   searchParams: Promise<{ page?: string }>;
 }) {
-  const { slug } = await params;
+  const { storeSlug, slug } = await params;
   const { page: pageParam } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
 
-  const store = await getActiveStore();
+  const store = await getStoreBySlug(storeSlug);
   const category = await getCategoryBySlug(store.id, slug);
 
   if (!category) notFound();
@@ -50,7 +50,7 @@ export default async function CategoryPage({
     <main className="flex flex-1 flex-col gap-8 px-6 py-12 sm:px-10 lg:px-16">
       <PageViewTracker storeId={store.id} eventType="category_view" categoryId={category.id} />
 
-      <BackLink href="/">Voltar para a página inicial</BackLink>
+      <BackLink href={`/loja/${storeSlug}`}>Voltar para a página inicial</BackLink>
 
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold tracking-tight">{category.name}</h1>
@@ -65,6 +65,7 @@ export default async function CategoryPage({
           {products.map((product) => (
             <ProductCard
               key={product.id}
+              storeSlug={storeSlug}
               slug={product.slug}
               name={product.name}
               price={product.price}
@@ -78,7 +79,7 @@ export default async function CategoryPage({
       {hasMore ? (
         <div className="flex justify-center pt-4">
           <a
-            href={`/categorias/${slug}?page=${page + 1}`}
+            href={`/loja/${storeSlug}/categorias/${slug}?page=${page + 1}`}
             className="rounded-full border border-zinc-300 px-6 py-2.5 text-sm font-medium hover:border-zinc-500"
           >
             Carregar mais

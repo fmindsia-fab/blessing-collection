@@ -41,27 +41,27 @@ import { getSitemapEntries, absoluteUrl } from "@/lib/seo/sitemap-entries";
 import robots from "@/app/robots";
 
 describe("getSitemapEntries", () => {
-  it("inclui home, listagem, produtos, categorias e coleções", async () => {
-    const entries = await getSitemapEntries("store-1");
+  it("inclui home, listagem, produtos, categorias e coleções, prefixados por /loja/{slug}", async () => {
+    const entries = await getSitemapEntries("store-1", "blessing-collection");
     const paths = entries.map((e) => e.path);
 
-    expect(paths).toContain("/");
-    expect(paths).toContain("/produtos");
-    expect(paths).toContain("/produtos/bolsa-florence");
-    expect(paths).toContain("/categorias/clutch");
-    expect(paths).toContain("/colecoes/verao-2026");
+    expect(paths).toContain("/loja/blessing-collection");
+    expect(paths).toContain("/loja/blessing-collection/produtos");
+    expect(paths).toContain("/loja/blessing-collection/produtos/bolsa-florence");
+    expect(paths).toContain("/loja/blessing-collection/categorias/clutch");
+    expect(paths).toContain("/loja/blessing-collection/colecoes/verao-2026");
   });
 
-  it("dá prioridade máxima à home", async () => {
-    const entries = await getSitemapEntries("store-1");
-    const home = entries.find((e) => e.path === "/");
+  it("dá prioridade máxima à home da loja", async () => {
+    const entries = await getSitemapEntries("store-1", "blessing-collection");
+    const home = entries.find((e) => e.path === "/loja/blessing-collection");
 
     expect(home?.priority).toBe(1);
   });
 
   it("usa updated_at de cada item como lastModified", async () => {
-    const entries = await getSitemapEntries("store-1");
-    const product = entries.find((e) => e.path === "/produtos/clutch-aurora");
+    const entries = await getSitemapEntries("store-1", "blessing-collection");
+    const product = entries.find((e) => e.path === "/loja/blessing-collection/produtos/clutch-aurora");
 
     expect(product?.lastModified.toISOString()).toBe("2026-07-15T10:00:00.000Z");
   });
@@ -69,7 +69,7 @@ describe("getSitemapEntries", () => {
   // Produto inativo indexado seria um link morto no Google.
   it("filtra por status público e pela loja ativa", async () => {
     applied.length = 0;
-    await getSitemapEntries("store-1");
+    await getSitemapEntries("store-1", "blessing-collection");
 
     const products = applied.find((a) => a.table === "products");
     expect(products?.filters["store_id"]).toBe("store-1");
@@ -92,13 +92,14 @@ describe("absoluteUrl", () => {
 });
 
 describe("robots", () => {
-  it("bloqueia painel, login e a página de seleção", () => {
+  it("bloqueia painel, login, cadastro e a página de seleção de qualquer loja", () => {
     const result = robots();
     const disallow = result.rules as { disallow: string[] };
 
     expect(disallow.disallow).toContain("/admin");
     expect(disallow.disallow).toContain("/login");
-    expect(disallow.disallow).toContain("/selecao");
+    expect(disallow.disallow).toContain("/cadastro");
+    expect(disallow.disallow).toContain("/loja/*/selecao");
   });
 
   it("libera o catálogo público", () => {

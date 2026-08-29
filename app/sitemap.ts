@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getActiveStore } from "@/lib/store/get-active-store";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { absoluteUrl, getSitemapEntries } from "@/lib/seo/sitemap-entries";
 
 // Lê o banco a cada requisição: um produto novo entra no sitemap sem redeploy.
@@ -12,10 +12,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // sitemap vazio que URLs relativas, que os buscadores rejeitam.
   if (!siteUrl) return [];
 
-  const store = await getActiveStore();
-  const entries = await getSitemapEntries(store.id);
+  const supabase = await createServerSupabaseClient();
+  const { data: stores } = await supabase.from("stores").select("id, slug").eq("status", "active");
 
-  return entries.map((entry) => ({
+  const entriesByStore = await Promise.all(
+    (stores ?? []).map((store) => getSitemapEntries(store.id, store.slug)),
+  );
+
+  return entriesByStore.flat().map((entry) => ({
     url: absoluteUrl(siteUrl, entry.path),
     lastModified: entry.lastModified,
     changeFrequency: entry.changeFrequency,

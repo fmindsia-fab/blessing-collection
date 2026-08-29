@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOwnerStore } from "@/lib/store/get-owner-store";
+import { revalidateStorePaths } from "@/lib/store/revalidate-store-paths";
 
 const variantSchema = z.object({
   name: z.string().min(1, "Informe o nome da variação"),
@@ -160,7 +161,7 @@ export async function updateVariant(
   if (error) return { error: "Não foi possível salvar a variação." };
 
   revalidatePath(`/admin/produtos/${productId}/editar`);
-  revalidatePath("/produtos");
+  revalidateStorePaths(store.slug);
   return {};
 }
 

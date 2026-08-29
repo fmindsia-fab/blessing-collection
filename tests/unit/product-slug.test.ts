@@ -11,8 +11,8 @@ const { state } = vi.hoisted(() => ({
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
-vi.mock("@/lib/store/get-active-store", () => ({
-  getActiveStore: async () => ({ id: "store-1" }),
+vi.mock("@/lib/store/get-owner-store", () => ({
+  getOwnerStore: async () => ({ id: "store-1", slug: "store-1" }),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({

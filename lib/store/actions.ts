@@ -7,6 +7,14 @@ import { getOwnerStore } from "@/lib/store/get-owner-store";
 import { parseBrandColors } from "@/lib/store/branding";
 import { isCuratedFont } from "@/lib/store/fonts";
 
+// Configurações de marca afetam o tema aplicado tanto no painel (layout do
+// admin) quanto na loja pública (layout de /loja/[storeSlug]) — os dois
+// precisam revalidar juntos, já que ambos leem a mesma linha de `stores`.
+function revalidateBrandLayouts(storeSlug: string) {
+  revalidatePath("/admin", "layout");
+  revalidatePath(`/loja/${storeSlug}`, "layout");
+}
+
 const storeSettingsSchema = z.object({
   whatsappNumber: z.string().min(8, "Informe um número de WhatsApp válido"),
   instagramUrl: z.string().url("Informe uma URL válida").optional().or(z.literal("")),
@@ -60,7 +68,7 @@ export async function updateStoreSettings(
   if (error) return { error: "Não foi possível salvar as configurações." };
 
   revalidatePath("/admin/configuracoes");
-  revalidatePath("/", "layout");
+  revalidateBrandLayouts(store.slug);
   return { success: true };
 }
 
@@ -117,7 +125,7 @@ export async function uploadBrandFont(
   if (error) return { error: "Fonte enviada, mas houve falha ao salvar no banco." };
 
   revalidatePath("/admin/configuracoes");
-  revalidatePath("/", "layout");
+  revalidateBrandLayouts(store.slug);
   return { success: true };
 }
 
@@ -134,7 +142,7 @@ export async function removeBrandFont(): Promise<StoreSettingsFormState> {
   if (error) return { error: "Não foi possível remover a fonte." };
 
   revalidatePath("/admin/configuracoes");
-  revalidatePath("/", "layout");
+  revalidateBrandLayouts(store.slug);
   return { success: true };
 }
 
@@ -184,6 +192,6 @@ export async function uploadStoreLogo(
   if (error) return { error: "Logo enviado, mas houve falha ao salvar no banco." };
 
   revalidatePath("/admin/configuracoes");
-  revalidatePath("/", "layout");
+  revalidateBrandLayouts(store.slug);
   return { success: true };
 }

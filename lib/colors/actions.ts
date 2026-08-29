@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOwnerStore } from "@/lib/store/get-owner-store";
+import { revalidateStorePaths } from "@/lib/store/revalidate-store-paths";
 import { slugify } from "@/lib/utils";
 
 // Mesmo formato do check da migration 0013: #rgb ou #rrggbb.
@@ -37,9 +38,9 @@ function parse(formData: FormData) {
   });
 }
 
-function revalidate() {
+function revalidate(storeSlug: string) {
   revalidatePath("/admin/cores");
-  revalidatePath("/produtos");
+  revalidateStorePaths(storeSlug);
 }
 
 export async function createColor(
@@ -72,7 +73,7 @@ export async function createColor(
     };
   }
 
-  revalidate();
+  revalidate(store.slug);
   return {};
 }
 
@@ -101,7 +102,7 @@ export async function updateColor(
 
   if (error) return { error: "Não foi possível salvar as alterações." };
 
-  revalidate();
+  revalidate(store.slug);
   return {};
 }
 
@@ -110,12 +111,12 @@ export async function archiveColor(id: string) {
   const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
   await supabase.from("colors").update({ status: "archived" }).eq("id", id).eq("store_id", store.id);
-  revalidate();
+  revalidate(store.slug);
 }
 
 export async function restoreColor(id: string) {
   const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
   await supabase.from("colors").update({ status: "active" }).eq("id", id).eq("store_id", store.id);
-  revalidate();
+  revalidate(store.slug);
 }

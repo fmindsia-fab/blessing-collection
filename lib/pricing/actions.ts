@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOwnerStore } from "@/lib/store/get-owner-store";
+import { revalidateStorePaths } from "@/lib/store/revalidate-store-paths";
 
 export type PricingFormState = {
   error?: string;
@@ -330,14 +331,14 @@ export async function updateProductPricing(
 export async function applySuggestedPrice(productId: string, priceReais: number) {
   if (!Number.isFinite(priceReais) || priceReais <= 0) return;
 
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
   if (!(await assertProductBelongsToStore(supabase, productId))) return;
 
   await supabase.from("products").update({ price: priceReais }).eq("id", productId);
 
   revalidatePath(`/admin/produtos/${productId}/editar`);
-  revalidatePath("/produtos");
-  revalidatePath("/");
+  revalidateStorePaths(store.slug);
 }
 
 // ========== CATÁLOGO DE MATERIAIS ==========

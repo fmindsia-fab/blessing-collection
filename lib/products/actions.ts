@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOwnerStore } from "@/lib/store/get-owner-store";
+import { revalidateStorePaths } from "@/lib/store/revalidate-store-paths";
 import { slugify } from "@/lib/utils";
 
 // slugify vem de lib/utils: o componente ProductSlug usa a mesma função para
@@ -167,7 +168,7 @@ export async function refreshProductSlug(productId: string): Promise<ProductForm
 
   revalidatePath("/admin/produtos");
   revalidatePath(`/admin/produtos/${productId}/editar`);
-  revalidatePath("/produtos");
+  revalidateStorePaths(store.slug);
   return {};
 }
 
@@ -222,8 +223,7 @@ export async function moveProduct(productId: string, direction: "up" | "down") {
   );
 
   revalidatePath("/admin/produtos");
-  revalidatePath("/produtos");
-  revalidatePath("/");
+  revalidateStorePaths(store.slug);
 }
 
 /**
@@ -280,8 +280,7 @@ export async function reorderProducts(orderedIds: string[]) {
   );
 
   revalidatePath("/admin/produtos");
-  revalidatePath("/produtos");
-  revalidatePath("/");
+  revalidateStorePaths(store.slug);
 }
 
 // "Excluir" no painel nunca é DELETE físico — sempre soft delete via status.

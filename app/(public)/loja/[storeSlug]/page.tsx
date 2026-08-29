@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getActiveStore } from "@/lib/store/get-active-store";
+import { getStoreBySlug } from "@/lib/store/get-store-by-slug";
 import { getFeaturedProducts, getNewArrivals } from "@/lib/products/queries";
 import { listCategories } from "@/lib/categories/queries";
 import { listCollections } from "@/lib/collections/queries";
@@ -18,8 +18,13 @@ export const dynamic = "force-dynamic";
 
 // Título e preview de compartilhamento da home — antes herdava o metadata
 // genérico do layout raiz, sem imagem nem descrição da loja.
-export async function generateMetadata(): Promise<Metadata> {
-  const store = await getActiveStore();
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ storeSlug: string }>;
+}): Promise<Metadata> {
+  const { storeSlug } = await params;
+  const store = await getStoreBySlug(storeSlug);
   const description =
     store.description ?? `Catálogo de bolsas e acessórios artesanais da ${store.name}.`;
 
@@ -37,8 +42,13 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function HomePage() {
-  const store = await getActiveStore();
+export default async function HomePage({
+  params,
+}: {
+  params: Promise<{ storeSlug: string }>;
+}) {
+  const { storeSlug } = await params;
+  const store = await getStoreBySlug(storeSlug);
   const [featured, newArrivals, categories, collections] = await Promise.all([
     getFeaturedProducts(store.id),
     getNewArrivals(store.id),
@@ -80,14 +90,14 @@ export default async function HomePage() {
             <p className="max-w-md text-[0.9375rem] leading-relaxed text-muted-foreground">{store.description}</p>
           ) : null}
 
-          <ActionLink href="/produtos" variant="underline" arrow className="mt-2">
+          <ActionLink href={`/loja/${storeSlug}/produtos`} variant="underline" arrow className="mt-2">
             Explorar o catálogo
           </ActionLink>
         </div>
 
         {heroProduct?.cover_image_url ? (
           <Link
-            href={`/produtos/${heroProduct.slug}`}
+            href={`/loja/${storeSlug}/produtos/${heroProduct.slug}`}
             className="reveal group relative block aspect-[4/5] w-full overflow-hidden rounded-[var(--radius-image)] bg-secondary shadow-md transition-shadow duration-500 hover:shadow-xl lg:aspect-[4/4.4]"
             style={{ animationDelay: "120ms" }}
           >
@@ -112,13 +122,14 @@ export default async function HomePage() {
       <div className="flex flex-col gap-20 px-6 pb-24 sm:px-10 lg:gap-28 lg:px-16">
         {newArrivals.length > 0 ? (
           <section className="flex flex-col gap-8">
-            <SectionHeading kicker="Recém-chegadas" title="Lançamentos" href="/produtos" />
+            <SectionHeading kicker="Recém-chegadas" title="Lançamentos" href={`/loja/${storeSlug}/produtos`} />
             {/* auto-fill com largura máxima: com 2 itens a grade não estica os
                 cards até metade da tela, mantendo a proporção editorial. */}
             <div className="grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] lg:gap-x-8">
               {newArrivals.map((product, index) => (
                 <ProductCard
                   key={product.id}
+                  storeSlug={storeSlug}
                   index={index}
                   slug={product.slug}
                   name={product.name}
@@ -133,13 +144,14 @@ export default async function HomePage() {
 
         {featured.length > 0 ? (
           <section className="flex flex-col gap-8">
-            <SectionHeading kicker="Seleção da casa" title="Destaques" href="/produtos" />
+            <SectionHeading kicker="Seleção da casa" title="Destaques" href={`/loja/${storeSlug}/produtos`} />
             {/* auto-fill com largura máxima: com 2 itens a grade não estica os
                 cards até metade da tela, mantendo a proporção editorial. */}
             <div className="grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] lg:gap-x-8">
               {featured.map((product, index) => (
                 <ProductCard
                   key={product.id}
+                  storeSlug={storeSlug}
                   index={index}
                   slug={product.slug}
                   name={product.name}
@@ -159,7 +171,7 @@ export default async function HomePage() {
               {categories.map((category) => (
                 <Link
                   key={category.id}
-                  href={`/categorias/${category.slug}`}
+                  href={`/loja/${storeSlug}/categorias/${category.slug}`}
                   className="group font-[family-name:var(--font-brand)] text-xl text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:text-foreground sm:text-2xl"
                 >
                   {category.name}
@@ -177,7 +189,7 @@ export default async function HomePage() {
               {collections.map((collection) => (
                 <Link
                   key={collection.id}
-                  href={`/colecoes/${collection.slug}`}
+                  href={`/loja/${storeSlug}/colecoes/${collection.slug}`}
                   className="group font-[family-name:var(--font-brand)] text-xl text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:text-foreground sm:text-2xl"
                 >
                   {collection.name}
@@ -189,7 +201,7 @@ export default async function HomePage() {
         ) : null}
 
         <div className="flex justify-center border-t border-border pt-14">
-          <ActionLink href="/produtos" variant="underline" arrow>
+          <ActionLink href={`/loja/${storeSlug}/produtos`} variant="underline" arrow>
             Ver todas as peças
           </ActionLink>
         </div>
