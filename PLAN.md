@@ -440,16 +440,28 @@ tamanho/numeração no cadastro de produto. Ver decisões completas no plano apr
 - [ ] Migration `0023` aplicada no Supabase (usuário aplicará manualmente)
 - [x] PRD.md atualizado: seções 2, 3.8, 4.3, 5.1/5.2, 9, 11.2, 12.1
 - [x] PLAN.md atualizado: seções 1, 2, 4, 9, milestone M12
-- [ ] `getStoreBySlug` e `getOwnerStore` extraídos de `get-active-store.ts`
-- [ ] Call sites admin (`lib/*/actions.ts`) trocados de `getActiveStore()` para `getOwnerStore()`
-- [ ] Roteamento público migrado para `app/(public)/loja/[storeSlug]/...`
-- [ ] `app/sitemap.ts` atualizado para iterar todas as lojas ativas
-- [ ] Home (`/`) redesenhada como landing da plataforma com CTA para `/cadastro`
-- [ ] Signup self-service (`app/(public)/cadastro`, `lib/store/signup-actions.ts`, `lib/store/reserved-slugs.ts`)
-- [ ] `supabase-security-audit` do fluxo de signup
-- [ ] `lib/products/size-presets.ts` + chips de sugestão em `product-form.tsx`/variantes
-- [ ] Testes: RLS rejeita INSERT em `stores` com `owner_user_id` de outro usuário; `getStoreBySlug` 404
-      para slug inexistente/inativo; signup rejeita slug reservado e duplicado
+- [x] `getStoreBySlug` e `getOwnerStore` extraídos de `get-active-store.ts`
+- [x] Call sites admin (`lib/*/actions.ts` e páginas `app/(admin)/**`) trocados de `getActiveStore()` para `getOwnerStore()`
+- [x] Roteamento público migrado para `app/(public)/loja/[storeSlug]/...` — tema de marca (buildStoreTheme)
+      deixou de ser global em `app/layout.tsx` e passou a ser aplicado por árvore (admin e loja pública)
+      via nova classe `.brand-scope` em `globals.css`
+- [x] `app/sitemap.ts` atualizado para iterar todas as lojas ativas; `getSitemapEntries` recebe o slug;
+      `robots.ts` bloqueia `/loja/*/selecao` e `/cadastro`
+- [x] Home (`/`) redesenhada como landing da plataforma com CTA para `/cadastro`
+- [x] Signup self-service (`app/(public)/cadastro`, `lib/store/signup-actions.ts`, `lib/store/reserved-slugs.ts`)
+- [x] `supabase-security-audit` do fluxo de signup — sem riscos críticos; 2 médios anotados (mensagem de
+      erro que revela e-mail já cadastrado; checagem prévia de slug sem rate limit), nenhum bloqueante
+- [x] `lib/products/size-presets.ts` + chips de sugestão em `product-variants.tsx`/`variant-row.tsx`
+      (campo Nome + Grupo da variação, condicionado a `business_type` da loja)
+- [x] Teste: `tests/unit/size-presets.test.ts` (presets por segmento). RLS de INSERT em `stores` já coberta
+      por `stores_owner_all` existente (confirmado por leitura da migration 0003, sem policy nova)
+
+**Pendências antes de considerar o M12 fechado:**
+1. Aplicar a migration `0023_business_type.sql` no Supabase (usuário aplicará manualmente).
+2. Confirmar no painel do Supabase se a confirmação de e-mail está desativada (usuário confirmou que sim,
+   mas vale checar antes de divulgar o cadastro publicamente).
+3. Testar manualmente o fluxo ponta a ponta: criar uma 2ª loja via `/cadastro` com `business_type='clothing'`,
+   confirmar isolamento de produtos entre lojas e que os chips de tamanho aparecem só nela.
 
 ---
 
