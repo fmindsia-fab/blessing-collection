@@ -6,6 +6,7 @@ import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOwnerStore } from "@/lib/store/get-owner-store";
 import { revalidateStorePaths } from "@/lib/store/revalidate-store-paths";
+import { countActiveProducts, FREE_PLAN_PRODUCT_LIMIT } from "@/lib/products/limits";
 import { slugify } from "@/lib/utils";
 
 // slugify vem de lib/utils: o componente ProductSlug usa a mesma função para
@@ -65,6 +66,16 @@ export async function createProduct(_prevState: ProductFormState, formData: Form
 
   const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
+
+  // Limite do teste grátis — checagem explícita além de qualquer constraint
+  // de banco, para devolver mensagem clara no formulário em vez de um erro
+  // genérico de insert (regra do CLAUDE.md: validar no servidor).
+  const activeCount = await countActiveProducts(store.id);
+  if (activeCount >= FREE_PLAN_PRODUCT_LIMIT) {
+    return {
+      error: `Seu teste grátis permite até ${FREE_PLAN_PRODUCT_LIMIT} produtos. Desative um produto existente para cadastrar um novo.`,
+    };
+  }
 
   const { data: product, error } = await supabase
     .from("products")

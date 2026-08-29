@@ -23,6 +23,9 @@ vi.mock("@/lib/supabase/server", () => ({
         single: () => Promise.resolve({ data: { id: "novo" }, error: null }),
         update: () => chain,
         eq: () => chain,
+        // countActiveProducts (limite do teste grátis): sempre abaixo do
+        // limite aqui — este arquivo testa dimensões, não o limite em si.
+        in: () => Promise.resolve({ count: 0 }),
       };
       return chain;
     },
