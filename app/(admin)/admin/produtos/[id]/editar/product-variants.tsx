@@ -1,12 +1,14 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useRef } from "react";
 import Link from "next/link";
 import { createVariant, type VariantFormState } from "@/lib/products/variant-actions";
+import { SIZE_PRESETS } from "@/lib/products/size-presets";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { VariantRow, type StoreColor, type Variant } from "./variant-row";
+import type { BusinessType } from "@/types/database.types";
 
 type ProductVariantsProps = {
   productId: string;
@@ -14,13 +16,23 @@ type ProductVariantsProps = {
   colors: StoreColor[];
   /** Grupos cadastrados em Grupos de variação (/admin/grupos-variacao). */
   catalogGroups: string[];
+  businessType: BusinessType;
 };
 
 const initialState: VariantFormState = {};
 
-export function ProductVariants({ productId, variants, colors, catalogGroups }: ProductVariantsProps) {
+export function ProductVariants({
+  productId,
+  variants,
+  colors,
+  catalogGroups,
+  businessType,
+}: ProductVariantsProps) {
   const createAction = createVariant.bind(null, productId);
   const [state, formAction, isPending] = useActionState(createAction, initialState);
+  const nameRef = useRef<HTMLInputElement>(null);
+  const groupRef = useRef<HTMLInputElement>(null);
+  const preset = SIZE_PRESETS[businessType];
 
   // Grupos já usados nesta peça + os cadastrados no catálogo da loja, sem
   // repetir. O catálogo é a fonte principal (pedido do usuário: gerenciar os
@@ -49,6 +61,7 @@ export function ProductVariants({ productId, variants, colors, catalogGroups }: 
               variant={variant}
               colors={colors}
               groups={existingGroups}
+              businessType={businessType}
             />
           ))}
         </div>
@@ -57,7 +70,24 @@ export function ProductVariants({ productId, variants, colors, catalogGroups }: 
       <form action={formAction} className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="variant-name">Nome</Label>
-          <Input id="variant-name" name="name" placeholder="Cor: Caramelo" required />
+          <Input id="variant-name" name="name" placeholder="Cor: Caramelo" required ref={nameRef} />
+          {preset ? (
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {preset.values.map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => {
+                    if (nameRef.current) nameRef.current.value = value;
+                    if (groupRef.current) groupRef.current.value = preset.group;
+                  }}
+                  className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground"
+                >
+                  {value}
+                </button>
+              ))}
+            </div>
+          ) : null}
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="variant-price">Preço específico (opcional)</Label>
@@ -96,6 +126,7 @@ export function ProductVariants({ productId, variants, colors, catalogGroups }: 
             maxLength={30}
             placeholder="Cor"
             defaultValue="Cor"
+            ref={groupRef}
           />
           {/* Sugere os grupos do catálogo (/admin/grupos-variacao) + os já
               usados nesta peça, para não surgir "Cor" e "cores" como eixos

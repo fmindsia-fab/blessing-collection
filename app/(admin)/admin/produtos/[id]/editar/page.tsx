@@ -79,6 +79,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
         variants={variants}
         colors={colors}
         catalogGroups={variantGroups.map((g) => g.name)}
+        businessType={store.business_type}
       />
 
       <div className="border-t border-border pt-10">
