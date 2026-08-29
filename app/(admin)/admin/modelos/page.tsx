@@ -1,11 +1,11 @@
-import { getOwnerStore } from "@/lib/store/get-owner-store";
+import { getActiveStore } from "@/lib/store/get-active-store";
 import { listAllModelsForAdmin } from "@/lib/models/queries";
 import { ModelForm } from "./model-form";
 import { ModelRow } from "./model-row";
 import { PageHeading } from "@/components/admin/page-heading";
 
 export default async function AdminModelsPage() {
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const models = await listAllModelsForAdmin(store.id);
 
   return (

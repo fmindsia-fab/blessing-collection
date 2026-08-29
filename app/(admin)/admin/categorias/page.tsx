@@ -1,11 +1,11 @@
-import { getOwnerStore } from "@/lib/store/get-owner-store";
+import { getActiveStore } from "@/lib/store/get-active-store";
 import { listAllCategoriesForAdmin } from "@/lib/categories/queries";
 import { CategoryForm } from "./category-form";
 import { CategoryRow } from "./category-row";
 import { PageHeading } from "@/components/admin/page-heading";
 
 export default async function AdminCategoriesPage() {
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const categories = await listAllCategoriesForAdmin(store.id);
 
   return (

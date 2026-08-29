@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getOwnerStore } from "@/lib/store/get-owner-store";
+import { getActiveStore } from "@/lib/store/get-active-store";
 import { getProductForAdmin } from "@/lib/products/admin-queries";
 import { listAllCategoriesForAdmin } from "@/lib/categories/queries";
 import { listAllCollectionsForAdmin } from "@/lib/collections/queries";
@@ -22,7 +22,7 @@ import { ProductPricing } from "./product-pricing";
 
 export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
 
   const [
     result,
@@ -79,7 +79,6 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
         variants={variants}
         colors={colors}
         catalogGroups={variantGroups.map((g) => g.name)}
-        businessType={store.business_type}
       />
 
       <div className="border-t border-border pt-10">

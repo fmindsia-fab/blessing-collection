@@ -3,8 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { getOwnerStore } from "@/lib/store/get-owner-store";
-import { revalidateStorePaths } from "@/lib/store/revalidate-store-paths";
+import { getActiveStore } from "@/lib/store/get-active-store";
 import { slugify } from "@/lib/utils";
 
 // Mesmo formato do check da migration 0013: #rgb ou #rrggbb.
@@ -38,9 +37,9 @@ function parse(formData: FormData) {
   });
 }
 
-function revalidate(storeSlug: string) {
+function revalidate() {
   revalidatePath("/admin/cores");
-  revalidateStorePaths(storeSlug);
+  revalidatePath("/produtos");
 }
 
 export async function createColor(
@@ -53,7 +52,7 @@ export async function createColor(
   const slug = slugify(parsed.data.name);
   if (!slug) return { error: "O nome precisa ter ao menos uma letra ou número." };
 
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
 
   const { error } = await supabase.from("colors").insert({
@@ -73,7 +72,7 @@ export async function createColor(
     };
   }
 
-  revalidate(store.slug);
+  revalidate();
   return {};
 }
 
@@ -85,7 +84,7 @@ export async function updateColor(
   const parsed = parse(formData);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
 
   // O slug não muda ao renomear: ele está nos links de filtro que a
@@ -102,21 +101,21 @@ export async function updateColor(
 
   if (error) return { error: "Não foi possível salvar as alterações." };
 
-  revalidate(store.slug);
+  revalidate();
   return {};
 }
 
 // "Excluir" no painel é sempre soft delete via status.
 export async function archiveColor(id: string) {
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
   await supabase.from("colors").update({ status: "archived" }).eq("id", id).eq("store_id", store.id);
-  revalidate(store.slug);
+  revalidate();
 }
 
 export async function restoreColor(id: string) {
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
   await supabase.from("colors").update({ status: "active" }).eq("id", id).eq("store_id", store.id);
-  revalidate(store.slug);
+  revalidate();
 }

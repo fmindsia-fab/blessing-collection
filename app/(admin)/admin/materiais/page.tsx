@@ -1,10 +1,10 @@
-import { getOwnerStore } from "@/lib/store/get-owner-store";
+import { getActiveStore } from "@/lib/store/get-active-store";
 import { listActiveMaterials } from "@/lib/pricing/queries";
 import { PageHeading } from "@/components/admin/page-heading";
 import { MaterialsList } from "./materials-list";
 
 export default async function MaterialsPage() {
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   // Só ativos: a tela lista para editar/remover, e "removido" não deve
   // reaparecer aqui — regra explícita da proprietária.
   const materials = await listActiveMaterials(store.id);

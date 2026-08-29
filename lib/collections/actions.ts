@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { getOwnerStore } from "@/lib/store/get-owner-store";
+import { getActiveStore } from "@/lib/store/get-active-store";
 
 function slugify(value: string) {
   return value
@@ -34,7 +34,7 @@ export async function createCollection(
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
 
   const { error } = await supabase.from("collections").insert({
@@ -61,7 +61,7 @@ export async function updateCollection(
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
   const { error } = await supabase
     .from("collections")
@@ -76,14 +76,14 @@ export async function updateCollection(
 }
 
 export async function archiveCollection(id: string) {
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
   await supabase.from("collections").update({ status: "archived" }).eq("id", id).eq("store_id", store.id);
   revalidatePath("/admin/colecoes");
 }
 
 export async function restoreCollection(id: string) {
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
   await supabase.from("collections").update({ status: "active" }).eq("id", id).eq("store_id", store.id);
   revalidatePath("/admin/colecoes");

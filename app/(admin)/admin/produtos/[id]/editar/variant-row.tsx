@@ -1,17 +1,16 @@
 "use client";
 
-import { useActionState, useRef, useState, useTransition } from "react";
+import { useActionState, useState, useTransition } from "react";
 import {
   archiveVariant,
   toggleVariantStatus,
   updateVariant,
   type VariantFormState,
 } from "@/lib/products/variant-actions";
-import { SIZE_PRESETS } from "@/lib/products/size-presets";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { BusinessType, VariantStatus } from "@/types/database.types";
+import type { VariantStatus } from "@/types/database.types";
 
 export type StoreColor = { id: string; name: string; hex: string; hex_secondary: string | null };
 
@@ -52,23 +51,18 @@ export function VariantRow({
   variant,
   colors,
   groups,
-  businessType,
 }: {
   productId: string;
   variant: Variant;
   colors: StoreColor[];
   /** Grupos já usados na peça, para o autocompletar. */
   groups: string[];
-  businessType: BusinessType;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const saveAction = updateVariant.bind(null, productId, variant.id);
   const [state, formAction, isSaving] = useActionState(saveAction, initialState);
-  const nameRef = useRef<HTMLInputElement>(null);
-  const groupRef = useRef<HTMLInputElement>(null);
-  const preset = SIZE_PRESETS[businessType];
 
   const color = variant.color_id ? colors.find((c) => c.id === variant.color_id) : undefined;
 
@@ -90,25 +84,7 @@ export function VariantRow({
               defaultValue={variant.name}
               required
               maxLength={60}
-              ref={nameRef}
             />
-            {preset ? (
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {preset.values.map((value) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => {
-                      if (nameRef.current) nameRef.current.value = value;
-                      if (groupRef.current) groupRef.current.value = preset.group;
-                    }}
-                    className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground"
-                  >
-                    {value}
-                  </button>
-                ))}
-              </div>
-            ) : null}
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -120,7 +96,6 @@ export function VariantRow({
               defaultValue={variant.variant_group ?? ""}
               maxLength={30}
               placeholder="Cor"
-              ref={groupRef}
             />
             <datalist id={`groups-${variant.id}`}>
               {groups.map((group) => (

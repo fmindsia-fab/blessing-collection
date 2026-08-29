@@ -9,20 +9,12 @@ export function SelectionFloatingButton() {
   const { items, isHydrated } = useSelection();
   const pathname = usePathname();
 
-  // O botão só existe dentro de uma loja (/loja/[storeSlug]/...) — o slug sai
-  // do próprio pathname em vez de vir por prop, porque este componente é
-  // renderizado uma vez no layout, sem acesso aos params da rota filha.
-  const storeSlugMatch = /^\/loja\/([^/]+)/.exec(pathname ?? "");
-  const storeSlug = storeSlugMatch?.[1];
-  const selecaoHref = storeSlug ? `/loja/${storeSlug}/selecao` : null;
-
-  // Sem itens, ainda hidratando, fora de uma loja, ou já na página de
-  // revisão: não mostra nada.
-  if (!isHydrated || items.length === 0 || !selecaoHref || pathname === selecaoHref) return null;
+  // Sem itens, ainda hidratando, ou já na página de revisão: não mostra nada.
+  if (!isHydrated || items.length === 0 || pathname === "/selecao") return null;
 
   return (
     <Link
-      href={selecaoHref}
+      href="/selecao"
       className="reveal group fixed bottom-6 right-6 z-50 inline-flex items-center gap-2.5 bg-foreground px-6 py-4 text-[0.6875rem] uppercase tracking-[0.16em] text-background shadow-[0_10px_34px_-10px_oklch(0.25_0.02_45/0.45)] outline-none transition-colors duration-300 hover:bg-[var(--gold)] focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-4 focus-visible:ring-offset-background"
     >
       <ShoppingBagIcon className="size-4" />

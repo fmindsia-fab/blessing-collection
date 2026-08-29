@@ -7,8 +7,8 @@ const { inserted } = vi.hoisted(() => ({ inserted: [] as Record<string, unknown>
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
-vi.mock("@/lib/store/get-owner-store", () => ({
-  getOwnerStore: async () => ({ id: "store-1", slug: "store-1" }),
+vi.mock("@/lib/store/get-active-store", () => ({
+  getActiveStore: async () => ({ id: "store-1" }),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -23,9 +23,6 @@ vi.mock("@/lib/supabase/server", () => ({
         single: () => Promise.resolve({ data: { id: "novo" }, error: null }),
         update: () => chain,
         eq: () => chain,
-        // countActiveProducts (limite do teste grátis): sempre abaixo do
-        // limite aqui — este arquivo testa dimensões, não o limite em si.
-        in: () => Promise.resolve({ count: 0 }),
       };
       return chain;
     },

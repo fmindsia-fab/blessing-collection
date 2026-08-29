@@ -1,4 +1,4 @@
-import { getStoreBySlug } from "@/lib/store/get-store-by-slug";
+import { getActiveStore } from "@/lib/store/get-active-store";
 import { listColorsInUse, listProducts, PAGE_SIZE } from "@/lib/products/queries";
 import { listModelsInUse } from "@/lib/models/queries";
 import { listCategoriesInUse } from "@/lib/categories/queries";
@@ -8,13 +8,8 @@ import { BackLink } from "@/components/shared/back-link";
 import { ActionLink } from "@/components/ui/action";
 import type { Metadata } from "next";
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ storeSlug: string }>;
-}): Promise<Metadata> {
-  const { storeSlug } = await params;
-  const store = await getStoreBySlug(storeSlug);
+export async function generateMetadata(): Promise<Metadata> {
+  const store = await getActiveStore();
 
   return {
     title: `Catálogo | ${store.name}`,
@@ -23,10 +18,8 @@ export async function generateMetadata({
 }
 
 export default async function ProductsPage({
-  params,
   searchParams,
 }: {
-  params: Promise<{ storeSlug: string }>;
   searchParams: Promise<{
     page?: string;
     busca?: string;
@@ -36,11 +29,10 @@ export default async function ProductsPage({
     categoria?: string;
   }>;
 }) {
-  const { storeSlug } = await params;
   const { page: pageParam, busca, cor, disponibilidade, modelo, categoria } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
 
-  const store = await getStoreBySlug(storeSlug);
+  const store = await getActiveStore();
 
   // As opções dos filtros vêm antes da listagem: os filtros chegam por slug
   // (URL legível) e a query precisa dos ids.
@@ -80,7 +72,7 @@ export default async function ProductsPage({
 
   return (
     <main className="flex flex-1 flex-col gap-10 px-6 py-12 sm:px-10 lg:px-16">
-      <BackLink href={`/loja/${storeSlug}`}>Voltar para a página inicial</BackLink>
+      <BackLink href="/">Voltar para a página inicial</BackLink>
 
       <div className="flex flex-col items-center gap-3 text-center">
         <span className="kicker">O catálogo</span>
@@ -113,7 +105,7 @@ export default async function ProductsPage({
       </form>
 
       <CatalogFilters
-        basePath={`/loja/${storeSlug}/produtos`}
+        basePath="/produtos"
         colors={colors}
         models={models}
         categories={categories}
@@ -133,7 +125,7 @@ export default async function ProductsPage({
           <p className="font-[family-name:var(--font-brand)] text-xl text-muted-foreground">
             Nenhuma peça encontrada{busca ? ` para "${busca}"` : ""}.
           </p>
-          <ActionLink href={`/loja/${storeSlug}/produtos`} variant="underline">
+          <ActionLink href="/produtos" variant="underline">
             Ver todas as peças
           </ActionLink>
         </div>
@@ -142,7 +134,6 @@ export default async function ProductsPage({
           {products.map((product, index) => (
             <ProductCard
               key={product.id}
-              storeSlug={storeSlug}
               anchorId={`peca-${index}`}
               // A cascata de entrada conta a partir da primeira peça recém
               // carregada: escalonar pelo índice absoluto atrasaria demais as
@@ -164,7 +155,7 @@ export default async function ProductsPage({
           {/* Âncora na primeira peça nova: sem ela o navegador volta ao topo e
               a cliente teria que rolar de novo tudo o que já viu. */}
           <ActionLink
-            href={`/loja/${storeSlug}/produtos?${nextPageQuery.toString()}#peca-${products.length}`}
+            href={`/produtos?${nextPageQuery.toString()}#peca-${products.length}`}
             variant="outline"
           >
             Carregar mais

@@ -10,14 +10,14 @@ export type SitemapEntry = {
 const PUBLIC_STATUSES = ["available", "made_to_order", "sold_out"] as const;
 
 /**
- * Rotas públicas indexáveis de uma loja, já prefixadas com /loja/{storeSlug}.
+ * Rotas públicas indexáveis da loja.
  *
  * Separado de `app/sitemap.ts` para ser testável sem o runtime do Next.
  * Produtos `inactive` e categorias/coleções arquivadas ficam de fora — a RLS
  * já os esconde do anon, mas o filtro explícito documenta a intenção e evita
  * depender só dela.
  */
-export async function getSitemapEntries(storeId: string, storeSlug: string): Promise<SitemapEntry[]> {
+export async function getSitemapEntries(storeId: string): Promise<SitemapEntry[]> {
   const supabase = await createServerSupabaseClient();
 
   const [{ data: products }, { data: categories }, { data: collections }] = await Promise.all([
@@ -39,18 +39,17 @@ export async function getSitemapEntries(storeId: string, storeSlug: string): Pro
   ]);
 
   const now = new Date();
-  const base = `/loja/${storeSlug}`;
 
-  // A home da loja é a página mais importante; o catálogo muda com mais
-  // frequência que as páginas individuais de produto.
+  // A home é a página mais importante; o catálogo muda com mais frequência
+  // que as páginas individuais de produto.
   const entries: SitemapEntry[] = [
-    { path: base, lastModified: now, changeFrequency: "weekly", priority: 1 },
-    { path: `${base}/produtos`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
+    { path: "/", lastModified: now, changeFrequency: "weekly", priority: 1 },
+    { path: "/produtos", lastModified: now, changeFrequency: "daily", priority: 0.9 },
   ];
 
   for (const product of products ?? []) {
     entries.push({
-      path: `${base}/produtos/${product.slug}`,
+      path: `/produtos/${product.slug}`,
       lastModified: new Date(product.updated_at),
       changeFrequency: "weekly",
       priority: 0.8,
@@ -59,7 +58,7 @@ export async function getSitemapEntries(storeId: string, storeSlug: string): Pro
 
   for (const category of categories ?? []) {
     entries.push({
-      path: `${base}/categorias/${category.slug}`,
+      path: `/categorias/${category.slug}`,
       lastModified: new Date(category.updated_at),
       changeFrequency: "weekly",
       priority: 0.6,
@@ -68,7 +67,7 @@ export async function getSitemapEntries(storeId: string, storeSlug: string): Pro
 
   for (const collection of collections ?? []) {
     entries.push({
-      path: `${base}/colecoes/${collection.slug}`,
+      path: `/colecoes/${collection.slug}`,
       lastModified: new Date(collection.updated_at),
       changeFrequency: "weekly",
       priority: 0.6,

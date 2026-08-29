@@ -3,7 +3,6 @@ import Link from "next/link";
 import type { ProductStatus } from "@/types/database.types";
 
 type ProductCardProps = {
-  storeSlug: string;
   slug: string;
   name: string;
   price: number;
@@ -28,7 +27,6 @@ function formatPrice(price: number) {
 }
 
 export function ProductCard({
-  storeSlug,
   slug,
   name,
   price,
@@ -43,7 +41,7 @@ export function ProductCard({
   return (
     <Link
       id={anchorId}
-      href={`/loja/${storeSlug}/produtos/${slug}`}
+      href={`/produtos/${slug}`}
       className="group reveal flex scroll-mt-24 flex-col outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-4 focus-visible:ring-offset-background"
       style={{ animationDelay: `${Math.min(index, 8) * 60}ms` }}
     >

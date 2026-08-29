@@ -2,8 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { getOwnerStore } from "@/lib/store/get-owner-store";
-import { revalidateStorePaths } from "@/lib/store/revalidate-store-paths";
+import { getActiveStore } from "@/lib/store/get-active-store";
 
 // 10MB — ampliado do limite original de 5MB do PRD 13.1 a pedido do usuário,
 // para acomodar fotos de câmera sem recompressão prévia.
@@ -23,7 +22,7 @@ async function assertProductBelongsToStore(
   supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
   productId: string,
 ) {
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const { data } = await supabase
     .from("products")
     .select("id")
@@ -56,7 +55,7 @@ export async function uploadProductImage(
     return { error: "A imagem deve ter no máximo 10MB." };
   }
 
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
 
   if (!(await assertProductBelongsToStore(supabase, productId))) {
@@ -135,7 +134,6 @@ export async function updateImageAltText(productId: string, imageId: string, alt
  * deixariam buracos que quebram a troca por índice.
  */
 export async function moveProductImage(productId: string, imageId: string, direction: "up" | "down") {
-  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
   if (!(await assertProductBelongsToStore(supabase, productId))) return;
 
@@ -165,7 +163,7 @@ export async function moveProductImage(productId: string, imageId: string, direc
   );
 
   revalidatePath(`/admin/produtos/${productId}/editar`);
-  revalidateStorePaths(store.slug);
+  revalidatePath("/produtos");
 }
 
 export async function setCoverImage(productId: string, imageId: string) {

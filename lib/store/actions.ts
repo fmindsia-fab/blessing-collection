@@ -3,17 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { getOwnerStore } from "@/lib/store/get-owner-store";
+import { getActiveStore } from "@/lib/store/get-active-store";
 import { parseBrandColors } from "@/lib/store/branding";
 import { isCuratedFont } from "@/lib/store/fonts";
-
-// Configurações de marca afetam o tema aplicado tanto no painel (layout do
-// admin) quanto na loja pública (layout de /loja/[storeSlug]) — os dois
-// precisam revalidar juntos, já que ambos leem a mesma linha de `stores`.
-function revalidateBrandLayouts(storeSlug: string) {
-  revalidatePath("/admin", "layout");
-  revalidatePath(`/loja/${storeSlug}`, "layout");
-}
 
 const storeSettingsSchema = z.object({
   whatsappNumber: z.string().min(8, "Informe um número de WhatsApp válido"),
@@ -29,8 +21,8 @@ export type StoreSettingsFormState = {
   success?: boolean;
 };
 
-// A loja é resolvida no servidor pelo usuário autenticado (getOwnerStore) —
-// nunca a partir de um id enviado pelo formulário, que o client poderia forjar.
+// A loja é resolvida no servidor via STORE_SLUG — nunca a partir de um id
+// enviado pelo formulário, que o client poderia forjar.
 export async function updateStoreSettings(
   _prevState: StoreSettingsFormState,
   formData: FormData,
@@ -48,7 +40,7 @@ export async function updateStoreSettings(
   const palette = parseBrandColors(String(formData.get("brandColors") ?? ""));
   if ("error" in palette) return { error: palette.error };
 
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
   const { error } = await supabase
     .from("stores")
@@ -68,7 +60,7 @@ export async function updateStoreSettings(
   if (error) return { error: "Não foi possível salvar as configurações." };
 
   revalidatePath("/admin/configuracoes");
-  revalidateBrandLayouts(store.slug);
+  revalidatePath("/", "layout");
   return { success: true };
 }
 
@@ -98,7 +90,7 @@ export async function uploadBrandFont(
   const displayName = String(formData.get("fontName") ?? "").trim();
   if (!displayName) return { error: "Dê um nome para identificar a fonte." };
 
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
   const bucket = supabase.storage.from(FONT_BUCKET);
 
@@ -125,13 +117,13 @@ export async function uploadBrandFont(
   if (error) return { error: "Fonte enviada, mas houve falha ao salvar no banco." };
 
   revalidatePath("/admin/configuracoes");
-  revalidateBrandLayouts(store.slug);
+  revalidatePath("/", "layout");
   return { success: true };
 }
 
 // Volta para a lista curada sem apagar o arquivo do Storage.
 export async function removeBrandFont(): Promise<StoreSettingsFormState> {
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
 
   const { error } = await supabase
@@ -142,7 +134,7 @@ export async function removeBrandFont(): Promise<StoreSettingsFormState> {
   if (error) return { error: "Não foi possível remover a fonte." };
 
   revalidatePath("/admin/configuracoes");
-  revalidateBrandLayouts(store.slug);
+  revalidatePath("/", "layout");
   return { success: true };
 }
 
@@ -166,7 +158,7 @@ export async function uploadStoreLogo(
     return { error: "O logo deve ter no máximo 2MB." };
   }
 
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
   const bucket = supabase.storage.from(LOGO_BUCKET);
 
@@ -192,6 +184,6 @@ export async function uploadStoreLogo(
   if (error) return { error: "Logo enviado, mas houve falha ao salvar no banco." };
 
   revalidatePath("/admin/configuracoes");
-  revalidateBrandLayouts(store.slug);
+  revalidatePath("/", "layout");
   return { success: true };
 }

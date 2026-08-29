@@ -3,8 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { getOwnerStore } from "@/lib/store/get-owner-store";
-import { revalidateStorePaths } from "@/lib/store/revalidate-store-paths";
+import { getActiveStore } from "@/lib/store/get-active-store";
 import { slugify } from "@/lib/utils";
 
 const modelSchema = z.object({
@@ -23,7 +22,7 @@ export async function createModel(_prevState: ModelFormState, formData: FormData
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
 
   const { error } = await supabase.from("models").insert({
@@ -36,7 +35,7 @@ export async function createModel(_prevState: ModelFormState, formData: FormData
   if (error) return { error: "Não foi possível criar o modelo. Verifique se o nome já existe." };
 
   revalidatePath("/admin/modelos");
-  revalidateStorePaths(store.slug);
+  revalidatePath("/produtos");
   return {};
 }
 
@@ -51,7 +50,7 @@ export async function updateModel(
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
   const { error } = await supabase
     .from("models")
@@ -62,23 +61,23 @@ export async function updateModel(
   if (error) return { error: "Não foi possível salvar as alterações." };
 
   revalidatePath("/admin/modelos");
-  revalidateStorePaths(store.slug);
+  revalidatePath("/produtos");
   return {};
 }
 
 // "Excluir" no painel é sempre soft delete via status.
 export async function archiveModel(id: string) {
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
   await supabase.from("models").update({ status: "archived" }).eq("id", id).eq("store_id", store.id);
   revalidatePath("/admin/modelos");
-  revalidateStorePaths(store.slug);
+  revalidatePath("/produtos");
 }
 
 export async function restoreModel(id: string) {
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
   await supabase.from("models").update({ status: "active" }).eq("id", id).eq("store_id", store.id);
   revalidatePath("/admin/modelos");
-  revalidateStorePaths(store.slug);
+  revalidatePath("/produtos");
 }

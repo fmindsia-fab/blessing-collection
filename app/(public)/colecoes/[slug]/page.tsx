@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getStoreBySlug } from "@/lib/store/get-store-by-slug";
+import { getActiveStore } from "@/lib/store/get-active-store";
 import { getCollectionBySlug } from "@/lib/collections/queries";
 import { listProducts } from "@/lib/products/queries";
 import { ProductCard } from "@/components/catalog/product-card";
@@ -10,10 +10,10 @@ import type { Metadata } from "next";
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ storeSlug: string; slug: string }>;
+  params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  const { storeSlug, slug } = await params;
-  const store = await getStoreBySlug(storeSlug);
+  const { slug } = await params;
+  const store = await getActiveStore();
   const collection = await getCollectionBySlug(store.id, slug);
 
   if (!collection) return { title: "Coleção não encontrada" };
@@ -29,14 +29,14 @@ export default async function CollectionPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ storeSlug: string; slug: string }>;
+  params: Promise<{ slug: string }>;
   searchParams: Promise<{ page?: string }>;
 }) {
-  const { storeSlug, slug } = await params;
+  const { slug } = await params;
   const { page: pageParam } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
 
-  const store = await getStoreBySlug(storeSlug);
+  const store = await getActiveStore();
   const collection = await getCollectionBySlug(store.id, slug);
 
   if (!collection) notFound();
@@ -51,7 +51,7 @@ export default async function CollectionPage({
     <main className="flex flex-1 flex-col gap-8 px-6 py-12 sm:px-10 lg:px-16">
       <PageViewTracker storeId={store.id} eventType="collection_view" collectionId={collection.id} />
 
-      <BackLink href={`/loja/${storeSlug}`}>Voltar para a página inicial</BackLink>
+      <BackLink href="/">Voltar para a página inicial</BackLink>
 
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold tracking-tight">{collection.name}</h1>
@@ -66,7 +66,6 @@ export default async function CollectionPage({
           {products.map((product) => (
             <ProductCard
               key={product.id}
-              storeSlug={storeSlug}
               slug={product.slug}
               name={product.name}
               price={product.price}
@@ -80,7 +79,7 @@ export default async function CollectionPage({
       {hasMore ? (
         <div className="flex justify-center pt-4">
           <a
-            href={`/loja/${storeSlug}/colecoes/${slug}?page=${page + 1}`}
+            href={`/colecoes/${slug}?page=${page + 1}`}
             className="rounded-full border border-zinc-300 px-6 py-2.5 text-sm font-medium hover:border-zinc-500"
           >
             Carregar mais

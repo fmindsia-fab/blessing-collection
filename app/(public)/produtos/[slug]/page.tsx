@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getStoreBySlug } from "@/lib/store/get-store-by-slug";
+import { getActiveStore } from "@/lib/store/get-active-store";
 import { getProductBySlug, getRelatedProducts } from "@/lib/products/queries";
 import { listPaymentMethods } from "@/lib/pricing/queries";
 import { ProductCard } from "@/components/catalog/product-card";
@@ -22,13 +22,9 @@ function formatPrice(price: number) {
 }
 
 // Alimenta o preview de link do WhatsApp/Instagram (miniatura + título) e o SEO.
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ storeSlug: string; slug: string }>;
-}): Promise<Metadata> {
-  const { storeSlug, slug } = await params;
-  const store = await getStoreBySlug(storeSlug);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const store = await getActiveStore();
   const result = await getProductBySlug(store.id, slug);
 
   if (!result) return { title: "Produto não encontrado" };
@@ -47,20 +43,16 @@ export async function generateMetadata({
       title,
       description,
       type: "website",
-      url: `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/loja/${storeSlug}/produtos/${product.slug}`,
+      url: `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/produtos/${product.slug}`,
       siteName: store.name,
       images: coverImage ? [{ url: coverImage.url, alt: coverImage.alt_text ?? product.name }] : [],
     },
   };
 }
 
-export default async function ProductPage({
-  params,
-}: {
-  params: Promise<{ storeSlug: string; slug: string }>;
-}) {
-  const { storeSlug, slug } = await params;
-  const store = await getStoreBySlug(storeSlug);
+export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const store = await getActiveStore();
   const result = await getProductBySlug(store.id, slug);
 
   if (!result) notFound();
@@ -80,13 +72,13 @@ export default async function ProductPage({
 
   // O preço exibido depende da variação escolhida, então o cálculo vive em
   // ProductPurchase, que é quem tem esse estado.
-  const productUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/loja/${storeSlug}/produtos/${product.slug}`;
+  const productUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/produtos/${product.slug}`;
 
   return (
     <main className="flex flex-1 flex-col gap-10 px-6 py-12 sm:px-10 lg:px-16">
       <PageViewTracker storeId={store.id} eventType="product_view" productId={product.id} />
 
-      <BackLink href={`/loja/${storeSlug}/produtos`}>Voltar para produtos</BackLink>
+      <BackLink href="/produtos">Voltar para produtos</BackLink>
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
         <div className="reveal">
@@ -156,12 +148,11 @@ export default async function ProductPage({
 
       {related.length > 0 ? (
         <section className="flex flex-col gap-8 border-t border-border pt-16">
-          <SectionHeading kicker="Talvez você goste" title="Outras peças" href={`/loja/${storeSlug}/produtos`} />
+          <SectionHeading kicker="Talvez você goste" title="Outras peças" href="/produtos" />
           <div className="grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] lg:gap-x-8">
             {related.map((item, index) => (
               <ProductCard
                 key={item.id}
-                storeSlug={storeSlug}
                 index={index}
                 slug={item.slug}
                 name={item.name}

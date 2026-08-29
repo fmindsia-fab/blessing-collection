@@ -3,8 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { getOwnerStore } from "@/lib/store/get-owner-store";
-import { revalidateStorePaths } from "@/lib/store/revalidate-store-paths";
+import { getActiveStore } from "@/lib/store/get-active-store";
 
 const variantSchema = z.object({
   name: z.string().min(1, "Informe o nome da variação"),
@@ -34,7 +33,7 @@ async function assertProductBelongsToStore(
   supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
   productId: string,
 ) {
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const { data } = await supabase
     .from("products")
     .select("id")
@@ -82,7 +81,7 @@ export async function createVariant(
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
   if (!(await assertProductBelongsToStore(supabase, productId))) {
     return { error: "Produto não encontrado." };
@@ -105,66 +104,6 @@ export async function createVariant(
   if (error) return { error: "Não foi possível adicionar a variação." };
 
   revalidatePath(`/admin/produtos/${productId}/editar`);
-  return {};
-}
-
-const sizeVariantsSchema = z.object({
-  group: z.string().trim().min(1).max(30),
-  // Chegam do multi-select de chips (lib/products/size-presets.ts) — a lista
-  // em si já é fechada no client, então aqui só garante 1+ valor não vazio.
-  sizes: z.array(z.string().trim().min(1)).min(1, "Selecione ao menos um tamanho"),
-  colorId: z
-    .union([z.literal(""), z.uuid("Cor inválida")])
-    .optional()
-    .transform((value) => value || null),
-  price: z.union([z.coerce.number().positive(), z.literal("")]).optional(),
-});
-
-/**
- * Cria uma variante por tamanho selecionado, de uma vez — o par (multi-select
- * de chips) para createVariant, usado quando a loja tem preset de tamanho
- * (business_type clothing/footwear). Mesma tabela, mesmas regras; só evita
- * repetir "Adicionar variação" um tamanho por vez.
- */
-export async function createSizeVariants(
-  productId: string,
-  _prevState: VariantFormState,
-  formData: FormData,
-): Promise<VariantFormState> {
-  const parsed = sizeVariantsSchema.safeParse({
-    group: formData.get("group"),
-    sizes: formData.getAll("sizes"),
-    colorId: formData.get("colorId") ?? "",
-    price: formData.get("price") || undefined,
-  });
-  if (!parsed.success) return { error: parsed.error.issues[0].message };
-
-  const store = await getOwnerStore();
-  const supabase = await createServerSupabaseClient();
-  if (!(await assertProductBelongsToStore(supabase, productId))) {
-    return { error: "Produto não encontrado." };
-  }
-
-  if (!(await colorBelongsToStore(supabase, store.id, parsed.data.colorId))) {
-    return { error: "Cor não encontrada." };
-  }
-
-  const { error } = await supabase.from("product_variants").insert(
-    parsed.data.sizes.map((size) => ({
-      product_id: productId,
-      name: size,
-      color_id: parsed.data.colorId,
-      variant_group: parsed.data.group,
-      size,
-      price: parsed.data.price || null,
-      status: "available" as const,
-    })),
-  );
-
-  if (error) return { error: "Não foi possível adicionar os tamanhos." };
-
-  revalidatePath(`/admin/produtos/${productId}/editar`);
-  revalidateStorePaths(store.slug);
   return {};
 }
 
@@ -194,7 +133,7 @@ export async function updateVariant(
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
   if (!(await assertProductBelongsToStore(supabase, productId))) {
     return { error: "Produto não encontrado." };
@@ -221,7 +160,7 @@ export async function updateVariant(
   if (error) return { error: "Não foi possível salvar a variação." };
 
   revalidatePath(`/admin/produtos/${productId}/editar`);
-  revalidateStorePaths(store.slug);
+  revalidatePath("/produtos");
   return {};
 }
 

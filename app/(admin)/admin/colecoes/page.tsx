@@ -1,11 +1,11 @@
-import { getOwnerStore } from "@/lib/store/get-owner-store";
+import { getActiveStore } from "@/lib/store/get-active-store";
 import { listAllCollectionsForAdmin } from "@/lib/collections/queries";
 import { CollectionForm } from "./collection-form";
 import { CollectionRow } from "./collection-row";
 import { PageHeading } from "@/components/admin/page-heading";
 
 export default async function AdminCollectionsPage() {
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const collections = await listAllCollectionsForAdmin(store.id);
 
   return (

@@ -37,30 +37,6 @@ export const getActiveStore = cache(async () => {
 
 Todo Server Component/Server Action busca `activeStore.id` e filtra explicitamente por `store_id` — o schema é multi-tenant desde o início, então nenhuma query pode assumir "só existe uma loja" mesmo que isso seja verdade hoje. `store_id` chega aos Client Components via props do Server Component pai, nunca lido diretamente no client.
 
-**Atualização de 29/08/2026 (M12 — multi-tenant self-service):** `STORE_SLUG` deixa de ser a fonte de verdade em rotas de produção. `getActiveStore()` passa a existir só como helper de dev/seed/scripts. Duas funções novas assumem a resolução de loja:
-
-```ts
-// lib/store/get-store-by-slug.ts — lado público, resolve pela URL
-export const getStoreBySlug = cache(async (slug: string) => {
-  const supabase = await createServerSupabaseClient();
-  const { data, error } = await supabase.from("stores").select("*")
-    .eq("slug", slug).eq("status", "active").single();
-  if (error || !data) notFound();
-  return data;
-});
-
-// lib/store/get-owner-store.ts — lado admin, resolve pelo usuário autenticado
-export const getOwnerStore = cache(async () => {
-  const supabase = await createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-  const { data, error } = await supabase.from("stores").select("*")
-    .eq("owner_user_id", user.id).single();
-  if (error || !data) redirect("/cadastro"); // conta sem loja associada
-  return data;
-});
-```
-
 ---
 
 ## 2. Modelo de Dados (Migration `0001_initial_schema.sql`)
@@ -90,17 +66,6 @@ Pontos de design que valem destaque:
 - Todas as tabelas com `store_id` (exceto `profiles`) têm FK `on delete cascade` a partir de `stores`, reforçando isolamento por loja.
 - Trigger genérica de `updated_at` reaproveitada em `stores`, `categories`, `collections`, `products`.
 
-**Migration `0023_business_type.sql` (29/08/2026, M12):**
-```sql
-alter table stores
-  add column business_type text not null default 'artisan'
-  check (business_type in ('artisan', 'clothing', 'footwear'));
-
-alter table stores
-  add constraint stores_owner_user_id_unique unique (owner_user_id);
-```
-`business_type` guia só a apresentação do cadastro de produto (chips de tamanho/numeração sugeridos por segmento) — `product_variants.size` continua texto livre (migration 0016), sem tabela nova. Presets vivem em `lib/products/size-presets.ts` (`Record<BusinessType, string[]>`). A constraint `unique(owner_user_id)` reforça 1 usuário = 1 loja. Nenhuma policy de RLS nova é necessária: `stores_owner_all` (`for all`) já cobre o INSERT feito pelo próprio dono no signup.
-
 ---
 
 ## 3. Row Level Security (Migration `0003_rls_policies.sql`)
@@ -120,14 +85,11 @@ Pontos críticos:
 ```
 app/
   (public)/
-    page.tsx                          -- landing da plataforma, CTA para /cadastro
-    cadastro/page.tsx                 -- signup self-service (conta + loja no mesmo fluxo)
-    loja/[storeSlug]/
-      page.tsx                        -- home da loja: destaques, categorias, coleções, lançamentos
-      produtos/page.tsx                -- listagem paginada (12 iniciais + "carregar mais")
-      produtos/[slug]/page.tsx         -- detalhe: galeria, variações, status, WhatsApp CTA
-      categorias/[slug]/page.tsx
-      colecoes/[slug]/page.tsx
+    page.tsx                          -- home: destaques, categorias, coleções, lançamentos
+    produtos/page.tsx                 -- listagem paginada (12 iniciais + "carregar mais")
+    produtos/[slug]/page.tsx          -- detalhe: galeria, variações, status, WhatsApp CTA
+    categorias/[slug]/page.tsx
+    colecoes/[slug]/page.tsx
   (admin)/
     login/page.tsx
     admin/page.tsx                    -- dashboard/analytics resumido
@@ -141,7 +103,7 @@ app/
 proxy.ts
 ```
 
-`proxy.ts` (renomeado de `middleware.ts` a partir do Next.js 16) redireciona `/admin/*` sem sessão para `/login`, e `/login` com sessão para `/admin` — é só UX; a segurança real é a RLS aplicada em toda query de Server Component/Server Action. Rotas admin resolvem a loja por `getOwnerStore()` (usuário autenticado), não pelo slug na URL — cada lojista só edita a própria loja.
+`proxy.ts` (renomeado de `middleware.ts` a partir do Next.js 16) redireciona `/admin/*` sem sessão para `/login`, e `/login` com sessão para `/admin` — é só UX; a segurança real é a RLS aplicada em toda query de Server Component/Server Action.
 
 ---
 
@@ -428,41 +390,6 @@ no código; `.env*` ignorado e nenhum `.env` rastreado no git; uploads revalidad
 máquina (`supabase login` é interativo). Confirmar no Studio que as migrations `0001`–`0008` estão
 aplicadas e que o bucket `product-images` é público de propósito (é: as imagens do catálogo precisam disso).
 
-### M12 — Multi-tenant self-service (iniciado 29/08/2026)
-
-Expansão de escopo aprovada pelo usuário: plataforma passa de mono-loja (só Blessing Collection) para
-multi-loja self-service, com tipos de negócio (artesanato/roupas/calçados) guiando presets de
-tamanho/numeração no cadastro de produto. Ver decisões completas no plano aprovado em
-`C:\Users\fabio\.claude\plans\reactive-chasing-squirrel.md`.
-
-- [x] Migration `0023_business_type.sql` escrita (`stores.business_type` + `unique(owner_user_id)`)
-- [x] `supabase-security-audit` do escopo da migration — sem riscos críticos ou médios
-- [ ] Migration `0023` aplicada no Supabase (usuário aplicará manualmente)
-- [x] PRD.md atualizado: seções 2, 3.8, 4.3, 5.1/5.2, 9, 11.2, 12.1
-- [x] PLAN.md atualizado: seções 1, 2, 4, 9, milestone M12
-- [x] `getStoreBySlug` e `getOwnerStore` extraídos de `get-active-store.ts`
-- [x] Call sites admin (`lib/*/actions.ts` e páginas `app/(admin)/**`) trocados de `getActiveStore()` para `getOwnerStore()`
-- [x] Roteamento público migrado para `app/(public)/loja/[storeSlug]/...` — tema de marca (buildStoreTheme)
-      deixou de ser global em `app/layout.tsx` e passou a ser aplicado por árvore (admin e loja pública)
-      via nova classe `.brand-scope` em `globals.css`
-- [x] `app/sitemap.ts` atualizado para iterar todas as lojas ativas; `getSitemapEntries` recebe o slug;
-      `robots.ts` bloqueia `/loja/*/selecao` e `/cadastro`
-- [x] Home (`/`) redesenhada como landing da plataforma com CTA para `/cadastro`
-- [x] Signup self-service (`app/(public)/cadastro`, `lib/store/signup-actions.ts`, `lib/store/reserved-slugs.ts`)
-- [x] `supabase-security-audit` do fluxo de signup — sem riscos críticos; 2 médios anotados (mensagem de
-      erro que revela e-mail já cadastrado; checagem prévia de slug sem rate limit), nenhum bloqueante
-- [x] `lib/products/size-presets.ts` + chips de sugestão em `product-variants.tsx`/`variant-row.tsx`
-      (campo Nome + Grupo da variação, condicionado a `business_type` da loja)
-- [x] Teste: `tests/unit/size-presets.test.ts` (presets por segmento). RLS de INSERT em `stores` já coberta
-      por `stores_owner_all` existente (confirmado por leitura da migration 0003, sem policy nova)
-
-**Pendências antes de considerar o M12 fechado:**
-1. Aplicar a migration `0023_business_type.sql` no Supabase (usuário aplicará manualmente).
-2. Confirmar no painel do Supabase se a confirmação de e-mail está desativada (usuário confirmou que sim,
-   mas vale checar antes de divulgar o cadastro publicamente).
-3. Testar manualmente o fluxo ponta a ponta: criar uma 2ª loja via `/cadastro` com `business_type='clothing'`,
-   confirmar isolamento de produtos entre lojas e que os chips de tamanho aparecem só nela.
-
 ---
 
 ## 8. Skills por fase
@@ -487,11 +414,7 @@ tamanho/numeração no cadastro de produto. Ver decisões completas no plano apr
 4. Upload de imagem validado só no client — sempre revalidar tipo/tamanho no Server Action/Route Handler antes de gravar no Storage.
 5. Todo botão "excluir" do painel deve ser auditado no code review para confirmar que faz `UPDATE status`, nunca `DELETE`.
 6. Middleware é só UX — a proteção real de dados é RLS; nunca tratar o redirect do middleware como controle de acesso suficiente.
-7. Falha de `STORE_SLUG` ausente/incorreto em produção derruba a aplicação inteira — `get-active-store.ts` deve lançar erro claro e cedo (fail-fast); vale só para os usos remanescentes de dev/script após o M12.
-8. **(M12)** Slugs de loja colidindo com rotas do sistema (`admin`, `login`, `cadastro`, `api`) — bloquear na validação Zod do signup via lista centralizada (`lib/store/reserved-slugs.ts`), não confiar só em não haver colisão de fato na URL.
-9. **(M12)** Conta órfã: `auth.users` criado via `signUp` sem `stores` correspondente (corrida de slug duplicado). `getOwnerStore()` precisa redirecionar para completar cadastro, não estourar erro genérico.
-10. **(M12)** Registro de `analytics_events` no lado público deve resolver `store_id` via `getStoreBySlug`, nunca via `getActiveStore` — maior risco de gravar evento na loja errada quando várias lojas estiverem ativas simultaneamente.
-11. **(M12)** `.env` de produção: `STORE_SLUG` precisa continuar batendo com o slug real da Blessing Collection mesmo após virar só fallback de dev, para não quebrar scripts/seeds que ainda dependam dele.
+7. Falha de `STORE_SLUG` ausente/incorreto em produção derruba a aplicação inteira — `get-active-store.ts` deve lançar erro claro e cedo (fail-fast).
 
 ---
 

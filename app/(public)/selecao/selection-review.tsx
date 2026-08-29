@@ -11,7 +11,6 @@ import { ActionButton, ActionLink } from "@/components/ui/action";
 
 type SelectionReviewProps = {
   storeId: string;
-  storeSlug: string;
   storeName: string;
   storeWhatsapp: string;
   siteUrl: string;
@@ -21,7 +20,7 @@ function formatPrice(price: number) {
   return price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-export function SelectionReview({ storeId, storeSlug, storeName, storeWhatsapp, siteUrl }: SelectionReviewProps) {
+export function SelectionReview({ storeId, storeName, storeWhatsapp, siteUrl }: SelectionReviewProps) {
   const { items, remove, clear, isHydrated } = useSelection();
 
   if (!isHydrated) return null;
@@ -32,7 +31,7 @@ export function SelectionReview({ storeId, storeSlug, storeName, storeWhatsapp, 
         <p className="font-[family-name:var(--font-brand)] text-xl text-muted-foreground">
           Você ainda não escolheu nenhuma peça.
         </p>
-        <ActionLink href={`/loja/${storeSlug}/produtos`} variant="outline">
+        <ActionLink href="/produtos" variant="outline">
           Ver o catálogo
         </ActionLink>
       </div>
@@ -48,7 +47,7 @@ export function SelectionReview({ storeId, storeSlug, storeName, storeWhatsapp, 
     storeName,
     items.map((item) => ({
       name: item.name,
-      url: `${siteUrl}/loja/${storeSlug}/produtos/${item.slug}`,
+      url: `${siteUrl}/produtos/${item.slug}`,
       status: item.status,
       variantName: item.variantName,
     })),
@@ -72,7 +71,7 @@ export function SelectionReview({ storeId, storeSlug, storeName, storeWhatsapp, 
             </div>
             <div className="flex flex-1 flex-col gap-1">
               <Link
-                href={`/loja/${storeSlug}/produtos/${item.slug}`}
+                href={`/produtos/${item.slug}`}
                 className="font-[family-name:var(--font-brand)] text-base transition-colors hover:text-[var(--gold)]"
               >
                 {item.name}

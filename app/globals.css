@@ -135,15 +135,6 @@
   }
   body {
     @apply bg-background text-foreground;
-  }
-  /* Escopo de marca: cada árvore com tema próprio (loja pública por slug,
-     painel administrativo da loja logada) reaplica fundo/texto/grão aqui —
-     --background só pinta o elemento em que a CSS custom property é
-     definida (ou um ancestral dele), nunca um filho que a redefine. Por
-     isso não basta setar as variáveis num <div> dentro do body: sem esta
-     classe repetindo o @apply, o fundo continuaria vindo do body raiz. */
-  .brand-scope {
-    @apply bg-background text-foreground;
     /* Grão sutil de papel: tira o "chapado" digital do fundo liso. */
     background-image: radial-gradient(
       oklch(0.72 0.02 70 / 0.035) 0.5px,

@@ -4,9 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { getOwnerStore } from "@/lib/store/get-owner-store";
-import { revalidateStorePaths } from "@/lib/store/revalidate-store-paths";
-import { countActiveProducts, FREE_PLAN_PRODUCT_LIMIT } from "@/lib/products/limits";
+import { getActiveStore } from "@/lib/store/get-active-store";
 import { slugify } from "@/lib/utils";
 
 // slugify vem de lib/utils: o componente ProductSlug usa a mesma função para
@@ -64,18 +62,8 @@ export async function createProduct(_prevState: ProductFormState, formData: Form
   const parsed = parseProductForm(formData);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
-
-  // Limite do teste grátis — checagem explícita além de qualquer constraint
-  // de banco, para devolver mensagem clara no formulário em vez de um erro
-  // genérico de insert (regra do CLAUDE.md: validar no servidor).
-  const activeCount = await countActiveProducts(store.id);
-  if (activeCount >= FREE_PLAN_PRODUCT_LIMIT) {
-    return {
-      error: `Seu teste grátis permite até ${FREE_PLAN_PRODUCT_LIMIT} produtos. Desative um produto existente para cadastrar um novo.`,
-    };
-  }
 
   const { data: product, error } = await supabase
     .from("products")
@@ -114,7 +102,7 @@ export async function updateProduct(
   const parsed = parseProductForm(formData);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
   const { error } = await supabase
     .from("products")
@@ -152,7 +140,7 @@ export async function updateProduct(
  * Esta ação é explícita — a proprietária decide quando vale trocar.
  */
 export async function refreshProductSlug(productId: string): Promise<ProductFormState> {
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
 
   const { data: product } = await supabase
@@ -179,7 +167,7 @@ export async function refreshProductSlug(productId: string): Promise<ProductForm
 
   revalidatePath("/admin/produtos");
   revalidatePath(`/admin/produtos/${productId}/editar`);
-  revalidateStorePaths(store.slug);
+  revalidatePath("/produtos");
   return {};
 }
 
@@ -192,7 +180,7 @@ export async function refreshProductSlug(productId: string): Promise<ProductForm
  * nascem com 0 e ficariam empatados, tornando a troca por índice imprevisível.
  */
 export async function moveProduct(productId: string, direction: "up" | "down") {
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
 
   const { data: products } = await supabase
@@ -234,7 +222,8 @@ export async function moveProduct(productId: string, direction: "up" | "down") {
   );
 
   revalidatePath("/admin/produtos");
-  revalidateStorePaths(store.slug);
+  revalidatePath("/produtos");
+  revalidatePath("/");
 }
 
 /**
@@ -250,7 +239,7 @@ export async function moveProduct(productId: string, direction: "up" | "down") {
 export async function reorderProducts(orderedIds: string[]) {
   if (orderedIds.length < 2) return;
 
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
 
   const { data: products } = await supabase
@@ -291,12 +280,13 @@ export async function reorderProducts(orderedIds: string[]) {
   );
 
   revalidatePath("/admin/produtos");
-  revalidateStorePaths(store.slug);
+  revalidatePath("/produtos");
+  revalidatePath("/");
 }
 
 // "Excluir" no painel nunca é DELETE físico — sempre soft delete via status.
 export async function deactivateProduct(productId: string) {
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
   await supabase
     .from("products")
@@ -307,7 +297,7 @@ export async function deactivateProduct(productId: string) {
 }
 
 export async function restoreProduct(productId: string) {
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
   await supabase
     .from("products")

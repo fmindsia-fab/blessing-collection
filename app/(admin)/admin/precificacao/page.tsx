@@ -1,4 +1,4 @@
-import { getOwnerStore } from "@/lib/store/get-owner-store";
+import { getActiveStore } from "@/lib/store/get-active-store";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { listAllPaymentMethodsForAdmin } from "@/lib/pricing/queries";
 import { PageHeading } from "@/components/admin/page-heading";
@@ -6,7 +6,7 @@ import { LaborForm } from "./labor-form";
 import { PaymentMethods } from "./payment-methods";
 
 export default async function PricingSettingsPage() {
-  const store = await getOwnerStore();
+  const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
 
   const [{ data: settings }, methods] = await Promise.all([
