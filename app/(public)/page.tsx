@@ -41,7 +41,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function HomePage() {
   const store = await getActiveStore();
-  const [featured, newArrivals, categories, collections, categoryCovers, collectionCovers] =
+  const [featured, newArrivals, allCategories, allCollections, categoryCovers, collectionCovers] =
     await Promise.all([
       getFeaturedProducts(store.id),
       getNewArrivals(store.id),
@@ -50,6 +50,12 @@ export default async function HomePage() {
       pickCategoryCovers(store.id),
       pickCollectionCovers(store.id),
     ]);
+
+  // Só entram na vitrine as categorias/coleções com pelo menos uma peça
+  // pública com foto de capa — sem isso o card cairia no fallback sem
+  // imagem, que parece quebrado (pedido do usuário: não mostrar as vazias).
+  const categories = allCategories.filter((category) => categoryCovers.has(category.id));
+  const collections = allCollections.filter((collection) => collectionCovers.has(collection.id));
 
   // A capa sorteia entre destaques e lançamentos a cada visita: quem volta ao
   // catálogo vê uma peça diferente em vez da mesma foto sempre.
