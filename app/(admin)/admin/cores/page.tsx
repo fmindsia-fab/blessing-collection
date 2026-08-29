@@ -1,11 +1,11 @@
-import { getActiveStore } from "@/lib/store/get-active-store";
+import { getOwnerStore } from "@/lib/store/get-owner-store";
 import { listAllColorsForAdmin } from "@/lib/colors/queries";
 import { ColorForm } from "./color-form";
 import { ColorRow } from "./color-row";
 import { PageHeading } from "@/components/admin/page-heading";
 
 export default async function AdminColorsPage() {
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const colors = await listAllColorsForAdmin(store.id);
 
   return (

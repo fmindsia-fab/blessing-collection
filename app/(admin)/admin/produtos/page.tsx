@@ -1,4 +1,4 @@
-import { getActiveStore } from "@/lib/store/get-active-store";
+import { getOwnerStore } from "@/lib/store/get-owner-store";
 import { listAllProductsForAdmin } from "@/lib/products/admin-queries";
 import { listAllCategoriesForAdmin } from "@/lib/categories/queries";
 import { PageHeading } from "@/components/admin/page-heading";
@@ -13,7 +13,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default async function AdminProductsPage() {
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const [products, categories] = await Promise.all([
     listAllProductsForAdmin(store.id),
     listAllCategoriesForAdmin(store.id),

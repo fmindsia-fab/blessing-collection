@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getActiveStore } from "@/lib/store/get-active-store";
+import { getOwnerStore } from "@/lib/store/get-owner-store";
 import { getProductForAdmin } from "@/lib/products/admin-queries";
 import { listAllCategoriesForAdmin } from "@/lib/categories/queries";
 import { listAllCollectionsForAdmin } from "@/lib/collections/queries";
@@ -22,7 +22,7 @@ import { ProductPricing } from "./product-pricing";
 
 export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
 
   const [
     result,

@@ -1,10 +1,10 @@
-import { getActiveStore } from "@/lib/store/get-active-store";
+import { getOwnerStore } from "@/lib/store/get-owner-store";
 import { listVariantGroups } from "@/lib/variant-groups/queries";
 import { PageHeading } from "@/components/admin/page-heading";
 import { VariantGroupsList } from "./variant-groups-list";
 
 export default async function VariantGroupsPage() {
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   // Só ativos: a tela lista para editar/remover, e "removido" não deve
   // reaparecer aqui — mesmo padrão da tela de Materiais.
   const groups = await listVariantGroups(store.id);

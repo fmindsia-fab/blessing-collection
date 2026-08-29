@@ -1,4 +1,4 @@
-import { getActiveStore } from "@/lib/store/get-active-store";
+import { getOwnerStore } from "@/lib/store/get-owner-store";
 import { StoreSettingsForm } from "./store-settings-form";
 import { StoreLogoForm } from "./store-logo-form";
 import { PageHeading } from "@/components/admin/page-heading";
@@ -6,7 +6,7 @@ import { BrandFontUpload } from "./brand-font-upload";
 import { ShareButton } from "@/components/shared/share-button";
 
 export default async function AdminSettingsPage() {
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
 
   return (

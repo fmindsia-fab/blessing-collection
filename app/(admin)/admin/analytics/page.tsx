@@ -1,4 +1,4 @@
-import { getActiveStore } from "@/lib/store/get-active-store";
+import { getOwnerStore } from "@/lib/store/get-owner-store";
 import {
   getAnalyticsTotals,
   getCategoryRankings,
@@ -20,7 +20,7 @@ export default async function AdminAnalyticsPage({
   const { periodo } = await searchParams;
   const period = parsePeriod(periodo);
 
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const [totals, products, categories, collections] = await Promise.all([
     getAnalyticsTotals(store.id, period),
     getProductRankings(store.id, period),

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { LogoutButton } from "./logout-button";
 import { AdminNavLink } from "./admin-nav-link";
 import { ShareButton } from "@/components/shared/share-button";
-import { getActiveStore } from "@/lib/store/get-active-store";
+import { getOwnerStore } from "@/lib/store/get-owner-store";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard" },
@@ -19,7 +19,7 @@ const NAV_ITEMS = [
 ];
 
 export default async function AdminAreaLayout({ children }: { children: React.ReactNode }) {
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const storeName = store.name;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
 

@@ -1,4 +1,4 @@
-import { getActiveStore } from "@/lib/store/get-active-store";
+import { getOwnerStore } from "@/lib/store/get-owner-store";
 import { listAllCategoriesForAdmin } from "@/lib/categories/queries";
 import { listAllCollectionsForAdmin } from "@/lib/collections/queries";
 import { listAllModelsForAdmin } from "@/lib/models/queries";
@@ -6,7 +6,7 @@ import { ProductForm } from "../product-form";
 import { PageHeading } from "@/components/admin/page-heading";
 
 export default async function NewProductPage() {
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const [categories, collections, models] = await Promise.all([
     listAllCategoriesForAdmin(store.id),
     listAllCollectionsForAdmin(store.id),

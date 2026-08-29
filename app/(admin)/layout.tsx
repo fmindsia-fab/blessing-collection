@@ -1,4 +1,4 @@
-import { getActiveStore } from "@/lib/store/get-active-store";
+import { getOwnerStore } from "@/lib/store/get-owner-store";
 import { getBrandFontVariable } from "@/lib/store/fonts";
 
 // O painel usa a mesma fonte e a mesma paleta da marca: a proprietária vê o
@@ -13,7 +13,7 @@ export default async function AdminLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const fontVariable = getBrandFontVariable(store.font_family);
 
   return <div className={`${fontVariable} flex flex-1 flex-col`}>{children}</div>;
