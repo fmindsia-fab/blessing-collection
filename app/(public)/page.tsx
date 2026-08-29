@@ -110,6 +110,65 @@ export default async function HomePage() {
       </section>
 
       <div className="flex flex-col gap-20 px-6 pb-24 sm:px-10 lg:gap-28 lg:px-16">
+        {categories.length > 0 || collections.length > 0 ? (
+          <section className="reveal flex flex-col gap-10" style={{ animationDelay: "180ms" }}>
+            {categories.length > 0 ? (
+              <div className="flex flex-col gap-5">
+                <div className="flex flex-col items-center gap-2 text-center">
+                  <span className="kicker">Navegue por</span>
+                  <h2 className="font-[family-name:var(--font-brand)] text-2xl tracking-tight sm:text-[1.75rem]">
+                    Categorias
+                  </h2>
+                </div>
+                <div className="flex flex-wrap justify-center gap-3">
+                  {categories.map((category) => (
+                    <Link
+                      key={category.id}
+                      href={`/categorias/${category.slug}`}
+                      className="group inline-flex items-center rounded-full border border-border bg-card px-6 py-3 text-sm text-foreground shadow-sm outline-none transition-all duration-300 hover:-translate-y-0.5 hover:border-[var(--gold)]/60 hover:shadow-md focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    >
+                      <span className="font-[family-name:var(--font-brand)] tracking-tight transition-colors duration-300 group-hover:text-[var(--gold)]">
+                        {category.name}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {collections.length > 0 ? (
+              <div className="flex flex-col gap-5">
+                <div className="flex flex-col items-center gap-2 text-center">
+                  <span className="kicker">Reunidas em</span>
+                  <h2 className="font-[family-name:var(--font-brand)] text-2xl tracking-tight sm:text-[1.75rem]">
+                    Coleções
+                  </h2>
+                </div>
+                <div className="flex flex-wrap justify-center gap-3">
+                  {collections.map((collection) => (
+                    <Link
+                      key={collection.id}
+                      href={`/colecoes/${collection.slug}`}
+                      className="group relative inline-flex items-center overflow-hidden rounded-full bg-foreground px-6 py-3 text-sm text-background shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    >
+                      {/* Véu dourado que desliza da esquerda no hover — o mesmo
+                          gesto do CTA sólido, aplicado às pills de coleção
+                          para reforçar que são o convite mais forte da seção. */}
+                      <span
+                        aria-hidden
+                        className="absolute inset-0 -translate-x-full bg-[var(--gold)] transition-transform duration-500 ease-out group-hover:translate-x-0"
+                      />
+                      <span className="relative font-[family-name:var(--font-brand)] tracking-tight">
+                        {collection.name}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </section>
+        ) : null}
+
         {newArrivals.length > 0 ? (
           <section className="flex flex-col gap-8">
             <SectionHeading kicker="Recém-chegadas" title="Lançamentos" href="/produtos" />
@@ -147,42 +206,6 @@ export default async function HomePage() {
                   status={product.status}
                   coverImageUrl={product.cover_image_url}
                 />
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        {categories.length > 0 ? (
-          <section className="flex flex-col gap-8">
-            <SectionHeading kicker="Navegue por" title="Categorias" />
-            <div className="flex flex-wrap justify-center gap-x-8 gap-y-4">
-              {categories.map((category) => (
-                <Link
-                  key={category.id}
-                  href={`/categorias/${category.slug}`}
-                  className="group font-[family-name:var(--font-brand)] text-xl text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:text-foreground sm:text-2xl"
-                >
-                  {category.name}
-                  <span className="mt-1 block h-px w-0 bg-[var(--gold)] transition-all duration-500 ease-out group-hover:w-full group-focus-visible:w-full" />
-                </Link>
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        {collections.length > 0 ? (
-          <section className="flex flex-col gap-8">
-            <SectionHeading kicker="Reunidas em" title="Coleções" />
-            <div className="flex flex-wrap justify-center gap-x-8 gap-y-4">
-              {collections.map((collection) => (
-                <Link
-                  key={collection.id}
-                  href={`/colecoes/${collection.slug}`}
-                  className="group font-[family-name:var(--font-brand)] text-xl text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:text-foreground sm:text-2xl"
-                >
-                  {collection.name}
-                  <span className="mt-1 block h-px w-0 bg-[var(--gold)] transition-all duration-500 ease-out group-hover:w-full group-focus-visible:w-full" />
-                </Link>
               ))}
             </div>
           </section>
