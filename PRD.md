@@ -23,6 +23,8 @@ Além disso, atualmente não existe uma forma objetiva de identificar:
 
 A solução começará atendendo à Blessing Collection, mas será estruturada desde o início para futuramente atender outras artesãs e pequenas marcas.
 
+A partir da expansão de escopo aprovada em 29/08/2026, a plataforma passa a permitir cadastro público e imediato (self-service) de novas lojas, cada uma com um tipo de negócio (`business_type`): artesanato, roupas/boutique ou calçados. O tipo de negócio determina os campos de tamanho/numeração sugeridos no cadastro de produto, sem alterar as demais regras de isolamento multiempresa.
+
 Cada loja terá apenas um usuário proprietário responsável pelo gerenciamento do catálogo. Não haverá colaboradores, múltiplos usuários por loja ou permissões por função no MVP.
 
 ---
@@ -235,6 +237,8 @@ Não haverá exclusão definitiva de produtos, categorias, coleções ou da loja
 - Não implementar permissões granulares.
 - Não implementar RBAC.
 - Não implementar painel geral da plataforma no MVP.
+- Cada loja terá um `business_type` (artesanato, roupas/boutique ou calçados), que determina somente os presets de tamanho/numeração sugeridos no cadastro de produto — não altera o modelo de dados de variações.
+- Cadastro de novas lojas é público, self-service e imediato (sem aprovação manual), com um usuário criando conta e loja no mesmo fluxo.
 
 ---
 
@@ -290,7 +294,6 @@ Não criar agora:
 - Gerenciamento de planos.
 - Comparação de métricas entre lojas.
 - Acesso aos analytics de outras lojas.
-- Cadastro público de novas lojas.
 
 ---
 
@@ -319,6 +322,7 @@ Não criar agora:
 - Configuração do WhatsApp e redes sociais.
 - Estrutura multiempresa.
 - Um único proprietário por loja.
+- Cadastro público e self-service de novas lojas, com escolha de tipo de negócio.
 - Row Level Security.
 - SEO básico.
 - Layout responsivo.
@@ -345,8 +349,8 @@ Não criar agora:
 - Controle avançado de estoque.
 - Chat interno.
 - Notificações automáticas.
-- Cadastro público de novas lojas.
-- Onboarding automático.
+- Onboarding automático guiado (tutorial passo a passo).
+- Aprovação manual de novas lojas.
 - Planos e assinaturas.
 - Stripe.
 - Painel completo do administrador da plataforma.
@@ -591,15 +595,17 @@ Não copiar layouts, textos, imagens ou identidade visual.
 
 ### 9.1 Rotas públicas
 
-- `/`
-- `/produtos`
-- `/produtos/[productSlug]`
-- `/categorias/[categorySlug]`
-- `/colecoes/[collectionSlug]`
+- `/` — landing da plataforma, com chamada para `/cadastro`.
+- `/cadastro` — cadastro público e self-service de nova loja (conta + loja no mesmo fluxo).
+- `/loja/[storeSlug]`
+- `/loja/[storeSlug]/produtos`
+- `/loja/[storeSlug]/produtos/[productSlug]`
+- `/loja/[storeSlug]/categorias/[categorySlug]`
+- `/loja/[storeSlug]/colecoes/[collectionSlug]`
 
-A tabela de lojas terá um slug único, mas o slug não aparecerá na URL pública do MVP.
+A tabela de lojas tem um slug único, que passa a compor a URL pública de cada loja a partir da expansão de escopo de 29/08/2026.
 
-A loja ativa será identificada por configuração segura do ambiente.
+A loja é identificada pelo slug presente na URL. A variável de ambiente que identificava a loja única do MVP inicial permanece só como auxiliar de desenvolvimento/scripts locais, não como fonte de verdade em produção.
 
 ### 9.2 Rotas administrativas
 
@@ -679,14 +685,16 @@ Todas as rotas administrativas deverão exigir autenticação.
 - WhatsApp.
 - Instagram.
 - Outras redes sociais.
+- Tipo de negócio (`business_type`: artesanato, roupas/boutique ou calçados).
 - Status.
 - Datas de criação e atualização.
 
 Regras:
 
 - Cada loja terá exatamente um proprietário.
-- Cada usuário terá somente uma loja no MVP.
+- Cada usuário terá somente uma loja (`owner_user_id` único).
 - Não criar `store_members`.
+- `business_type` define somente os presets de tamanho/numeração sugeridos no cadastro de produto, sem exigir tabela ou schema próprios por segmento.
 
 ### 11.3 `categories`
 
@@ -786,8 +794,8 @@ A estratégia definitiva de consulta e agregação deverá evitar consultas cara
 - Utilizar Supabase Auth.
 - Somente a proprietária terá login.
 - Visitantes não precisam de conta.
-- Não implementar cadastro público de lojas.
-- A conta inicial poderá ser criada durante a configuração.
+- Cadastro de loja é público, self-service e imediato pela rota `/cadastro`, sem aprovação manual.
+- A conta e a loja são criadas no mesmo fluxo, com `owner_user_id` atribuído pelo servidor a partir da sessão autenticada — nunca a partir de valor enviado pelo formulário.
 
 ### 12.2 Row Level Security
 
