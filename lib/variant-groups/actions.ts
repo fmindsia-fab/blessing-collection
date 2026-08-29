@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { getActiveStore } from "@/lib/store/get-active-store";
+import { getOwnerStore } from "@/lib/store/get-owner-store";
 
 const groupSchema = z.object({
   name: z.string().trim().min(1, "Informe o nome do grupo").max(30),
@@ -27,7 +27,7 @@ export async function createVariantGroup(
   const parsed = groupSchema.safeParse({ name: formData.get("name") });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
 
   const { count } = await supabase
@@ -55,7 +55,7 @@ export async function renameVariantGroup(id: string, name: string) {
   const trimmed = name.trim();
   if (!trimmed || trimmed.length > 30) return;
 
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
 
   await supabase
@@ -72,14 +72,14 @@ export async function renameVariantGroup(id: string, name: string) {
 // product_variants.variant_group nas peças que já o usam (é texto livre,
 // sem vínculo direto com esta tabela — arquivar aqui não quebra nada lá).
 export async function archiveVariantGroup(id: string) {
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
   await supabase.from("variant_groups").update({ status: "archived" }).eq("id", id).eq("store_id", store.id);
   revalidate();
 }
 
 export async function restoreVariantGroup(id: string) {
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
   await supabase.from("variant_groups").update({ status: "active" }).eq("id", id).eq("store_id", store.id);
   revalidate();

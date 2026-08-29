@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { getActiveStore } from "@/lib/store/get-active-store";
+import { getOwnerStore } from "@/lib/store/get-owner-store";
 import { slugify } from "@/lib/utils";
 
 const modelSchema = z.object({
@@ -22,7 +22,7 @@ export async function createModel(_prevState: ModelFormState, formData: FormData
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
 
   const { error } = await supabase.from("models").insert({
@@ -50,7 +50,7 @@ export async function updateModel(
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
   const { error } = await supabase
     .from("models")
@@ -67,7 +67,7 @@ export async function updateModel(
 
 // "Excluir" no painel é sempre soft delete via status.
 export async function archiveModel(id: string) {
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
   await supabase.from("models").update({ status: "archived" }).eq("id", id).eq("store_id", store.id);
   revalidatePath("/admin/modelos");
@@ -75,7 +75,7 @@ export async function archiveModel(id: string) {
 }
 
 export async function restoreModel(id: string) {
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
   await supabase.from("models").update({ status: "active" }).eq("id", id).eq("store_id", store.id);
   revalidatePath("/admin/modelos");

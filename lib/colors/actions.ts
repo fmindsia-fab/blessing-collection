@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { getActiveStore } from "@/lib/store/get-active-store";
+import { getOwnerStore } from "@/lib/store/get-owner-store";
 import { slugify } from "@/lib/utils";
 
 // Mesmo formato do check da migration 0013: #rgb ou #rrggbb.
@@ -52,7 +52,7 @@ export async function createColor(
   const slug = slugify(parsed.data.name);
   if (!slug) return { error: "O nome precisa ter ao menos uma letra ou número." };
 
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
 
   const { error } = await supabase.from("colors").insert({
@@ -84,7 +84,7 @@ export async function updateColor(
   const parsed = parse(formData);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
 
   // O slug não muda ao renomear: ele está nos links de filtro que a
@@ -107,14 +107,14 @@ export async function updateColor(
 
 // "Excluir" no painel é sempre soft delete via status.
 export async function archiveColor(id: string) {
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
   await supabase.from("colors").update({ status: "archived" }).eq("id", id).eq("store_id", store.id);
   revalidate();
 }
 
 export async function restoreColor(id: string) {
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
   await supabase.from("colors").update({ status: "active" }).eq("id", id).eq("store_id", store.id);
   revalidate();

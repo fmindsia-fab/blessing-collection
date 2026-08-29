@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { getActiveStore } from "@/lib/store/get-active-store";
+import { getOwnerStore } from "@/lib/store/get-owner-store";
 
 function slugify(value: string) {
   return value
@@ -31,7 +31,7 @@ export async function createCategory(_prevState: CategoryFormState, formData: Fo
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
 
   const { error } = await supabase.from("categories").insert({
@@ -58,7 +58,7 @@ export async function updateCategory(
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
   const { error } = await supabase
     .from("categories")
@@ -73,14 +73,14 @@ export async function updateCategory(
 }
 
 export async function archiveCategory(id: string) {
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
   await supabase.from("categories").update({ status: "archived" }).eq("id", id).eq("store_id", store.id);
   revalidatePath("/admin/categorias");
 }
 
 export async function restoreCategory(id: string) {
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
   await supabase.from("categories").update({ status: "active" }).eq("id", id).eq("store_id", store.id);
   revalidatePath("/admin/categorias");

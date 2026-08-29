@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { getActiveStore } from "@/lib/store/get-active-store";
+import { getOwnerStore } from "@/lib/store/get-owner-store";
 import { parseBrandColors } from "@/lib/store/branding";
 import { isCuratedFont } from "@/lib/store/fonts";
 
@@ -21,8 +21,8 @@ export type StoreSettingsFormState = {
   success?: boolean;
 };
 
-// A loja é resolvida no servidor via STORE_SLUG — nunca a partir de um id
-// enviado pelo formulário, que o client poderia forjar.
+// A loja é resolvida no servidor pelo usuário autenticado (getOwnerStore) —
+// nunca a partir de um id enviado pelo formulário, que o client poderia forjar.
 export async function updateStoreSettings(
   _prevState: StoreSettingsFormState,
   formData: FormData,
@@ -40,7 +40,7 @@ export async function updateStoreSettings(
   const palette = parseBrandColors(String(formData.get("brandColors") ?? ""));
   if ("error" in palette) return { error: palette.error };
 
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
   const { error } = await supabase
     .from("stores")
@@ -90,7 +90,7 @@ export async function uploadBrandFont(
   const displayName = String(formData.get("fontName") ?? "").trim();
   if (!displayName) return { error: "Dê um nome para identificar a fonte." };
 
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
   const bucket = supabase.storage.from(FONT_BUCKET);
 
@@ -123,7 +123,7 @@ export async function uploadBrandFont(
 
 // Volta para a lista curada sem apagar o arquivo do Storage.
 export async function removeBrandFont(): Promise<StoreSettingsFormState> {
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
 
   const { error } = await supabase
@@ -158,7 +158,7 @@ export async function uploadStoreLogo(
     return { error: "O logo deve ter no máximo 2MB." };
   }
 
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
   const bucket = supabase.storage.from(LOGO_BUCKET);
 

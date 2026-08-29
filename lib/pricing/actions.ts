@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { getActiveStore } from "@/lib/store/get-active-store";
+import { getOwnerStore } from "@/lib/store/get-owner-store";
 
 export type PricingFormState = {
   error?: string;
@@ -58,7 +58,7 @@ export async function updatePricingSettings(
   // custos fixos. Guardar um percentual aqui taxaria a peça duas vezes.
   const taxPercent = data.taxRegime === "simples" || data.taxRegime === "other" ? data.taxPercent : 0;
 
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
 
   const { error } = await supabase
@@ -104,7 +104,7 @@ export async function createPaymentMethod(
 
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
 
   const { count } = await supabase
@@ -127,7 +127,7 @@ export async function createPaymentMethod(
 }
 
 export async function updatePaymentMethodFee(id: string, feePercent: number) {
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
 
   if (!Number.isFinite(feePercent) || feePercent < 0 || feePercent >= 100) return;
@@ -144,7 +144,7 @@ export async function updatePaymentMethodFee(id: string, feePercent: number) {
 
 // "Excluir" no painel é sempre soft delete via status.
 export async function togglePaymentMethod(id: string, currentStatus: string) {
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
 
   await supabase
@@ -166,7 +166,7 @@ async function assertProductBelongsToStore(
   supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
   productId: string,
 ) {
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const { data } = await supabase
     .from("products")
     .select("id")
@@ -224,7 +224,7 @@ export async function addProductMaterial(
   // aplicação, igual à checagem de produto acima (RLS já bloquearia).
   let catalogSnapshot: { name: string; unit: string; unit_cost: number } | null = null;
   if (isCatalogMaterial) {
-    const store = await getActiveStore();
+    const store = await getOwnerStore();
     const { data: material } = await supabase
       .from("materials")
       .select("name, unit, unit_cost")
@@ -360,7 +360,7 @@ export async function createMaterial(
 
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
 
   const { count } = await supabase
@@ -387,7 +387,7 @@ export async function updateMaterial(
   id: string,
   fields: { name?: string; unit?: string; unitCost?: number },
 ) {
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
 
   const update: Partial<{ name: string; unit: string; unit_cost: number }> = {};
@@ -418,7 +418,7 @@ export async function updateMaterial(
 // Arquivar tira o material do seletor de peça nova, mas não desfaz o vínculo
 // das peças que já o usam.
 export async function toggleMaterial(id: string, currentStatus: string) {
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
 
   await supabase

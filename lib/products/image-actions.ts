@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { getActiveStore } from "@/lib/store/get-active-store";
+import { getOwnerStore } from "@/lib/store/get-owner-store";
 
 // 10MB — ampliado do limite original de 5MB do PRD 13.1 a pedido do usuário,
 // para acomodar fotos de câmera sem recompressão prévia.
@@ -22,7 +22,7 @@ async function assertProductBelongsToStore(
   supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
   productId: string,
 ) {
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const { data } = await supabase
     .from("products")
     .select("id")
@@ -55,7 +55,7 @@ export async function uploadProductImage(
     return { error: "A imagem deve ter no máximo 10MB." };
   }
 
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
 
   if (!(await assertProductBelongsToStore(supabase, productId))) {

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { getActiveStore } from "@/lib/store/get-active-store";
+import { getOwnerStore } from "@/lib/store/get-owner-store";
 import { slugify } from "@/lib/utils";
 
 // slugify vem de lib/utils: o componente ProductSlug usa a mesma função para
@@ -62,7 +62,7 @@ export async function createProduct(_prevState: ProductFormState, formData: Form
   const parsed = parseProductForm(formData);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
 
   const { data: product, error } = await supabase
@@ -102,7 +102,7 @@ export async function updateProduct(
   const parsed = parseProductForm(formData);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
   const { error } = await supabase
     .from("products")
@@ -140,7 +140,7 @@ export async function updateProduct(
  * Esta ação é explícita — a proprietária decide quando vale trocar.
  */
 export async function refreshProductSlug(productId: string): Promise<ProductFormState> {
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
 
   const { data: product } = await supabase
@@ -180,7 +180,7 @@ export async function refreshProductSlug(productId: string): Promise<ProductForm
  * nascem com 0 e ficariam empatados, tornando a troca por índice imprevisível.
  */
 export async function moveProduct(productId: string, direction: "up" | "down") {
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
 
   const { data: products } = await supabase
@@ -239,7 +239,7 @@ export async function moveProduct(productId: string, direction: "up" | "down") {
 export async function reorderProducts(orderedIds: string[]) {
   if (orderedIds.length < 2) return;
 
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
 
   const { data: products } = await supabase
@@ -286,7 +286,7 @@ export async function reorderProducts(orderedIds: string[]) {
 
 // "Excluir" no painel nunca é DELETE físico — sempre soft delete via status.
 export async function deactivateProduct(productId: string) {
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
   await supabase
     .from("products")
@@ -297,7 +297,7 @@ export async function deactivateProduct(productId: string) {
 }
 
 export async function restoreProduct(productId: string) {
-  const store = await getActiveStore();
+  const store = await getOwnerStore();
   const supabase = await createServerSupabaseClient();
   await supabase
     .from("products")
