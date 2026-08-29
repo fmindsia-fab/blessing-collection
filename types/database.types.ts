@@ -6,6 +6,8 @@ export type ProductStatus = "available" | "made_to_order" | "sold_out" | "inacti
 export type VariantStatus = "available" | "sold_out" | "archived";
 export type ArchivableStatus = "active" | "archived";
 export type StoreStatus = "active" | "inactive";
+/** Guia só os presets de tamanho/numeração sugeridos no cadastro de produto (migration 0023). */
+export type BusinessType = "artisan" | "clothing" | "footwear";
 /** MEI não entra como percentual: o DAS é custo fixo mensal (migration 0014). */
 export type TaxRegime = "none" | "mei" | "simples" | "other";
 export type PricingMethodValue = "margin" | "markup";
@@ -72,6 +74,8 @@ export interface Database {
           tax_percent: number;
           default_pricing_method: PricingMethodValue;
           default_margin_percent: number;
+          /** Migration 0023. Default 'artisan' — só guia presets de tamanho na UI. */
+          business_type: BusinessType;
           status: StoreStatus;
           created_at: string;
           updated_at: string;
@@ -99,6 +103,7 @@ export interface Database {
           tax_percent?: number;
           default_pricing_method?: PricingMethodValue;
           default_margin_percent?: number;
+          business_type?: BusinessType;
           status?: StoreStatus;
           created_at?: string;
           updated_at?: string;
