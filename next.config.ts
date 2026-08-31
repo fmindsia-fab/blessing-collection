@@ -18,6 +18,14 @@ const nextConfig: NextConfig = {
     // reduzindo o número de transformações únicas por foto.
     deviceSizes: [420, 640, 828, 1080, 1440, 1920],
     imageSizes: [64, 96, 128, 160, 256],
+    // TEMPORÁRIO: a cota de Image Optimization do plano gratuito da Vercel
+    // estourou (endpoint /_next/image respondendo 402), quebrando toda foto
+    // do catálogo até o ciclo renovar ou o plano ser upgradado. Com
+    // unoptimized, o <Image> aponta direto para a URL original do Supabase
+    // Storage — sem passar pelo pipeline de otimização da Vercel, então sem
+    // gerar nenhuma transformação nova (e sem 402). Reverter (remover esta
+    // linha) assim que a cota normalizar.
+    unoptimized: true,
   },
   experimental: {
     serverActions: {
