@@ -9,6 +9,15 @@ const nextConfig: NextConfig = {
         pathname: "/storage/v1/object/public/**",
       },
     ],
+    // Cada combinação (imagem × largura × qualidade) é 1 transformação
+    // faturável na Vercel, cacheada por 30 dias depois de gerada. O padrão do
+    // Next tem 8 deviceSizes (até 3840px) + 8 imageSizes — muito mais largura
+    // do que qualquer `sizes=` deste site pede (o maior é ~55vw em telas de
+    // até ~2560px). Restringir a lista não piora nitidez em nenhum
+    // dispositivo real: só corta variações que nunca são solicitadas,
+    // reduzindo o número de transformações únicas por foto.
+    deviceSizes: [420, 640, 828, 1080, 1440, 1920],
+    imageSizes: [64, 96, 128, 160, 256],
   },
   experimental: {
     serverActions: {
