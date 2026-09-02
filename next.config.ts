@@ -9,24 +9,30 @@ const nextConfig: NextConfig = {
         pathname: "/storage/v1/object/public/**",
       },
     ],
-    // Cada combinação (imagem × largura × qualidade) é 1 transformação
-    // faturável na Vercel, cacheada por 30 dias depois de gerada. O padrão do
-    // Next tem 8 deviceSizes (até 3840px) + 8 imageSizes — muito mais largura
-    // do que qualquer `sizes=` deste site pede (o maior é ~55vw em telas de
-    // até ~2560px). Restringir a lista não piora nitidez em nenhum
-    // dispositivo real: só corta variações que nunca são solicitadas,
-    // reduzindo o número de transformações únicas por foto.
+    // Cada combinação (imagem × largura × qualidade × formato) é 1
+    // transformação faturável na Vercel (cota do plano gratuito: 5.000/mês,
+    // já estourada duas vezes). Conjunto de reduções recomendado pela própria
+    // doc da Vercel ("Reducing Usage" em Image Optimization):
+    //
+    // deviceSizes/imageSizes: restrito às larguras que algum `sizes=` deste
+    // site realmente pede — o maior é ~55vw em telas de até ~2560px, nunca os
+    // 3840px do padrão do Next. Não perde nitidez em nenhum dispositivo real,
+    // só corta variações nunca solicitadas.
     deviceSizes: [420, 640, 828, 1080, 1440, 1920],
     imageSizes: [64, 96, 128, 160, 256],
-    // TEMPORÁRIO (2ª vez): cota de Image Optimization da Vercel estourou de
-    // novo mesmo com deviceSizes/imageSizes reduzidos — 402 em /_next/image.
-    // unoptimized tira a Vercel dessa conta: <Image> aponta direto para a
-    // URL original do Supabase Storage, sem gerar transformação nova. Custo
-    // aceito por ora: sem redimensionar por tela, fotos carregam mais lentas
-    // em conexão fraca (5G incluso). Próximo passo real: migrar para a
-    // transformação de imagem do próprio Supabase Storage (cota separada,
-    // confirmar plano antes) em vez de reativar isto pela 3ª vez.
-    unoptimized: true,
+    // formats: nenhum componente pede AVIF explicitamente, e o padrão do Next
+    // gera AVIF *e* WebP por combinação de tamanho — dobrando as transformações
+    // por foto. Servir só WebP (suportado por todo navegador atual) corta essa
+    // duplicação sem perda visível de qualidade.
+    formats: ["image/webp"],
+    // qualities: nenhum <Image> deste projeto define `quality`, todos usam o
+    // padrão implícito (75). Travar a allowlist em [75] impede que uma
+    // qualidade diferente e não intencional crie uma transformação nova.
+    qualities: [75],
+    // minimumCacheTTL: fotos de produto não mudam depois de publicadas (a
+    // proprietária substitui o arquivo, não edita a URL) — 31 dias reduz
+    // quantas vezes a mesma transformação é regravada no cache da Vercel.
+    minimumCacheTTL: 2678400,
   },
   experimental: {
     serverActions: {
