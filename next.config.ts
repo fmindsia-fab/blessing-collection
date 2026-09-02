@@ -11,38 +11,29 @@ const nextConfig: NextConfig = {
     ],
     // Cada combinação (imagem × largura × qualidade × formato) é 1
     // transformação faturável na Vercel (cota do plano gratuito: 5.000/mês,
-    // já estourada duas vezes). Conjunto de reduções recomendado pela própria
-    // doc da Vercel ("Reducing Usage" em Image Optimization):
+    // já estourada repetidamente). Migrar para a transformação de imagem do
+    // Supabase Storage foi avaliado e descartado: o painel do próprio
+    // Supabase mostra "Storage Image Transformations — Not included in
+    // plan" no projeto atual (Free) — o endpoint responde e transforma de
+    // fato, mas não é um recurso coberto pelo plano, e pode ser cobrado ou
+    // bloqueado sem aviso. Trocaria um limite estourado por outro.
     //
-    // deviceSizes/imageSizes: restrito às larguras que algum `sizes=` deste
-    // site realmente pede — o maior é ~55vw em telas de até ~2560px, nunca os
-    // 3840px do padrão do Next. Não perde nitidez em nenhum dispositivo real,
-    // só corta variações nunca solicitadas.
+    // Conjunto de reduções recomendado pela doc da Vercel ("Reducing Usage"
+    // em Image Optimization) permanece, para esticar o quanto der a cota
+    // atual:
     deviceSizes: [420, 640, 828, 1080, 1440, 1920],
     imageSizes: [64, 96, 128, 160, 256],
-    // formats: nenhum componente pede AVIF explicitamente, e o padrão do Next
-    // gera AVIF *e* WebP por combinação de tamanho — dobrando as transformações
-    // por foto. Servir só WebP (suportado por todo navegador atual) corta essa
-    // duplicação sem perda visível de qualidade.
     formats: ["image/webp"],
-    // qualities: nenhum <Image> deste projeto define `quality`, todos usam o
-    // padrão implícito (75). Travar a allowlist em [75] impede que uma
-    // qualidade diferente e não intencional crie uma transformação nova.
     qualities: [75],
-    // minimumCacheTTL: fotos de produto não mudam depois de publicadas (a
-    // proprietária substitui o arquivo, não edita a URL) — 31 dias reduz
-    // quantas vezes a mesma transformação é regravada no cache da Vercel.
     minimumCacheTTL: 2678400,
-    // TEMPORÁRIO (3ª vez): cota de Image Optimization do plano gratuito
-    // segue em 402 mesmo com a config econômica acima (formats/qualities/
-    // deviceSizes reduzidos) — ela só limita o RITMO futuro de consumo, não
+    // TEMPORÁRIO: cota da Vercel segue estourada (402 em /_next/image) — a
+    // config econômica acima só reduz o ritmo futuro de consumo, não
     // devolve o que já foi gasto no ciclo atual. unoptimized tira a Vercel
     // dessa conta: <Image> aponta direto para a URL original do Supabase
-    // Storage. Custo aceito por ora: fotos mais lentas em conexão fraca.
-    // Remover assim que o ciclo renovar (checar em Vercel → Settings →
-    // Billing a data exata) — e se estourar de novo rápido depois disso,
-    // considerar upgrade de plano ou migrar para a transformação de imagem
-    // do Supabase Storage em vez de repetir este ciclo de novo.
+    // Storage, sem otimização (fotos mais lentas em conexão fraca, mas sem
+    // quebrar). Remover quando o ciclo renovar (Vercel → Settings →
+    // Billing) — se estourar de novo rápido, a decisão real que falta é
+    // upgrade de plano (Vercel Pro ou Supabase Pro), não outra config.
     unoptimized: true,
   },
   experimental: {
