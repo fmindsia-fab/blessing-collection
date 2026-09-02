@@ -33,6 +33,17 @@ const nextConfig: NextConfig = {
     // proprietária substitui o arquivo, não edita a URL) — 31 dias reduz
     // quantas vezes a mesma transformação é regravada no cache da Vercel.
     minimumCacheTTL: 2678400,
+    // TEMPORÁRIO (3ª vez): cota de Image Optimization do plano gratuito
+    // segue em 402 mesmo com a config econômica acima (formats/qualities/
+    // deviceSizes reduzidos) — ela só limita o RITMO futuro de consumo, não
+    // devolve o que já foi gasto no ciclo atual. unoptimized tira a Vercel
+    // dessa conta: <Image> aponta direto para a URL original do Supabase
+    // Storage. Custo aceito por ora: fotos mais lentas em conexão fraca.
+    // Remover assim que o ciclo renovar (checar em Vercel → Settings →
+    // Billing a data exata) — e se estourar de novo rápido depois disso,
+    // considerar upgrade de plano ou migrar para a transformação de imagem
+    // do Supabase Storage em vez de repetir este ciclo de novo.
+    unoptimized: true,
   },
   experimental: {
     serverActions: {
