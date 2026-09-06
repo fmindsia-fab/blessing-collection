@@ -10,31 +10,20 @@ const nextConfig: NextConfig = {
       },
     ],
     // Cada combinação (imagem × largura × qualidade × formato) é 1
-    // transformação faturável na Vercel (cota do plano gratuito: 5.000/mês,
-    // já estourada repetidamente). Migrar para a transformação de imagem do
-    // Supabase Storage foi avaliado e descartado: o painel do próprio
-    // Supabase mostra "Storage Image Transformations — Not included in
-    // plan" no projeto atual (Free) — o endpoint responde e transforma de
-    // fato, mas não é um recurso coberto pelo plano, e pode ser cobrado ou
-    // bloqueado sem aviso. Trocaria um limite estourado por outro.
+    // transformação faturável na Vercel. O time fez upgrade para o plano Pro
+    // (5 set 2026) especificamente por causa da cota de Image Optimization,
+    // que no plano Free (5.000/mês) estourava repetidamente. Otimização
+    // reativada — o Pro cobre uso sob demanda além do crédito incluso, em
+    // vez de bloquear com 402 como o Free fazia.
     //
     // Conjunto de reduções recomendado pela doc da Vercel ("Reducing Usage"
-    // em Image Optimization) permanece, para esticar o quanto der a cota
-    // atual:
+    // em Image Optimization) mantido mesmo no Pro — sem custo em nitidez,
+    // só evita gastar crédito/cota com variações que este site não usa:
     deviceSizes: [420, 640, 828, 1080, 1440, 1920],
     imageSizes: [64, 96, 128, 160, 256],
     formats: ["image/webp"],
     qualities: [75],
     minimumCacheTTL: 2678400,
-    // TEMPORÁRIO: cota da Vercel segue estourada (402 em /_next/image) — a
-    // config econômica acima só reduz o ritmo futuro de consumo, não
-    // devolve o que já foi gasto no ciclo atual. unoptimized tira a Vercel
-    // dessa conta: <Image> aponta direto para a URL original do Supabase
-    // Storage, sem otimização (fotos mais lentas em conexão fraca, mas sem
-    // quebrar). Remover quando o ciclo renovar (Vercel → Settings →
-    // Billing) — se estourar de novo rápido, a decisão real que falta é
-    // upgrade de plano (Vercel Pro ou Supabase Pro), não outra config.
-    unoptimized: true,
   },
   experimental: {
     serverActions: {
