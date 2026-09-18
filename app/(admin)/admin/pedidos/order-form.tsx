@@ -190,14 +190,19 @@ export function OrderForm({
         <span className="kicker">Itens do pedido</span>
 
         <div className="flex flex-col gap-4">
-          {items.map((item) => {
+          {items.map((item, index) => {
             const product = products.find((p) => p.id === item.productId);
             const isCustom = item.productId === "";
 
             return (
               <div key={item.key} className="rounded-[var(--radius-image)] border border-border p-4">
                 <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+                  {/* name direto no campo visível: os valores digitados vão para o
+                      submit sem depender de um hidden input espelhando o state, que
+                      dessincronizava (valor selecionado no <select> não chegava ao
+                      servidor). */}
                   <select
+                    name={`items[${index}].productId`}
                     value={item.productId}
                     onChange={(e) => selectProduct(item.key, e.target.value)}
                     aria-label="Produto"
@@ -224,6 +229,7 @@ export function OrderForm({
 
                 {!isCustom && product && product.variants.length > 0 ? (
                   <select
+                    name={`items[${index}].variantId`}
                     value={item.variantId}
                     onChange={(e) => selectVariant(item.key, item, e.target.value)}
                     aria-label="Variação"
@@ -238,11 +244,14 @@ export function OrderForm({
                       </option>
                     ))}
                   </select>
-                ) : null}
+                ) : (
+                  <input type="hidden" name={`items[${index}].variantId`} value="" />
+                )}
 
                 {isCustom ? (
                   <div className="mt-3 grid gap-3">
                     <Input
+                      name={`items[${index}].customName`}
                       value={item.customName}
                       onChange={(e) => updateItem(item.key, { customName: e.target.value })}
                       placeholder="Nome da peça personalizada"
@@ -250,6 +259,7 @@ export function OrderForm({
                       maxLength={120}
                     />
                     <Textarea
+                      name={`items[${index}].customDescription`}
                       value={item.customDescription}
                       onChange={(e) => updateItem(item.key, { customDescription: e.target.value })}
                       placeholder="Detalhes da personalização (cor, tamanho, observações)…"
@@ -257,12 +267,18 @@ export function OrderForm({
                       rows={2}
                     />
                   </div>
-                ) : null}
+                ) : (
+                  <>
+                    <input type="hidden" name={`items[${index}].customName`} value="" />
+                    <input type="hidden" name={`items[${index}].customDescription`} value="" />
+                  </>
+                )}
 
                 <div className="mt-3 grid grid-cols-2 gap-3 sm:w-64">
                   <div className="flex flex-col gap-1">
                     <Label className="text-xs">Quantidade</Label>
                     <Input
+                      name={`items[${index}].quantity`}
                       type="number"
                       min="1"
                       step="1"
@@ -273,6 +289,7 @@ export function OrderForm({
                   <div className="flex flex-col gap-1">
                     <Label className="text-xs">Preço unitário (R$)</Label>
                     <Input
+                      name={`items[${index}].unitPrice`}
                       type="number"
                       min="0"
                       step="0.01"
@@ -281,18 +298,6 @@ export function OrderForm({
                     />
                   </div>
                 </div>
-
-                {/* Campos ocultos: o schema do servidor lê por índice (items[N].campo). */}
-                <input type="hidden" name={`items[${items.indexOf(item)}].productId`} value={item.productId} />
-                <input type="hidden" name={`items[${items.indexOf(item)}].variantId`} value={item.variantId} />
-                <input type="hidden" name={`items[${items.indexOf(item)}].customName`} value={item.customName} />
-                <input
-                  type="hidden"
-                  name={`items[${items.indexOf(item)}].customDescription`}
-                  value={item.customDescription}
-                />
-                <input type="hidden" name={`items[${items.indexOf(item)}].quantity`} value={item.quantity} />
-                <input type="hidden" name={`items[${items.indexOf(item)}].unitPrice`} value={item.unitPrice} />
               </div>
             );
           })}
