@@ -188,10 +188,12 @@ export async function listOrdersForMonth(storeId: string, year: number, month: n
     .lt("expected_delivery_date", end)
     .order("expected_delivery_date", { ascending: true });
 
-  return (data ?? []).map((row) => ({
+  const rows = (data ?? []).map((row) => ({
     ...row,
     customer: Array.isArray(row.customer) ? (row.customer[0] ?? null) : row.customer,
   }));
+
+  return attachItemsSummary(supabase, rows);
 }
 
 export async function getOrder(storeId: string, orderId: string) {

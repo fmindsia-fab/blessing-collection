@@ -472,6 +472,16 @@ ignoravam o campo `error` do Supabase e retornavam vazio sem log algum — agora
       clicável para editar, pouco óbvio) — a tela de edição já existia desde o M12
 - [x] `next build`, `tsc --noEmit`, `eslint` e suíte completa (232 testes) verdes
 
+**Calendário redesenhado:**
+- [x] Grade com navegação "Anterior/Hoje/Próximo" (`ActionLink`, ícones), dia atual destacado em
+      dourado, células preenchidas até fechar semanas completas de 7 colunas
+- [x] Cada pedido no dia mostra cliente **e** nome do(s) produto(s) (via `attachItemsSummary`,
+      reaproveitado de `listOrders`), com um indicador de cor sutil por status; clique no card leva
+      direto ao pedido (já era `<Link>`, só reforçado visualmente)
+- [x] `listOrdersForMonth` passou a chamar `attachItemsSummary` — mesma função usada no Kanban,
+      sem N+1
+- [x] `next build`, `tsc --noEmit`, `eslint` e suíte completa (232 testes) verdes
+
 ### M9 — Sistema de botões, links e setas
 
 - [x] `components/ui/action.tsx`: vocabulário único de ações (`solid`, `outline`, `quiet`, `underline`,
