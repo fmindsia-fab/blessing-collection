@@ -20,6 +20,8 @@ export type AnalyticsEventType =
   | "whatsapp_click"
   | "category_view"
   | "collection_view";
+/** Fluxo completo de encomenda (migration 0025), do orçamento à entrega. */
+export type OrderStatus = "quote" | "confirmed" | "in_production" | "ready" | "delivered" | "cancelled";
 
 export interface Database {
   public: {
@@ -274,6 +276,122 @@ export interface Database {
         };
         Update: Partial<Database["public"]["Tables"]["materials"]["Insert"]>;
         Relationships: [];
+      };
+      customers: {
+        Row: {
+          id: string;
+          store_id: string;
+          name: string;
+          phone: string | null;
+          notes: string | null;
+          status: ArchivableStatus;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          store_id: string;
+          name: string;
+          phone?: string | null;
+          notes?: string | null;
+          status?: ArchivableStatus;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["customers"]["Insert"]>;
+        Relationships: [];
+      };
+      orders: {
+        Row: {
+          id: string;
+          store_id: string;
+          customer_id: string;
+          status: OrderStatus;
+          order_date: string;
+          expected_delivery_date: string | null;
+          delivered_at: string | null;
+          deposit_amount: number;
+          deposit_paid_at: string | null;
+          deposit_payment_method_id: string | null;
+          balance_amount: number;
+          balance_paid_at: string | null;
+          balance_payment_method_id: string | null;
+          total_amount: number;
+          notes: string | null;
+          production_notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          store_id: string;
+          customer_id: string;
+          status?: OrderStatus;
+          order_date?: string;
+          expected_delivery_date?: string | null;
+          delivered_at?: string | null;
+          deposit_amount?: number;
+          deposit_paid_at?: string | null;
+          deposit_payment_method_id?: string | null;
+          balance_amount?: number;
+          balance_paid_at?: string | null;
+          balance_payment_method_id?: string | null;
+          total_amount?: number;
+          notes?: string | null;
+          production_notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["orders"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "orders_customer_id_fkey";
+            columns: ["customer_id"];
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      order_items: {
+        Row: {
+          id: string;
+          order_id: string;
+          product_id: string | null;
+          variant_id: string | null;
+          custom_name: string | null;
+          custom_description: string | null;
+          quantity: number;
+          unit_price: number;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          order_id: string;
+          product_id?: string | null;
+          variant_id?: string | null;
+          custom_name?: string | null;
+          custom_description?: string | null;
+          quantity?: number;
+          unit_price?: number;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["order_items"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey";
+            columns: ["order_id"];
+            referencedRelation: "orders";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "order_items_product_id_fkey";
+            columns: ["product_id"];
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       colors: {
         Row: {

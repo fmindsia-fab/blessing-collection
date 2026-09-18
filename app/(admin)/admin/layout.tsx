@@ -6,6 +6,8 @@ import { getActiveStore } from "@/lib/store/get-active-store";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard" },
+  { href: "/admin/pedidos", label: "Pedidos" },
+  { href: "/admin/clientes", label: "Clientes" },
   { href: "/admin/produtos", label: "Produtos" },
   { href: "/admin/categorias", label: "Categorias" },
   { href: "/admin/colecoes", label: "Coleções" },

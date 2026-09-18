@@ -342,6 +342,57 @@ escuro). Fecha o último critério de acessibilidade do PRD seção 15 que depen
    no nome do produto, o que funciona mas não descreve a foto (PRD 15).
 3. **Nenhum `seo_description`** preenchido — a metadata cai na descrição do produto.
 
+### M12 — Controle de pedidos (encomendas)
+
+Extensão de escopo aprovada pelo usuário sobre o PRD (seção 5.2 excluía "controle financeiro" e
+"controle avançado de estoque" do MVP): este milestone é um controle de **encomendas** — cliente,
+itens, prazos e pagamento (sinal/saldo) de pedidos já fechados via WhatsApp — não um financeiro
+completo (sem contas a pagar/fluxo de caixa) nem estoque (sem baixa automática de insumo).
+
+Decisões confirmadas com o usuário antes de implementar:
+- Item do pedido pode ser um produto do catálogo (com variante opcional) ou avulso/personalizado
+  (nome digitado na hora), cobrindo encomenda sob medida fora do catálogo.
+- Cliente vira cadastro próprio (`customers`), com histórico de pedidos, não texto solto no pedido.
+- Pagamento em sinal + saldo (valor/data/forma de pagamento para cada um), reaproveitando
+  `payment_methods` já existente (migration 0014).
+- Fluxo de status completo: orçamento → confirmado → em produção → pronto → entregue / cancelado.
+- Lista de produção é **derivada automaticamente**: soma os `product_materials` (migration 0014,
+  já usados na ficha de "Formação de preço" de cada produto) multiplicados pela quantidade
+  encomendada, agregando por material entre os itens do pedido — mais um campo de texto livre
+  (`production_notes`) para insumo extra fora do cadastro.
+- Único extra de boas práticas aceito além do pedido original: alerta de pedidos atrasados
+  (previsão de entrega vencida sem status entregue/cancelado) na lista de pedidos. Descartados:
+  timeline de mudança de status, número sequencial do pedido, e vínculo com analytics — mantidos
+  fora por decisão explícita do usuário.
+
+- [x] Migration `0025_orders.sql`: `customers`, `orders`, `order_items` — RLS só para a dona
+      (mesmo padrão de `payment_methods`/`product_materials`: dado de negócio sensível, sem
+      policy pública de leitura)
+- [x] `lib/customers/{queries,actions}.ts` — CRUD com soft delete (`status`) via `toggleCustomer`
+- [x] `lib/orders/{queries,actions}.ts` — criação/edição de pedido com itens, cálculo de
+      `total_amount`, mudança de status, lista de produção agregada (`getOrderProductionList`)
+- [x] Rotas admin: `/admin/pedidos` (lista + filtro de status + busca por cliente + alerta de
+      atraso), `/admin/pedidos/novo`, `/admin/pedidos/[id]` (detalhe + lista de produção),
+      `/admin/pedidos/[id]/editar`, `/admin/pedidos/calendario` (visão mensal por previsão de
+      entrega), `/admin/clientes` (lista + cadastro), `/admin/clientes/[id]` (edição + histórico)
+- [x] `types/database.types.ts`: tipos de `customers`, `orders`, `order_items` e `OrderStatus`
+- [x] Nav do painel atualizada com "Pedidos" e "Clientes"
+- [x] `next build` verde, `tsc --noEmit` e `eslint` sem erros nos arquivos novos
+
+- [x] Migration `0025_orders.sql` aplicada em produção (usuário confirmou via SQL Editor do
+      Supabase Studio)
+- [x] Cálculo de total do pedido e agregação da lista de produção extraídos para
+      `lib/orders/calculate.ts` (funções puras, mesmo padrão de `lib/pricing/calculate.ts`) e
+      reaproveitados em `actions.ts`/`queries.ts`
+- [x] Teste: total do pedido soma quantidade × preço por item — `tests/unit/orders-calculate.test.ts`
+- [x] Teste: lista de produção multiplica material pela quantidade encomendada, soma entre peças
+      diferentes do mesmo pedido e ignora produto fora do pedido — `tests/unit/orders-calculate.test.ts`
+- [x] `next build`, `tsc --noEmit` e suíte completa (226 testes) verdes após o milestone
+
+**Pendente:** validação manual do fluxo completo no painel (criar cliente, criar pedido com item de
+catálogo e item avulso, mudar status, conferir lista de produção e alerta de atraso) — a fazer pelo
+usuário agora que a migration está em produção.
+
 ### M9 — Sistema de botões, links e setas
 
 - [x] `components/ui/action.tsx`: vocabulário único de ações (`solid`, `outline`, `quiet`, `underline`,
