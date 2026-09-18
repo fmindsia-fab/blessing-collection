@@ -140,7 +140,10 @@ export async function createOrder(
     .select("id")
     .single();
 
-  if (error || !order) return { error: "Não foi possível criar o pedido." };
+  if (error || !order) {
+    if (error) console.error("createOrder (pedido) falhou:", error.message);
+    return { error: "Não foi possível criar o pedido." };
+  }
 
   const { error: itemsError } = await supabase.from("order_items").insert(
     data.items.map((item, index) => ({
@@ -156,6 +159,7 @@ export async function createOrder(
   );
 
   if (itemsError) {
+    console.error("createOrder (itens) falhou:", itemsError.message);
     // Sem itens, o pedido fica órfão — melhor desfazer do que deixar um
     // registro inconsistente no painel.
     await supabase.from("orders").delete().eq("id", order.id);

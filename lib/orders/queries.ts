@@ -61,7 +61,11 @@ export async function listOrders(
 
   if (filters.status) query = query.eq("status", filters.status);
 
-  const { data } = await query;
+  const { data, error } = await query;
+  if (error) {
+    console.error("listOrders falhou:", error.message);
+    return [];
+  }
   let rows = (data ?? []).map((row) => ({
     ...row,
     customer: Array.isArray(row.customer) ? (row.customer[0] ?? null) : row.customer,
@@ -123,22 +127,25 @@ export async function listOrdersForMonth(storeId: string, year: number, month: n
 export async function getOrder(storeId: string, orderId: string) {
   const supabase = await createServerSupabaseClient();
 
-  const { data: order } = await supabase
+  const { data: order, error: orderError } = await supabase
     .from("orders")
     .select("*, customer:customers(id, name, phone)")
     .eq("id", orderId)
     .eq("store_id", storeId)
     .maybeSingle();
 
+  if (orderError) console.error("getOrder (pedido) falhou:", orderError.message);
   if (!order) return null;
 
-  const { data: items } = await supabase
+  const { data: items, error: itemsError } = await supabase
     .from("order_items")
     .select(
       "id, product_id, variant_id, custom_name, custom_description, quantity, unit_price, sort_order, product:products(id, name), variant:product_variants(id, name, color, size)",
     )
     .eq("order_id", orderId)
     .order("sort_order", { ascending: true });
+
+  if (itemsError) console.error("getOrder (itens) falhou:", itemsError.message);
 
   return {
     order: {
@@ -162,20 +169,23 @@ export async function getOrder(storeId: string, orderId: string) {
 export async function getOrderProductionList(orderId: string) {
   const supabase = await createServerSupabaseClient();
 
-  const { data: items } = await supabase
+  const { data: items, error: itemsError } = await supabase
     .from("order_items")
     .select("product_id, quantity")
     .eq("order_id", orderId)
     .not("product_id", "is", null);
 
+  if (itemsError) console.error("getOrderProductionList (itens) falhou:", itemsError.message);
   if (!items || items.length === 0) return [];
 
   const productIds = [...new Set(items.map((item) => item.product_id as string))];
 
-  const { data: materials } = await supabase
+  const { data: materials, error: materialsError } = await supabase
     .from("product_materials")
     .select("product_id, description, quantity, unit, material_id, materials(name, unit)")
     .in("product_id", productIds);
+
+  if (materialsError) console.error("getOrderProductionList (materiais) falhou:", materialsError.message);
 
   const quantityByProduct = new Map<string, number>();
   for (const item of items) {
