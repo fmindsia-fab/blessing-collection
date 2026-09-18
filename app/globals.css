@@ -95,38 +95,46 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
+/*
+ * Escuro do painel administrativo (só /admin/*, nunca o catálogo público —
+ * decisão do usuário: a identidade da marca em pergaminho/dourado é
+ * proposital do lado público). Mesma linguagem editorial da paleta clara:
+ * marrom bem escuro em vez de preto puro, pergaminho claro como texto,
+ * dourado envelhecido preservado como único acento.
+ */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
+  --background: oklch(0.195 0.014 45);   /* café bem escuro, não preto */
+  --foreground: oklch(0.945 0.012 70);   /* pergaminho claro */
+  --card: oklch(0.235 0.016 45);
+  --card-foreground: oklch(0.945 0.012 70);
+  --popover: oklch(0.235 0.016 45);
+  --popover-foreground: oklch(0.945 0.012 70);
+  --primary: oklch(0.905 0.028 75);
+  --primary-foreground: oklch(0.235 0.016 45);
+  --secondary: oklch(0.285 0.018 48);
+  --secondary-foreground: oklch(0.945 0.012 70);
+  --muted: oklch(0.285 0.018 48);
+  --muted-foreground: oklch(0.665 0.02 60);
+  --accent: oklch(0.325 0.024 55);
+  --accent-foreground: oklch(0.945 0.012 70);
+  --destructive: oklch(0.645 0.165 25);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --ring: oklch(0.685 0.085 78);
+  --chart-1: oklch(0.72 0.07 70);
+  --chart-2: oklch(0.62 0.055 55);
+  --chart-3: oklch(0.52 0.04 45);
+  --chart-4: oklch(0.42 0.03 40);
+  --chart-5: oklch(0.32 0.02 38);
+  --gold: oklch(0.735 0.095 78);         /* levemente mais claro no escuro para contraste */
+  --sidebar: oklch(0.235 0.016 45);
+  --sidebar-foreground: oklch(0.945 0.012 70);
+  --sidebar-primary: oklch(0.905 0.028 75);
+  --sidebar-primary-foreground: oklch(0.235 0.016 45);
+  --sidebar-accent: oklch(0.285 0.018 48);
+  --sidebar-accent-foreground: oklch(0.945 0.012 70);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-ring: oklch(0.685 0.085 78);
 }
 
 @layer base {
@@ -186,5 +194,20 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* Card do Kanban ao pousar na nova coluna (app/(admin)/admin/pedidos). */
+@keyframes kanban-pop {
+  0% {
+    transform: scale(0.92);
+    box-shadow: 0 0 0 2px var(--gold);
+  }
+  60% {
+    transform: scale(1.03);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: none;
   }
 }

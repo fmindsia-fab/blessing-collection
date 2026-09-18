@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { LogoutButton } from "./logout-button";
 import { AdminNavLink } from "./admin-nav-link";
+import { AdminThemeProvider } from "./theme-provider";
+import { ThemeToggle } from "./theme-toggle";
 import { ShareButton } from "@/components/shared/share-button";
 import { getActiveStore } from "@/lib/store/get-active-store";
 
@@ -26,7 +28,7 @@ export default async function AdminAreaLayout({ children }: { children: React.Re
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
 
   return (
-    <div className="flex flex-1 flex-col">
+    <AdminThemeProvider>
       <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-md">
         <div className="flex items-center justify-between gap-6 px-6 py-4 lg:px-10">
           <div className="flex items-center gap-8">
@@ -61,6 +63,7 @@ export default async function AdminAreaLayout({ children }: { children: React.Re
             >
               Ver catálogo ↗
             </Link>
+            <ThemeToggle />
             <LogoutButton />
           </div>
         </div>
@@ -74,6 +77,6 @@ export default async function AdminAreaLayout({ children }: { children: React.Re
       </header>
 
       <div className="flex flex-1 flex-col px-6 py-10 lg:px-10">{children}</div>
-    </div>
+    </AdminThemeProvider>
   );
 }

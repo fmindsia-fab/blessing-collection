@@ -416,6 +416,27 @@ ignoravam o campo `error` do Supabase e retornavam vazio sem log algum — agora
       permanece coberta pelos botões de status já existentes na tela de detalhe do pedido
 - [x] `next build`, `tsc --noEmit`, `eslint` e suíte completa (232 testes) verdes
 
+**Ajustes pedidos após o primeiro uso do Kanban:**
+- [x] Visual dos cards/colunas refinado (achatado demais na primeira versão): borda tracejada nas
+      colunas, destaque dourado + leve zoom na coluna sob o card arrastado, cards com sombra que
+      cresce no hover, leve rotação/escala/opacidade durante o arraste
+- [x] Animação ao soltar o card na nova coluna (`@keyframes kanban-pop` em `globals.css`) —
+      respeita `prefers-reduced-motion` (já zerado globalmente para toda animação/transição)
+- [x] **Tema escuro do painel administrativo** (`/admin/*` apenas — decisão do usuário: o catálogo
+      público mantém sempre a identidade visual da loja, nunca varia). Toggle no header
+      (`theme-toggle.tsx`), preferência em `localStorage` (não é dado de negócio, sem banco).
+      Paleta escura adaptada à linguagem editorial da marca (café bem escuro, não preto puro;
+      pergaminho claro como texto; dourado preservado como acento) — não o cinza genérico do
+      template shadcn que já existia em `.dark` no CSS. `lib/store/dark-mode.ts` repete essas
+      variáveis para sobrescrever via `style` inline no wrapper do admin: `buildStoreTheme` já
+      define `--background`/`--foreground`/etc via `style` inline no `<body>` (para refletir a
+      paleta da loja), e inline sempre vence regra de classe para a mesma custom property — a
+      classe `.dark` sozinha não seria suficiente para vencer isso.
+- [x] `theme-provider.tsx` segue o mesmo padrão de `lib/selection/selection-context.tsx`
+      (`useSyncExternalStore` + inicialização preguiçosa no `useState`, sem `setState` em efeito)
+      — lint `react-hooks/set-state-in-effect` pego e corrigido antes do commit
+- [x] `next build`, `tsc --noEmit`, `eslint` e suíte completa (232 testes) verdes
+
 ### M9 — Sistema de botões, links e setas
 
 - [x] `components/ui/action.tsx`: vocabulário único de ações (`solid`, `outline`, `quiet`, `underline`,

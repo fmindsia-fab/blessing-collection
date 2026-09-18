@@ -21,6 +21,9 @@ export function OrdersKanban({ orders }: { orders: OrderListRow[] }) {
   const [localOrders, setLocalOrders] = useState(orders);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [overStatus, setOverStatus] = useState<OrderStatus | null>(null);
+  // Card que acabou de trocar de coluna: recebe a animação de entrada por um
+  // instante só, depois volta ao normal (senão reanimaria a cada revalidação).
+  const [justMovedId, setJustMovedId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const signature = orders.map((o) => `${o.id}:${o.status}`).join("|");
@@ -38,11 +41,13 @@ export function OrdersKanban({ orders }: { orders: OrderListRow[] }) {
     // reconcilia com o servidor no próximo render, mesmo padrão do
     // sortable-list.tsx de produtos.
     setLocalOrders((current) => current.map((o) => (o.id === orderId ? { ...o, status } : o)));
+    setJustMovedId(orderId);
+    window.setTimeout(() => setJustMovedId((current) => (current === orderId ? null : current)), 320);
     startTransition(() => updateOrderStatus(orderId, status));
   }
 
   return (
-    <div className="-mx-6 flex gap-4 overflow-x-auto px-6 pb-4 lg:-mx-10 lg:px-10">
+    <div className="-mx-6 flex gap-5 overflow-x-auto px-6 pb-4 lg:-mx-10 lg:px-10">
       {ORDER_STATUS_ORDER.map((status) => {
         const columnOrders = localOrders.filter((o) => o.status === status);
 
@@ -59,18 +64,22 @@ export function OrdersKanban({ orders }: { orders: OrderListRow[] }) {
               if (draggingId) moveOrder(draggingId, status);
               setOverStatus(null);
             }}
-            className={`flex w-72 shrink-0 flex-col gap-3 rounded-[var(--radius-image)] border p-3 transition-colors ${
-              overStatus === status ? "border-[var(--gold)] bg-secondary/40" : "border-border bg-secondary/15"
+            className={`flex w-72 shrink-0 flex-col gap-3 rounded-[var(--radius-image)] border-2 border-dashed p-3 transition-all duration-200 ${
+              overStatus === status
+                ? "scale-[1.02] border-[var(--gold)] bg-[var(--gold)]/8 shadow-md"
+                : "border-transparent bg-secondary/25"
             }`}
           >
-            <div className="flex items-center justify-between gap-2 px-1">
-              <span className="text-xs font-medium uppercase tracking-[0.1em] text-muted-foreground">
+            <div className="flex items-center justify-between gap-2 px-1 pb-1">
+              <span className="text-xs font-semibold uppercase tracking-[0.12em] text-foreground">
                 {ORDER_STATUS_LABEL[status]}
               </span>
-              <span className="text-xs text-muted-foreground">{columnOrders.length}</span>
+              <span className="flex size-5 items-center justify-center rounded-full bg-secondary text-[0.625rem] font-medium tabular-nums text-muted-foreground">
+                {columnOrders.length}
+              </span>
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2.5">
               {columnOrders.map((order) => (
                 <div
                   key={order.id}
@@ -84,9 +93,13 @@ export function OrdersKanban({ orders }: { orders: OrderListRow[] }) {
                     setDraggingId(null);
                     setOverStatus(null);
                   }}
-                  className={`group flex flex-col gap-2 rounded-[var(--radius)] border border-border bg-background p-3 shadow-sm transition-opacity ${
-                    draggingId === order.id ? "opacity-40" : ""
-                  } ${isPending ? "pointer-events-none" : ""}`}
+                  className={`group flex cursor-grab flex-col gap-2 rounded-[var(--radius)] border border-border bg-card p-3.5 shadow-sm transition-all duration-200 ease-out active:cursor-grabbing ${
+                    draggingId === order.id
+                      ? "rotate-2 scale-105 opacity-50 shadow-lg"
+                      : "hover:-translate-y-0.5 hover:shadow-md"
+                  } ${justMovedId === order.id ? "animate-[kanban-pop_0.32s_ease-out]" : ""} ${
+                    isPending ? "pointer-events-none" : ""
+                  }`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <Link
@@ -112,7 +125,7 @@ export function OrdersKanban({ orders }: { orders: OrderListRow[] }) {
                     {order.expected_delivery_date ? ` · entrega ${formatOrderDate(order.expected_delivery_date)}` : ""}
                   </span>
 
-                  <span className="text-sm tabular-nums">{formatBRL(order.total_amount)}</span>
+                  <span className="text-sm font-medium tabular-nums">{formatBRL(order.total_amount)}</span>
                 </div>
               ))}
 
