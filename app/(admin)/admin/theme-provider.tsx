@@ -30,6 +30,15 @@ function readStoredPreference(): boolean {
  * e inline sempre vence regra de classe para a mesma custom property — por
  * isso o dark mode não pode depender só da classe `.dark` do CSS.
  *
+ * `text-foreground`/`bg-background` explícitos aqui (não só a variável) são
+ * essenciais: `color` é herdado pelo valor JÁ COMPUTADO, não recalculado a
+ * cada elemento. O `<body>` fixa `color: var(--foreground)` resolvido para o
+ * tema claro da loja (globals.css, `body { @apply text-foreground }`); sem
+ * este wrapper recalcular `color` no ponto onde `--foreground` já foi
+ * sobrescrito, todo texto sem classe de cor própria (a maioria das células
+ * de tabela, por exemplo) herdava a cor clara do body — café escuro sobre
+ * fundo escuro, quase ilegível.
+ *
  * Mesmo padrão de lib/selection/selection-context.tsx: inicialização
  * preguiçosa no useState (sem setState em efeito) + useSyncExternalStore só
  * para saber quando a hidratação terminou, evitando divergência entre o
@@ -58,7 +67,7 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
   return (
     <ThemeContext.Provider value={{ isDark, toggle: () => setIsDark((v) => !v) }}>
       <div
-        className={isDark ? "dark flex flex-1 flex-col" : "flex flex-1 flex-col"}
+        className={isDark ? "dark flex flex-1 flex-col bg-background text-foreground" : "flex flex-1 flex-col"}
         style={isDark ? (DARK_MODE_VARS as React.CSSProperties) : undefined}
       >
         {children}
