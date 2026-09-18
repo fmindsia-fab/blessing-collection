@@ -6,6 +6,7 @@ import { TrashIcon } from "lucide-react";
 import { createOrder, updateOrder, type OrderFormState } from "@/lib/orders/actions";
 import { formatBRL } from "@/lib/orders/labels";
 import { formatPhoneBR } from "@/lib/customers/phone-mask";
+import { NewCustomerInline } from "./new-customer-inline";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -81,6 +82,9 @@ export function OrderForm({
   const action = order ? updateOrder.bind(null, order.id) : createOrder;
   const [state, formAction, isPending] = useActionState(action, initialState);
 
+  const [customerList, setCustomerList] = useState(customers);
+  const [customerId, setCustomerId] = useState(order?.customer_id ?? "");
+
   const [items, setItems] = useState<ItemRow[]>(() => {
     if (initialItems && initialItems.length > 0) {
       return initialItems.map((item) => ({
@@ -141,20 +145,27 @@ export function OrderForm({
               id="customerId"
               name="customerId"
               required
-              defaultValue={order?.customer_id ?? ""}
+              value={customerId}
+              onChange={(e) => setCustomerId(e.target.value)}
               className="h-9 rounded-[var(--radius)] border border-input bg-background px-3 text-sm outline-none transition-colors focus-visible:border-foreground/40 focus-visible:ring-2 focus-visible:ring-[var(--gold)]/40"
             >
               <option value="" disabled>
                 Selecione…
               </option>
-              {customers.map((customer) => (
+              {customerList.map((customer) => (
                 <option key={customer.id} value={customer.id}>
                   {customer.name}
                   {customer.phone ? ` — ${formatPhoneBR(customer.phone)}` : ""}
                 </option>
               ))}
             </select>
-            {customers.length === 0 ? (
+            <NewCustomerInline
+              onCreated={(customer) => {
+                setCustomerList((prev) => [...prev, customer].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")));
+                setCustomerId(customer.id);
+              }}
+            />
+            {customerList.length === 0 ? (
               <p className="text-xs text-muted-foreground">
                 Nenhuma cliente cadastrada.{" "}
                 <Link href="/admin/clientes" className="underline underline-offset-2">

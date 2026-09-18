@@ -11,6 +11,76 @@ export type OrderListRow = {
   customer: { id: string; name: string } | null;
 };
 
+/** OrderListRow + resumo dos itens (nome/capa), usado nos cards do Kanban. */
+export type OrderKanbanRow = OrderListRow & {
+  itemsSummary: { label: string; coverImageUrl: string | null };
+};
+
+/**
+ * Busca o(s) nome(s) dos itens de cada pedido e a foto de capa do primeiro
+ * item que é produto do catálogo — usado no Kanban, sem N+1 (uma query para
+ * todos os pedidos da tela, não uma por pedido).
+ */
+async function attachItemsSummary<T extends { id: string }>(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  orders: T[],
+): Promise<(T & { itemsSummary: { label: string; coverImageUrl: string | null } })[]> {
+  if (orders.length === 0) return [];
+
+  const { data: items } = await supabase
+    .from("order_items")
+    .select("order_id, custom_name, sort_order, product:products(id, name)")
+    .in(
+      "order_id",
+      orders.map((o) => o.id),
+    )
+    .order("sort_order", { ascending: true });
+
+  const itemsByOrder = new Map<string, { name: string; productId: string | null }[]>();
+  for (const item of items ?? []) {
+    const product = Array.isArray(item.product) ? (item.product[0] ?? null) : item.product;
+    const list = itemsByOrder.get(item.order_id) ?? [];
+    list.push({ name: product?.name ?? item.custom_name ?? "Item", productId: product?.id ?? null });
+    itemsByOrder.set(item.order_id, list);
+  }
+
+  // Capa do primeiro item de catálogo de cada pedido (um único IN para todos).
+  const firstProductIds = [...itemsByOrder.values()]
+    .map((list) => list.find((i) => i.productId)?.productId)
+    .filter((id): id is string => Boolean(id));
+
+  const { data: covers } =
+    firstProductIds.length > 0
+      ? await supabase
+          .from("product_images")
+          .select("product_id, url")
+          .in("product_id", firstProductIds)
+          .eq("is_cover", true)
+      : { data: [] };
+
+  const coverByProduct = new Map((covers ?? []).map((c) => [c.product_id, c.url]));
+
+  return orders.map((order) => {
+    const list = itemsByOrder.get(order.id) ?? [];
+    const names = list.map((i) => i.name);
+    const label =
+      names.length === 0
+        ? "Sem itens"
+        : names.length === 1
+          ? names[0]
+          : `${names[0]} +${names.length - 1}`;
+    const firstProductId = list.find((i) => i.productId)?.productId ?? null;
+
+    return {
+      ...order,
+      itemsSummary: {
+        label,
+        coverImageUrl: firstProductId ? (coverByProduct.get(firstProductId) ?? null) : null,
+      },
+    };
+  });
+}
+
 /** Produtos/variantes ativos, para o seletor de item do pedido. */
 export async function listProductsForOrderPicker(storeId: string) {
   const supabase = await createServerSupabaseClient();
@@ -50,7 +120,7 @@ export async function listProductsForOrderPicker(storeId: string) {
 export async function listOrders(
   storeId: string,
   filters: { status?: OrderStatus; search?: string } = {},
-): Promise<OrderListRow[]> {
+): Promise<OrderKanbanRow[]> {
   const supabase = await createServerSupabaseClient();
 
   let query = supabase
@@ -78,7 +148,7 @@ export async function listOrders(
     if (term) rows = rows.filter((row) => row.customer?.name.toLowerCase().includes(term));
   }
 
-  return rows;
+  return attachItemsSummary(supabase, rows);
 }
 
 /**
@@ -147,15 +217,31 @@ export async function getOrder(storeId: string, orderId: string) {
 
   if (itemsError) console.error("getOrder (itens) falhou:", itemsError.message);
 
+  const resolvedItems = (items ?? []).map((item) => ({
+    ...item,
+    product: Array.isArray(item.product) ? (item.product[0] ?? null) : item.product,
+    variant: Array.isArray(item.variant) ? (item.variant[0] ?? null) : item.variant,
+  }));
+
+  const productIds = [...new Set(resolvedItems.map((item) => item.product?.id).filter((id): id is string => Boolean(id)))];
+  const { data: covers } =
+    productIds.length > 0
+      ? await supabase
+          .from("product_images")
+          .select("product_id, url")
+          .in("product_id", productIds)
+          .eq("is_cover", true)
+      : { data: [] };
+  const coverByProduct = new Map((covers ?? []).map((c) => [c.product_id, c.url]));
+
   return {
     order: {
       ...order,
       customer: Array.isArray(order.customer) ? (order.customer[0] ?? null) : order.customer,
     },
-    items: (items ?? []).map((item) => ({
+    items: resolvedItems.map((item) => ({
       ...item,
-      product: Array.isArray(item.product) ? (item.product[0] ?? null) : item.product,
-      variant: Array.isArray(item.variant) ? (item.variant[0] ?? null) : item.variant,
+      coverImageUrl: item.product ? (coverByProduct.get(item.product.id) ?? null) : null,
     })),
   };
 }

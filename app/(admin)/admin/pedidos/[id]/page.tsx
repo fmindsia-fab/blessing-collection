@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { getOrder, getOrderProductionList } from "@/lib/orders/queries";
 import { formatPhoneBR } from "@/lib/customers/phone-mask";
@@ -44,22 +45,37 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         <span className="kicker">Itens</span>
         <div className="flex flex-col divide-y divide-border border-y border-border">
           {items.map((item) => (
-            <div key={item.id} className="flex items-center justify-between gap-4 py-3">
-              <div className="flex min-w-0 flex-col">
-                <span className="truncate text-sm">
-                  {item.product?.name ?? item.custom_name}
-                  {item.variant ? ` — ${item.variant.name}` : ""}
-                </span>
-                {item.custom_description ? (
-                  <span className="text-xs text-muted-foreground">{item.custom_description}</span>
-                ) : null}
-                <span className="text-xs text-muted-foreground">
-                  {item.quantity} × {formatBRL(item.unit_price)}
+            <div key={item.id} className="flex items-center gap-3 py-3">
+              {item.coverImageUrl ? (
+                <Image
+                  src={item.coverImageUrl}
+                  alt=""
+                  width={48}
+                  height={48}
+                  className="size-12 shrink-0 rounded-[var(--radius)] border border-border object-cover"
+                />
+              ) : (
+                <div className="flex size-12 shrink-0 items-center justify-center rounded-[var(--radius)] border border-dashed border-border text-[0.5625rem] text-muted-foreground">
+                  s/foto
+                </div>
+              )}
+              <div className="flex min-w-0 flex-1 items-center justify-between gap-4">
+                <div className="flex min-w-0 flex-col">
+                  <span className="truncate text-sm">
+                    {item.product?.name ?? item.custom_name}
+                    {item.variant ? ` — ${item.variant.name}` : ""}
+                  </span>
+                  {item.custom_description ? (
+                    <span className="text-xs text-muted-foreground">{item.custom_description}</span>
+                  ) : null}
+                  <span className="text-xs text-muted-foreground">
+                    {item.quantity} × {formatBRL(item.unit_price)}
+                  </span>
+                </div>
+                <span className="shrink-0 text-sm tabular-nums">
+                  {formatBRL(item.quantity * item.unit_price)}
                 </span>
               </div>
-              <span className="shrink-0 text-sm tabular-nums">
-                {formatBRL(item.quantity * item.unit_price)}
-              </span>
             </div>
           ))}
         </div>

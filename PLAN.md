@@ -435,16 +435,41 @@ ignoravam o campo `error` do Supabase e retornavam vazio sem log algum — agora
 - [x] **Tema escuro do painel administrativo** (`/admin/*` apenas — decisão do usuário: o catálogo
       público mantém sempre a identidade visual da loja, nunca varia). Toggle no header
       (`theme-toggle.tsx`), preferência em `localStorage` (não é dado de negócio, sem banco).
-      Paleta escura adaptada à linguagem editorial da marca (café bem escuro, não preto puro;
-      pergaminho claro como texto; dourado preservado como acento) — não o cinza genérico do
-      template shadcn que já existia em `.dark` no CSS. `lib/store/dark-mode.ts` repete essas
-      variáveis para sobrescrever via `style` inline no wrapper do admin: `buildStoreTheme` já
-      define `--background`/`--foreground`/etc via `style` inline no `<body>` (para refletir a
-      paleta da loja), e inline sempre vence regra de classe para a mesma custom property — a
-      classe `.dark` sozinha não seria suficiente para vencer isso.
+      `lib/store/dark-mode.ts` repete os valores de `.dark` (globals.css) para sobrescrever via
+      `style` inline no wrapper do admin: `buildStoreTheme` já define `--background`/`--foreground`/
+      etc via `style` inline no `<body>` (para refletir a paleta da loja), e inline sempre vence
+      regra de classe para a mesma custom property — a classe `.dark` sozinha não venceria isso.
 - [x] `theme-provider.tsx` segue o mesmo padrão de `lib/selection/selection-context.tsx`
       (`useSyncExternalStore` + inicialização preguiçosa no `useState`, sem `setState` em efeito)
       — lint `react-hooks/set-state-in-effect` pego e corrigido antes do commit
+- [x] `next build`, `tsc --noEmit`, `eslint` e suíte completa (232 testes) verdes
+
+**Correções pedidas após o primeiro uso do tema escuro:**
+- [x] Paleta do escuro trocada de "café escuro adaptado ao editorial" para **cinza neutro puro**,
+      sem nenhuma relação com a paleta da marca — a primeira tentativa de honrar a linguagem da
+      marca no escuro ficou estranha; decisão do usuário: escuro do painel é neutro, período
+- [x] **Bug crítico corrigido: texto quase invisível no escuro.** Qualquer texto sem classe de cor
+      própria (a maioria das células de tabela, por exemplo) herdava o `color` já computado no
+      `<body>` pelo tema claro da loja — `color` é herdado pelo valor *resolvido*, não recalculado
+      por elemento via `var(--foreground)`. O wrapper do dark mode só sobrescrevia a variável CSS,
+      nunca aplicava `color`/`background-color` de fato ali. Corrigido adicionando
+      `text-foreground bg-background` explícitos no wrapper (`theme-provider.tsx`), forçando a
+      reavaliação da variável no ponto onde ela já tinha sido sobrescrita.
+
+**Pedidos seguintes (miniatura, cliente inline):**
+- [x] Card do Kanban ganhou miniatura (capa `is_cover` do primeiro item do catálogo do pedido) e
+      nome do(s) produto(s) — `attachItemsSummary` em `lib/orders/queries.ts` busca isso para
+      todos os pedidos da tela numa única query (sem N+1). Item avulso sem produto fica sem
+      miniatura ("s/foto") — decisão do usuário: só puxa foto do catálogo, sem upload próprio
+- [x] Tela de detalhe do pedido também ganhou miniatura por item (`getOrder` agora inclui
+      `coverImageUrl` por item, mesma fonte)
+- [x] Atalho **"+ Nova cliente"** no formulário de pedido (`new-customer-inline.tsx`): expande um
+      mini-formulário (nome + telefone) sem sair da tela; `createCustomerInline` em
+      `lib/customers/actions.ts` retorna o registro criado para o `<select>` de cliente já
+      selecionar automaticamente — decisão do usuário: inline, não abrir aba separada (o
+      `<select>` de cliente precisou virar controlado por state para isso)
+- [x] Lista de clientes ganhou link "Editar" explícito ao lado de "Arquivar" (antes só o nome era
+      clicável para editar, pouco óbvio) — a tela de edição já existia desde o M12
 - [x] `next build`, `tsc --noEmit`, `eslint` e suíte completa (232 testes) verdes
 
 ### M9 — Sistema de botões, links e setas

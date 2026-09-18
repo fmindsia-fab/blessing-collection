@@ -2,10 +2,11 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { PencilIcon } from "lucide-react";
 import { updateOrderStatus } from "@/lib/orders/actions";
 import { ORDER_STATUS_LABEL, ORDER_STATUS_ORDER, formatBRL, formatOrderDate } from "@/lib/orders/labels";
-import type { OrderListRow } from "@/lib/orders/queries";
+import type { OrderKanbanRow } from "@/lib/orders/queries";
 import type { OrderStatus } from "@/types/database.types";
 
 /**
@@ -17,7 +18,7 @@ import type { OrderStatus } from "@/types/database.types";
  * coluna muda otimisticamente ao soltar, e volta à posição do servidor se a
  * Server Action falhar.
  */
-export function OrdersKanban({ orders }: { orders: OrderListRow[] }) {
+export function OrdersKanban({ orders }: { orders: OrderKanbanRow[] }) {
   const [localOrders, setLocalOrders] = useState(orders);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [overStatus, setOverStatus] = useState<OrderStatus | null>(null);
@@ -101,23 +102,44 @@ export function OrdersKanban({ orders }: { orders: OrderListRow[] }) {
                     isPending ? "pointer-events-none" : ""
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <Link
-                      href={`/admin/pedidos/${order.id}`}
-                      className="min-w-0 flex-1 truncate text-sm font-medium underline-offset-4 outline-none hover:underline focus-visible:underline"
-                    >
-                      {order.customer?.name ?? "Cliente"}
-                    </Link>
+                  <div className="flex items-start gap-3">
+                    {order.itemsSummary.coverImageUrl ? (
+                      <Image
+                        src={order.itemsSummary.coverImageUrl}
+                        alt=""
+                        width={44}
+                        height={44}
+                        className="size-11 shrink-0 rounded-[var(--radius)] border border-border object-cover"
+                      />
+                    ) : (
+                      <div className="flex size-11 shrink-0 items-center justify-center rounded-[var(--radius)] border border-dashed border-border text-[0.5625rem] text-muted-foreground">
+                        s/foto
+                      </div>
+                    )}
 
-                    {status === "quote" ? (
-                      <Link
-                        href={`/admin/pedidos/${order.id}/editar`}
-                        aria-label="Editar pedido"
-                        className="shrink-0 rounded-full p-1 text-muted-foreground outline-none transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
-                      >
-                        <PencilIcon className="size-3.5" />
-                      </Link>
-                    ) : null}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <Link
+                          href={`/admin/pedidos/${order.id}`}
+                          className="min-w-0 flex-1 truncate text-sm font-medium underline-offset-4 outline-none hover:underline focus-visible:underline"
+                        >
+                          {order.customer?.name ?? "Cliente"}
+                        </Link>
+
+                        {status === "quote" ? (
+                          <Link
+                            href={`/admin/pedidos/${order.id}/editar`}
+                            aria-label="Editar pedido"
+                            className="shrink-0 rounded-full p-1 text-muted-foreground outline-none transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
+                          >
+                            <PencilIcon className="size-3.5" />
+                          </Link>
+                        ) : null}
+                      </div>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {order.itemsSummary.label}
+                      </span>
+                    </div>
                   </div>
 
                   <span className="text-xs text-muted-foreground">

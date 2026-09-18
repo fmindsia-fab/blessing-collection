@@ -34,27 +34,30 @@ export function CustomersList({ customers }: { customers: CustomerRow[] }) {
           {active.map((customer) => (
             <div key={customer.id} className="flex items-center justify-between gap-4 py-3">
               <div className="flex min-w-0 flex-col">
-                <Link
-                  href={`/admin/clientes/${customer.id}`}
-                  className="truncate text-sm underline-offset-4 hover:underline"
-                >
-                  {customer.name}
-                </Link>
+                <span className="truncate text-sm">{customer.name}</span>
                 {customer.phone ? (
                   <span className="text-xs text-muted-foreground">{formatPhoneBR(customer.phone)}</span>
                 ) : null}
               </div>
-              <button
-                type="button"
-                disabled={isSaving}
-                onClick={() => {
-                  if (!confirm(`Arquivar "${customer.name}"?`)) return;
-                  startTransition(() => toggleCustomer(customer.id, "active"));
-                }}
-                className="shrink-0 text-xs uppercase tracking-[0.08em] text-muted-foreground outline-none transition-colors hover:text-destructive focus-visible:text-destructive"
-              >
-                Arquivar
-              </button>
+              <div className="flex shrink-0 items-center gap-4">
+                <Link
+                  href={`/admin/clientes/${customer.id}`}
+                  className="text-xs uppercase tracking-[0.08em] text-muted-foreground underline-offset-4 outline-none transition-colors hover:text-foreground hover:underline focus-visible:text-foreground focus-visible:underline"
+                >
+                  Editar
+                </Link>
+                <button
+                  type="button"
+                  disabled={isSaving}
+                  onClick={() => {
+                    if (!confirm(`Arquivar "${customer.name}"?`)) return;
+                    startTransition(() => toggleCustomer(customer.id, "active"));
+                  }}
+                  className="text-xs uppercase tracking-[0.08em] text-muted-foreground outline-none transition-colors hover:text-destructive focus-visible:text-destructive"
+                >
+                  Arquivar
+                </button>
+              </div>
             </div>
           ))}
         </div>
