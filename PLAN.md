@@ -416,6 +416,16 @@ ignoravam o campo `error` do Supabase e retornavam vazio sem log algum — agora
       permanece coberta pelos botões de status já existentes na tela de detalhe do pedido
 - [x] `next build`, `tsc --noEmit`, `eslint` e suíte completa (232 testes) verdes
 
+**Correções pedidas após o primeiro uso em produção:**
+- [x] Telefone sem máscara aparecendo em 3 lugares que exibiam `customer.phone` cru do banco
+      (tela de detalhe do pedido, lista de clientes, seletor de cliente no formulário de pedido) —
+      a máscara só formatava durante a digitação; números já salvos (ou digitados antes da máscara
+      existir) precisam de `formatPhoneBR` também na leitura, não só na entrada
+- [x] Paleta do tema escuro trocada de "café escuro adaptado ao editorial" para **cinza neutro
+      puro**, sem nenhuma relação com a identidade visual da loja — a primeira tentativa de honrar
+      a linguagem da marca no escuro ficou estranha visualmente; decisão do usuário: escuro do
+      painel é neutro, período
+
 **Ajustes pedidos após o primeiro uso do Kanban:**
 - [x] Visual dos cards/colunas refinado (achatado demais na primeira versão): borda tracejada nas
       colunas, destaque dourado + leve zoom na coluna sob o card arrastado, cards com sombra que

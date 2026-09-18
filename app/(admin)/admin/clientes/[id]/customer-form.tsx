@@ -13,7 +13,7 @@ const initialState: CustomerFormState = {};
 
 export function CustomerForm({ customer }: { customer: CustomerRow }) {
   const [state, formAction, isPending] = useActionState(updateCustomer.bind(null, customer.id), initialState);
-  const [phone, setPhone] = useState(customer.phone ?? "");
+  const [phone, setPhone] = useState(customer.phone ? formatPhoneBR(customer.phone) : "");
 
   return (
     <form action={formAction} className="flex flex-col gap-4">

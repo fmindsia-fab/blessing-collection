@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { getOrder, getOrderProductionList } from "@/lib/orders/queries";
+import { formatPhoneBR } from "@/lib/customers/phone-mask";
 import { PageHeading } from "@/components/admin/page-heading";
 import { BackLink } from "@/components/shared/back-link";
 import { ActionLink } from "@/components/ui/action";
@@ -29,7 +30,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       <PageHeading
         kicker="Encomenda"
         title={order.customer?.name ?? "Cliente"}
-        description={order.customer?.phone ?? undefined}
+        description={order.customer?.phone ? formatPhoneBR(order.customer.phone) : undefined}
         action={
           <ActionLink href={`/admin/pedidos/${id}/editar`} variant="outline" className="h-10 px-5">
             Editar pedido

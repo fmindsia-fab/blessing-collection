@@ -41,7 +41,7 @@ export function CustomersList({ customers }: { customers: CustomerRow[] }) {
                   {customer.name}
                 </Link>
                 {customer.phone ? (
-                  <span className="text-xs text-muted-foreground">{customer.phone}</span>
+                  <span className="text-xs text-muted-foreground">{formatPhoneBR(customer.phone)}</span>
                 ) : null}
               </div>
               <button

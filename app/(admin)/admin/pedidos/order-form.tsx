@@ -5,6 +5,7 @@ import Link from "next/link";
 import { TrashIcon } from "lucide-react";
 import { createOrder, updateOrder, type OrderFormState } from "@/lib/orders/actions";
 import { formatBRL } from "@/lib/orders/labels";
+import { formatPhoneBR } from "@/lib/customers/phone-mask";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -149,7 +150,7 @@ export function OrderForm({
               {customers.map((customer) => (
                 <option key={customer.id} value={customer.id}>
                   {customer.name}
-                  {customer.phone ? ` — ${customer.phone}` : ""}
+                  {customer.phone ? ` — ${formatPhoneBR(customer.phone)}` : ""}
                 </option>
               ))}
             </select>
