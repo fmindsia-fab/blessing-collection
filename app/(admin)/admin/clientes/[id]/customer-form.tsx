@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { updateCustomer, type CustomerFormState } from "@/lib/customers/actions";
 import type { CustomerRow } from "@/lib/customers/queries";
+import { formatPhoneBR } from "@/lib/customers/phone-mask";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +13,7 @@ const initialState: CustomerFormState = {};
 
 export function CustomerForm({ customer }: { customer: CustomerRow }) {
   const [state, formAction, isPending] = useActionState(updateCustomer.bind(null, customer.id), initialState);
+  const [phone, setPhone] = useState(customer.phone ?? "");
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
@@ -22,7 +24,15 @@ export function CustomerForm({ customer }: { customer: CustomerRow }) {
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="phone">Telefone</Label>
-          <Input id="phone" name="phone" maxLength={30} defaultValue={customer.phone ?? ""} />
+          <Input
+            id="phone"
+            name="phone"
+            value={phone}
+            onChange={(e) => setPhone(formatPhoneBR(e.target.value))}
+            maxLength={15}
+            placeholder="(11) 99999-9999"
+            inputMode="tel"
+          />
         </div>
       </div>
       <div className="flex flex-col gap-1.5">

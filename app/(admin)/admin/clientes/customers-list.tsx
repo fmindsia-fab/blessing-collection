@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useTransition } from "react";
+import { useActionState, useState, useTransition } from "react";
 import Link from "next/link";
 import { createCustomer, toggleCustomer, type CustomerFormState } from "@/lib/customers/actions";
 import type { CustomerRow } from "@/lib/customers/queries";
+import { formatPhoneBR } from "@/lib/customers/phone-mask";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,9 +14,18 @@ const initialState: CustomerFormState = {};
 export function CustomersList({ customers }: { customers: CustomerRow[] }) {
   const [state, formAction, isPending] = useActionState(createCustomer, initialState);
   const [isSaving, startTransition] = useTransition();
+  const [phone, setPhone] = useState("");
 
   const active = customers.filter((c) => c.status === "active");
   const archived = customers.filter((c) => c.status === "archived");
+
+  // Limpa o campo ao adicionar: a contagem de clientes muda quando a Server
+  // Action revalida com sucesso, mesmo sinal usado no cadastro de materiais.
+  const [syncedCount, setSyncedCount] = useState(customers.length);
+  if (customers.length !== syncedCount) {
+    setSyncedCount(customers.length);
+    setPhone("");
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -61,7 +71,15 @@ export function CustomersList({ customers }: { customers: CustomerRow[] }) {
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="cust-phone">Telefone</Label>
-          <Input id="cust-phone" name="phone" maxLength={30} placeholder="(11) 99999-9999" />
+          <Input
+            id="cust-phone"
+            name="phone"
+            value={phone}
+            onChange={(e) => setPhone(formatPhoneBR(e.target.value))}
+            maxLength={15}
+            placeholder="(11) 99999-9999"
+            inputMode="tel"
+          />
         </div>
         <Button type="submit" variant="outline" disabled={isPending} className="self-end">
           {isPending ? "Salvando..." : "Adicionar"}
