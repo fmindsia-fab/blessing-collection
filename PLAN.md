@@ -389,9 +389,32 @@ Decisões confirmadas com o usuário antes de implementar:
       diferentes do mesmo pedido e ignora produto fora do pedido — `tests/unit/orders-calculate.test.ts`
 - [x] `next build`, `tsc --noEmit` e suíte completa (226 testes) verdes após o milestone
 
-**Pendente:** validação manual do fluxo completo no painel (criar cliente, criar pedido com item de
-catálogo e item avulso, mudar status, conferir lista de produção e alerta de atraso) — a fazer pelo
-usuário agora que a migration está em produção.
+**Validado pelo usuário em produção:** fluxo de criação de pedido funcionando.
+
+**Bug corrigido pós-validação:** o formulário de pedido não salvava o produto selecionado no item —
+os campos (select de produto, quantidade, preço) eram controlados por state mas só enviavam valor via
+`<input type="hidden">` paralelo, que dessincronizava do state em alguns casos. Corrigido passando
+`name` direto aos campos visíveis, removendo os hidden inputs espelhados como fonte de verdade
+paralela (commit `dcd106a`). Também corrigido: `listOrders`/`getOrder`/`getOrderProductionList`
+ignoravam o campo `error` do Supabase e retornavam vazio sem log algum — agora logam no servidor.
+
+**Máscara de telefone** adicionada ao cadastro/edição de cliente (`(DD) 9XXXX-XXXX`), com
+`lib/customers/phone-mask.ts` e teste unitário — pedido do usuário após o primeiro teste em produção.
+
+### M13 — Kanban de pedidos (pedido do usuário, pós-M12)
+
+- [x] `/admin/pedidos` passa de lista para **Kanban por status** (uma coluna por status do fluxo),
+      substituindo a lista — decisão do usuário
+- [x] Arraste entre colunas com **HTML Drag and Drop API nativa**, mesmo padrão de
+      `app/(admin)/admin/produtos/sortable-list.tsx` (sem biblioteca — regra do CLAUDE.md de não
+      adicionar dependência sem necessidade real). Move otimisticamente no client e reconcilia via
+      `revalidatePath` dentro de `updateOrderStatus`, que já existia da tela de detalhe
+- [x] Card da coluna **Orçamento** tem atalho de edição (ícone de lápis) direto para
+      `/admin/pedidos/[id]/editar` — decisão do usuário: atalho para a tela já existente, não edição
+      inline no card
+- [x] `orders-list.tsx` removido (substituído por `orders-kanban.tsx`); acessibilidade sem drag
+      permanece coberta pelos botões de status já existentes na tela de detalhe do pedido
+- [x] `next build`, `tsc --noEmit`, `eslint` e suíte completa (232 testes) verdes
 
 ### M9 — Sistema de botões, links e setas
 

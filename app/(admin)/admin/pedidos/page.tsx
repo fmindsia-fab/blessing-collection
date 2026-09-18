@@ -2,7 +2,7 @@ import { getActiveStore } from "@/lib/store/get-active-store";
 import { listOrders, listOverdueOrders } from "@/lib/orders/queries";
 import { PageHeading } from "@/components/admin/page-heading";
 import { ActionLink } from "@/components/ui/action";
-import { OrdersList } from "./orders-list";
+import { OrdersKanban } from "./orders-kanban";
 import { OverdueBanner } from "./overdue-banner";
 
 export default async function AdminOrdersPage() {
@@ -40,7 +40,7 @@ export default async function AdminOrdersPage() {
           </ActionLink>
         </div>
       ) : (
-        <OrdersList orders={orders} />
+        <OrdersKanban orders={orders} />
       )}
     </div>
   );
