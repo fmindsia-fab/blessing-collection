@@ -493,6 +493,11 @@ ignoravam o campo `error` do Supabase e retornavam vazio sem log algum — agora
       Corrigido removendo o `<form>` interno: a Server Action agora é chamada diretamente num
       `onClick` (via `useTransition`, com os campos em `useState` em vez de `FormData` do form)
 
+**Ordenação do Kanban:** `listOrders` passou a ordenar por `expected_delivery_date` ascendente
+(entrega mais próxima primeiro, `nullsFirst: false` — sem previsão vai para o final da coluna, não
+some no meio), com `order_date` desc como desempate. Cada coluna do Kanban filtra preservando essa
+ordem (`Array.filter` não reordena) — pedido do usuário, entregas mais urgentes ficam no topo.
+
 ### M9 — Sistema de botões, links e setas
 
 - [x] `components/ui/action.tsx`: vocabulário único de ações (`solid`, `outline`, `quiet`, `underline`,

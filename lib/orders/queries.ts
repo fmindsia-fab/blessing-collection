@@ -127,6 +127,10 @@ export async function listOrders(
     .from("orders")
     .select("id, status, order_date, expected_delivery_date, total_amount, customer:customers(id, name)")
     .eq("store_id", storeId)
+    // Entrega mais próxima primeiro (mais urgente no topo de cada coluna do
+    // Kanban) — pedido do usuário. Sem previsão de entrega vai para o final
+    // (nullsFirst: false), não some no meio da lista.
+    .order("expected_delivery_date", { ascending: true, nullsFirst: false })
     .order("order_date", { ascending: false });
 
   if (filters.status) query = query.eq("status", filters.status);
