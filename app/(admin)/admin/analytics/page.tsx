@@ -1,5 +1,6 @@
 import { getActiveStore } from "@/lib/store/get-active-store";
 import {
+  ANALYTICS_PERIODS,
   getAnalyticsTotals,
   getCategoryRankings,
   getCollectionRankings,
@@ -36,7 +37,7 @@ export default async function AdminAnalyticsPage({
           title="Analytics"
           description={`Por produto, categoria e coleção — ${PERIOD_LABEL[period].toLowerCase()}.`}
         />
-        <PeriodFilter basePath="/admin/analytics" active={period} />
+        <PeriodFilter basePath="/admin/analytics" active={period} periods={ANALYTICS_PERIODS} labels={PERIOD_LABEL} />
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

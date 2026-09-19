@@ -1,12 +1,25 @@
 import Link from "next/link";
-import { ANALYTICS_PERIODS, PERIOD_LABEL, type AnalyticsPeriod } from "@/lib/analytics/queries";
 import { cn } from "@/lib/utils";
 
-// Filtro por links: trocar o período é só um novo `?periodo=`, sem estado no client.
-export function PeriodFilter({ basePath, active }: { basePath: string; active: AnalyticsPeriod }) {
+/**
+ * Filtro por links: trocar o período é só um novo `?periodo=`, sem estado
+ * no client. Genérico em T: outro domínio (ex: dashboard de pedidos) passa
+ * seu próprio conjunto de períodos/labels, sem duplicar o componente.
+ */
+export function PeriodFilter<T extends string>({
+  basePath,
+  active,
+  periods,
+  labels,
+}: {
+  basePath: string;
+  active: T;
+  periods: readonly T[];
+  labels: Record<T, string>;
+}) {
   return (
     <div className="flex flex-wrap justify-center gap-2">
-      {ANALYTICS_PERIODS.map((period) => (
+      {periods.map((period) => (
         <Link
           key={period}
           href={`${basePath}?periodo=${period}`}
@@ -18,7 +31,7 @@ export function PeriodFilter({ basePath, active }: { basePath: string; active: A
               : "border-border text-muted-foreground hover:border-foreground hover:bg-secondary hover:text-foreground",
           )}
         >
-          {PERIOD_LABEL[period]}
+          {labels[period]}
         </Link>
       ))}
     </div>

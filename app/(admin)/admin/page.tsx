@@ -1,6 +1,7 @@
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { listAllProductsForAdmin } from "@/lib/products/admin-queries";
 import {
+  ANALYTICS_PERIODS,
   getAnalyticsTotals,
   getProductRankings,
   parsePeriod,
@@ -37,7 +38,7 @@ export default async function AdminDashboardPage({
           title="Dashboard"
           description={`Indicadores da loja — ${PERIOD_LABEL[period].toLowerCase()}.`}
         />
-        <PeriodFilter basePath="/admin" active={period} />
+        <PeriodFilter basePath="/admin" active={period} periods={ANALYTICS_PERIODS} labels={PERIOD_LABEL} />
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

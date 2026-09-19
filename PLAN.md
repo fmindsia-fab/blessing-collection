@@ -498,6 +498,42 @@ ignoravam o campo `error` do Supabase e retornavam vazio sem log algum — agora
 some no meio), com `order_date` desc como desempate. Cada coluna do Kanban filtra preservando essa
 ordem (`Array.filter` não reordena) — pedido do usuário, entregas mais urgentes ficam no topo.
 
+### M14 — Dashboard financeiro e gerencial de pedidos (pedido do usuário, pós-M13)
+
+Decisões confirmadas com o usuário antes de implementar:
+- Rota separada `/admin/pedidos/dashboard` (não uma seção dentro do Kanban) — mantém o Kanban
+  focado no operacional, dashboard focado em análise, com link entre as duas telas.
+- **Recebido** = soma de sinal/saldo com data de pagamento preenchida (`deposit_paid_at`/
+  `balance_paid_at`), independente do status do pedido. **A receber** = soma do que falta pagar,
+  só em pedidos não cancelados. **Ticket médio** = valor total (pago ou não) ÷ pedidos não
+  cancelados no período.
+- **Materiais a comprar**: soma de `product_materials` (mesma fonte da lista de produção do
+  pedido) de pedidos estritamente em status "Confirmado" — decisão do usuário: não inclui "Em
+  produção" (que já pode ter material comprado). Este indicador não respeita o filtro de período
+  (é sempre "agora", não faz sentido limitar por data de criação do pedido).
+- Extras aceitos: ticket médio, card de pedidos atrasados (reaproveitando a mesma regra do alerta
+  já existente na tela de Pedidos) e filtro de período (7/30/90/total, mesmo padrão do dashboard
+  de analytics do PRD) — filtra por `order_date`, todo o resto do dashboard exceto materiais.
+
+- [x] `lib/orders/dashboard-calculate.ts`: funções puras testáveis (`calculateFinancialSummary`,
+      `calculateStatusBreakdown`, `calculateTopEntries`) — mesmo padrão de `orders/calculate.ts`
+- [x] `lib/orders/dashboard-queries.ts`: `getOrderDashboardData` busca os pedidos do período uma
+      única vez e agrega tudo em memória com as funções puras (mais simples que uma RPC por
+      indicador para o volume de pedidos de uma loja pequena); `getMaterialsToBuy` reaproveita
+      `calculateProductionList` de `orders/calculate.ts` somando entre todos os pedidos confirmados
+- [x] `components/admin/period-filter.tsx` generalizado (genérico em `T`, `periods`/`labels` agora
+      obrigatórios em vez de default fixo em `AnalyticsPeriod`) para ser reaproveitado pelo
+      dashboard de pedidos sem duplicar o componente — os 2 usos existentes (dashboard geral e
+      `/admin/analytics`) atualizados para passar `periods`/`labels` explicitamente
+- [x] Rota `/admin/pedidos/dashboard`: cards de indicadores (pedidos no período, recebido, a
+      receber, ticket médio), alerta de atraso, contagem+valor por status, top 5 produtos, top 5
+      clientes, lista de materiais a comprar — link "Dashboard" adicionado na tela de Pedidos
+- [x] Teste: recebido/a receber por data de pagamento, pedido cancelado não entra na conta, ticket
+      médio sem dividir por zero — `tests/unit/orders-dashboard-calculate.test.ts`
+- [x] Teste: agregação de status, top entries ordenado por contagem com desempate por valor e
+      limitado ao N pedido — mesmo arquivo
+- [x] `next build`, `tsc --noEmit`, `eslint` e suíte completa (239 testes) verdes
+
 ### M9 — Sistema de botões, links e setas
 
 - [x] `components/ui/action.tsx`: vocabulário único de ações (`solid`, `outline`, `quiet`, `underline`,
