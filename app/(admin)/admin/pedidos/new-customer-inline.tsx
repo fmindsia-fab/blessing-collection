@@ -1,19 +1,23 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState, useTransition } from "react";
 import { UserPlusIcon, XIcon } from "lucide-react";
-import { createCustomerInline, type CreateCustomerInlineState } from "@/lib/customers/actions";
+import { createCustomerInline } from "@/lib/customers/actions";
 import { formatPhoneBR } from "@/lib/customers/phone-mask";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-const initialState: CreateCustomerInlineState = {};
-
 /**
  * Atalho "+ Nova cliente" no formulário de pedido: cadastra sem sair da
  * tela e já seleciona a cliente criada — decisão do usuário, para não
  * interromper o fluxo de montar um pedido só para cadastrar quem encomendou.
+ *
+ * Sem <form> aqui: este componente vive dentro do <form> do pedido
+ * (order-form.tsx), e HTML não permite formulário dentro de formulário —
+ * o clique em "Salvar" era capturado pelo form externo em vez de disparar
+ * este cadastro, então nada era salvo. A action é chamada diretamente (não
+ * via useActionState + action prop de um form), com os valores em state.
  */
 export function NewCustomerInline({
   onCreated,
@@ -21,19 +25,29 @@ export function NewCustomerInline({
   onCreated: (customer: { id: string; name: string; phone: string | null }) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [state, formAction, isPending] = useActionState(async (
-    _prevState: CreateCustomerInlineState,
-    formData: FormData,
-  ) => {
-    const result = await createCustomerInline(_prevState, formData);
-    if (result.customer) {
-      onCreated(result.customer);
-      setIsOpen(false);
-      setPhone("");
-    }
-    return result;
-  }, initialState);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  function handleSave() {
+    setError(null);
+    startTransition(async () => {
+      const formData = new FormData();
+      formData.set("name", name);
+      formData.set("phone", phone);
+      const result = await createCustomerInline({}, formData);
+
+      if (result.customer) {
+        onCreated(result.customer);
+        setIsOpen(false);
+        setName("");
+        setPhone("");
+      } else {
+        setError(result.error ?? "Não foi possível cadastrar a cliente.");
+      }
+    });
+  }
 
   if (!isOpen) {
     return (
@@ -49,10 +63,7 @@ export function NewCustomerInline({
   }
 
   return (
-    <form
-      action={formAction}
-      className="flex flex-col gap-3 rounded-[var(--radius)] border border-dashed border-border p-3"
-    >
+    <div className="flex flex-col gap-3 rounded-[var(--radius)] border border-dashed border-border p-3">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
           Nova cliente
@@ -67,33 +78,45 @@ export function NewCustomerInline({
         </button>
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="new-customer-name" className="text-xs">
-            Nome
-          </Label>
-          <Input id="new-customer-name" name="name" required maxLength={120} autoFocus />
-        </div>
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="new-customer-phone" className="text-xs">
-            Telefone
-          </Label>
-          <Input
-            id="new-customer-phone"
-            name="phone"
-            value={phone}
-            onChange={(e) => setPhone(formatPhoneBR(e.target.value))}
-            maxLength={15}
-            placeholder="(11) 99999-9999"
-            inputMode="tel"
-          />
-        </div>
-        <Button type="submit" variant="outline" size="sm" disabled={isPending} className="self-end">
-          {isPending ? "Salvando..." : "Salvar"}
-        </Button>
+      <div className="flex flex-col gap-1">
+        <Label htmlFor="new-customer-name" className="text-xs">
+          Nome
+        </Label>
+        <Input
+          id="new-customer-name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          maxLength={120}
+          autoFocus
+        />
       </div>
 
-      {state.error ? <p className="text-xs text-destructive">{state.error}</p> : null}
-    </form>
+      <div className="flex flex-col gap-1">
+        <Label htmlFor="new-customer-phone" className="text-xs">
+          Telefone
+        </Label>
+        <Input
+          id="new-customer-phone"
+          value={phone}
+          onChange={(e) => setPhone(formatPhoneBR(e.target.value))}
+          maxLength={15}
+          placeholder="(11) 99999-9999"
+          inputMode="tel"
+        />
+      </div>
+
+      {error ? <p className="text-xs text-destructive">{error}</p> : null}
+
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={isPending || !name.trim()}
+        onClick={handleSave}
+        className="w-fit"
+      >
+        {isPending ? "Salvando..." : "Salvar"}
+      </Button>
+    </div>
   );
 }

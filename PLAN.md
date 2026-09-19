@@ -482,6 +482,17 @@ ignoravam o campo `error` do Supabase e retornavam vazio sem log algum — agora
       sem N+1
 - [x] `next build`, `tsc --noEmit`, `eslint` e suíte completa (232 testes) verdes
 
+**Correções pedidas após uso do atalho "+ Nova cliente":**
+- [x] Layout do mini-formulário apertado demais (grid de 3 colunas espremido dentro de uma coluna
+      de 1/3 do form de pedido, campos com 1-2 caracteres visíveis) — trocado para empilhado
+      verticalmente (nome, telefone, botão), que cabe bem em qualquer largura de coluna
+- [x] **Bug crítico corrigido: botão "Salvar" não salvava nada.** `NewCustomerInline` usava seu
+      próprio `<form action={...}>`, mas esse componente vive dentro do `<form>` do pedido inteiro
+      (`order-form.tsx`) — HTML não permite formulário aninhado dentro de outro formulário, e o
+      clique era capturado pelo form externo (de pedido) em vez de disparar o cadastro da cliente.
+      Corrigido removendo o `<form>` interno: a Server Action agora é chamada diretamente num
+      `onClick` (via `useTransition`, com os campos em `useState` em vez de `FormData` do form)
+
 ### M9 — Sistema de botões, links e setas
 
 - [x] `components/ui/action.tsx`: vocabulário único de ações (`solid`, `outline`, `quiet`, `underline`,
