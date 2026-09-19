@@ -5,6 +5,8 @@
 
 export type OrderFinancialInput = {
   status: string;
+  /** Valor de referência do pedido — sempre o total dos itens, nunca sinal+saldo. */
+  totalAmount: number;
   depositAmount: number;
   depositPaidAt: string | null;
   balanceAmount: number;
@@ -18,11 +20,15 @@ export type FinancialSummary = {
 };
 
 /**
- * Recebido = soma de sinal/saldo com data de pagamento preenchida.
- * A receber = soma do que falta (sem data de pagamento), só em pedidos não
- * cancelados — pedido cancelado não é mais cobrança em aberto.
- * Ticket médio = valor total (sinal+saldo, pago ou não) dividido pelo número
- * de pedidos não cancelados.
+ * `total_amount` (soma dos itens) é sempre o valor de referência do pedido.
+ * Sinal e saldo registram COMO e QUANDO o pagamento aconteceu, não um valor
+ * financeiro paralelo — por isso o "pago" de cada pedido é limitado ao seu
+ * total (min), mesmo que sinal+saldo somados sejam preenchidos com um valor
+ * diferente (parcial, ou por engano maior que o pedido).
+ *
+ * Recebido = soma do pago (limitado ao total) em pedidos não cancelados.
+ * A receber = total − recebido, por pedido, somado.
+ * Ticket médio = total_amount médio dos pedidos não cancelados.
  */
 export function calculateFinancialSummary(orders: OrderFinancialInput[]): FinancialSummary {
   let received = 0;
@@ -34,13 +40,14 @@ export function calculateFinancialSummary(orders: OrderFinancialInput[]): Financ
     if (order.status === "cancelled") continue;
 
     countedOrders += 1;
-    totalValue += order.depositAmount + order.balanceAmount;
+    totalValue += order.totalAmount;
 
-    received += order.depositPaidAt ? order.depositAmount : 0;
-    received += order.balancePaidAt ? order.balanceAmount : 0;
+    const paid =
+      (order.depositPaidAt ? order.depositAmount : 0) + (order.balancePaidAt ? order.balanceAmount : 0);
+    const orderReceived = Math.min(paid, order.totalAmount);
 
-    pending += order.depositPaidAt ? 0 : order.depositAmount;
-    pending += order.balancePaidAt ? 0 : order.balanceAmount;
+    received += orderReceived;
+    pending += order.totalAmount - orderReceived;
   }
 
   return {

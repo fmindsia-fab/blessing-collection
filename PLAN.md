@@ -534,6 +534,19 @@ Decisões confirmadas com o usuário antes de implementar:
       limitado ao N pedido — mesmo arquivo
 - [x] `next build`, `tsc --noEmit`, `eslint` e suíte completa (239 testes) verdes
 
+**Correção pedida após primeiro uso: "Recebido" e "Pedidos por status" não batiam.** No print de
+validação, "Recebido" (R$ 529,80) não tinha relação com a soma de "Pedidos por status" (R$ 1039,40)
+nem com "A receber" (R$ 0,00) — porque o financeiro somava `deposit_amount + balance_amount`
+(campos de sinal/saldo do pedido) enquanto o resto do dashboard usa `total_amount` (soma dos
+itens): duas fontes de valor independentes que só coincidem se sinal+saldo forem preenchidos
+cobrindo exatamente o total do pedido, o que não é garantido pelo formulário. Decisão do usuário:
+`total_amount` é sempre a referência do pedido; sinal/saldo passam a registrar só COMO e QUANDO foi
+pago, nunca um valor financeiro à parte — `calculateFinancialSummary` agora limita o "pago" de cada
+pedido ao seu `total_amount` (`Math.min`), e "a receber" é sempre `total − pago`, por pedido. Dois
+testes novos cobrem exatamente o cenário do bug (sinal+saldo abaixo do total; pago maior que o
+total por erro de digitação não deixa "a receber" negativo) — `tests/unit/orders-dashboard-calculate.test.ts`
+(241 testes na suíte completa).
+
 ### M9 — Sistema de botões, links e setas
 
 - [x] `components/ui/action.tsx`: vocabulário único de ações (`solid`, `outline`, `quiet`, `underline`,

@@ -86,6 +86,7 @@ export async function getOrderDashboardData(
   const financial = calculateFinancialSummary(
     rows.map((row) => ({
       status: row.status,
+      totalAmount: row.total_amount,
       depositAmount: row.deposit_amount,
       depositPaidAt: row.deposit_paid_at,
       balanceAmount: row.balance_amount,
