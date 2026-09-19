@@ -27,7 +27,16 @@ export default async function OrdersDashboardPage({
     getMaterialsToBuy(store.id),
   ]);
 
-  const { financial, statusBreakdown, overdueCount, overdueAmount, topProducts, topCustomers, totalOrders } = data;
+  const {
+    financial,
+    statusBreakdown,
+    overdueCount,
+    overdueAmount,
+    topProducts,
+    topCustomers,
+    totalOrders,
+    pendingPayments,
+  } = data;
 
   const statusMap = new Map(statusBreakdown.map((s) => [s.status, s]));
 
@@ -52,7 +61,15 @@ export default async function OrdersDashboardPage({
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Pedidos no período" value={String(totalOrders)} hint="Não cancelados" />
         <StatCard label="Recebido" value={formatBRL(financial.received)} hint="Sinal + saldo já pagos" />
-        <StatCard label="A receber" value={formatBRL(financial.pending)} hint="Pendente de pagamento" />
+        <StatCard
+          label="A receber"
+          value={formatBRL(financial.pending)}
+          hint={
+            pendingPayments.length > 0
+              ? `${pendingPayments.length} ${pendingPayments.length === 1 ? "pedido" : "pedidos"} pendentes`
+              : "Nada pendente"
+          }
+        />
         <StatCard label="Ticket médio" value={formatBRL(financial.averageTicket)} />
       </div>
 
@@ -87,6 +104,25 @@ export default async function OrdersDashboardPage({
           })}
         </div>
       </section>
+
+      {pendingPayments.length > 0 ? (
+        <section className="flex flex-col gap-3">
+          <span className="kicker">Pagamentos pendentes</span>
+          <ul className="flex flex-col divide-y divide-border border-y border-border">
+            {pendingPayments.map((entry) => (
+              <li key={entry.orderId} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                <Link
+                  href={`/admin/pedidos/${entry.orderId}`}
+                  className="truncate underline-offset-4 hover:underline"
+                >
+                  {entry.customerName}
+                </Link>
+                <span className="shrink-0 tabular-nums">{formatBRL(entry.pendingAmount)}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="flex flex-col gap-3">

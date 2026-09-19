@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   calculateFinancialSummary,
+  calculatePendingPayments,
   calculateStatusBreakdown,
   calculateTopEntries,
 } from "@/lib/orders/dashboard-calculate";
@@ -104,6 +105,65 @@ describe("calculateFinancialSummary", () => {
 
     expect(result.received).toBe(100);
     expect(result.pending).toBe(0);
+  });
+});
+
+describe("calculatePendingPayments", () => {
+  it("lista só pedidos com saldo pendente, maior primeiro", () => {
+    const result = calculatePendingPayments([
+      {
+        orderId: "o1",
+        customerName: "Ana",
+        status: "confirmed",
+        totalAmount: 100,
+        depositAmount: 0,
+        depositPaidAt: null,
+        balanceAmount: 0,
+        balancePaidAt: null,
+      },
+      {
+        orderId: "o2",
+        customerName: "Bia",
+        status: "confirmed",
+        totalAmount: 300,
+        depositAmount: 100,
+        depositPaidAt: "2026-09-01",
+        balanceAmount: 200,
+        balancePaidAt: null,
+      },
+    ]);
+
+    expect(result).toEqual([
+      { orderId: "o2", customerName: "Bia", pendingAmount: 200 },
+      { orderId: "o1", customerName: "Ana", pendingAmount: 100 },
+    ]);
+  });
+
+  it("omite pedido totalmente pago e pedido cancelado", () => {
+    const result = calculatePendingPayments([
+      {
+        orderId: "o1",
+        customerName: "Ana",
+        status: "confirmed",
+        totalAmount: 100,
+        depositAmount: 100,
+        depositPaidAt: "2026-09-01",
+        balanceAmount: 0,
+        balancePaidAt: null,
+      },
+      {
+        orderId: "o2",
+        customerName: "Bia",
+        status: "cancelled",
+        totalAmount: 500,
+        depositAmount: 0,
+        depositPaidAt: null,
+        balanceAmount: 0,
+        balancePaidAt: null,
+      },
+    ]);
+
+    expect(result).toEqual([]);
   });
 });
 

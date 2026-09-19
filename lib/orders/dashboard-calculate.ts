@@ -57,6 +57,36 @@ export function calculateFinancialSummary(orders: OrderFinancialInput[]): Financ
   };
 }
 
+export type PendingPaymentInput = OrderFinancialInput & {
+  orderId: string;
+  customerName: string;
+};
+
+export type PendingPayment = {
+  orderId: string;
+  customerName: string;
+  pendingAmount: number;
+};
+
+/**
+ * Lista os pedidos (não cancelados) que ainda têm valor a receber, do maior
+ * pendente para o menor — dá rastreabilidade ao total agregado do card "A
+ * receber" (pedido do usuário: o número sozinho não deixava claro quais
+ * pedidos o compunham).
+ */
+export function calculatePendingPayments(orders: PendingPaymentInput[]): PendingPayment[] {
+  return orders
+    .filter((order) => order.status !== "cancelled")
+    .map((order) => {
+      const paid =
+        (order.depositPaidAt ? order.depositAmount : 0) + (order.balancePaidAt ? order.balanceAmount : 0);
+      const pendingAmount = order.totalAmount - Math.min(paid, order.totalAmount);
+      return { orderId: order.orderId, customerName: order.customerName, pendingAmount };
+    })
+    .filter((entry) => entry.pendingAmount > 0)
+    .sort((a, b) => b.pendingAmount - a.pendingAmount);
+}
+
 export type StatusCount = { status: string; count: number; totalAmount: number };
 
 /** Contagem e soma de valor por status — para os cards "N pedidos em X". */

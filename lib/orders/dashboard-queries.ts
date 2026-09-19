@@ -2,9 +2,11 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { calculateProductionList } from "@/lib/orders/calculate";
 import {
   calculateFinancialSummary,
+  calculatePendingPayments,
   calculateStatusBreakdown,
   calculateTopEntries,
   type FinancialSummary,
+  type PendingPayment,
   type StatusCount,
   type TopEntry,
 } from "@/lib/orders/dashboard-calculate";
@@ -39,6 +41,7 @@ export type OrderDashboardData = {
   topProducts: TopEntry[];
   topCustomers: TopEntry[];
   totalOrders: number;
+  pendingPayments: PendingPayment[];
 };
 
 /**
@@ -75,6 +78,7 @@ export async function getOrderDashboardData(
       topProducts: [],
       topCustomers: [],
       totalOrders: 0,
+      pendingPayments: [],
     };
   }
 
@@ -96,6 +100,19 @@ export async function getOrderDashboardData(
 
   const statusBreakdown = calculateStatusBreakdown(
     rows.map((row) => ({ status: row.status, totalAmount: row.total_amount })),
+  );
+
+  const pendingPayments = calculatePendingPayments(
+    rows.map((row) => ({
+      orderId: row.id,
+      customerName: row.customer?.name ?? "Cliente",
+      status: row.status,
+      totalAmount: row.total_amount,
+      depositAmount: row.deposit_amount,
+      depositPaidAt: row.deposit_paid_at,
+      balanceAmount: row.balance_amount,
+      balancePaidAt: row.balance_paid_at,
+    })),
   );
 
   const overdueOrders = rows.filter(
@@ -149,6 +166,7 @@ export async function getOrderDashboardData(
     topProducts,
     topCustomers,
     totalOrders: rows.filter((row) => row.status !== "cancelled").length,
+    pendingPayments,
   };
 }
 

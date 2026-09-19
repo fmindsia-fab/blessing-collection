@@ -544,8 +544,15 @@ cobrindo exatamente o total do pedido, o que não é garantido pelo formulário.
 pago, nunca um valor financeiro à parte — `calculateFinancialSummary` agora limita o "pago" de cada
 pedido ao seu `total_amount` (`Math.min`), e "a receber" é sempre `total − pago`, por pedido. Dois
 testes novos cobrem exatamente o cenário do bug (sinal+saldo abaixo do total; pago maior que o
-total por erro de digitação não deixa "a receber" negativo) — `tests/unit/orders-dashboard-calculate.test.ts`
-(241 testes na suíte completa).
+total por erro de digitação não deixa "a receber" negativo) — `tests/unit/orders-dashboard-calculate.test.ts`.
+
+**Rastreabilidade do "A receber":** depois de validar a correção acima, o usuário estranhou o
+valor de "Recebido" não corresponder a um único pedido que lembrava ter marcado como pago —
+investigação confirmou que eram dois pedidos com pagamento parcial somados (dado correto, não
+bug), mas expôs que o card agregado não permitia conferir quais pedidos o compunham. Adicionado
+`calculatePendingPayments` (lista pedidos não cancelados com saldo pendente, maior primeiro) e uma
+seção "Pagamentos pendentes" no dashboard com link direto para cada pedido — 2 testes novos
+(`tests/unit/orders-dashboard-calculate.test.ts`, 243 testes na suíte completa).
 
 ### M9 — Sistema de botões, links e setas
 
