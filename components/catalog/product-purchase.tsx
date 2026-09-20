@@ -204,7 +204,7 @@ export function ProductPurchase({
           title={productName}
           message={`Olha essa ${productName}${selectionLabel ? ` (${selectionLabel})` : ""} que eu encontrei!`}
           label="Compartilhar"
-          variant="ghost"
+          variant="outline"
         />
       </div>
     </>
