@@ -585,9 +585,21 @@ aleatória), reaproveitada em toda cobrança.
       hardcoded — `Intl.NumberFormat` usa espaço não separável entre "R$" e o valor, não espaço
       normal, o que quebrou a primeira versão do teste)
 - [x] `next build`, `tsc --noEmit`, `eslint` e suíte completa (245 testes) verdes
+- [x] Migration `0026_store_pix_key.sql` aplicada em produção pelo usuário
 
-**Pendente:** aplicar a migration `0026_store_pix_key.sql` em produção (usuário aplica manualmente
-no SQL Editor do Supabase Studio, mesma limitação de CLI não autenticado já registrada no M9/M12).
+**Cupom de próxima encomenda pedido em seguida:** ao clicar "Enviar cobrança", um campo pede o
+nome do cupom antes de montar a mensagem — pré-preenchido com o nome da cliente (por convenção,
+cupom = nome da cliente), editável, obrigatório (não permite enviar em branco). Percentual fixo do
+sistema em 10% (`INVOICE_COUPON_PERCENT`, `lib/orders/build-invoice-message.ts`), não digitado a
+cada envio. A chave PIX já vinha de `store.pix_key` desde a primeira versão — nada mudou aí, só
+confirmado que é sempre a configurada no painel, nunca digitada na hora.
+- [x] `buildInvoiceMessage` ganha `couponCode`/`couponPercent`; mensagem inclui a linha do cupom só
+      quando o código não vem vazio
+- [x] `invoice-button.tsx`: painel inline (mesmo padrão de `new-customer-inline.tsx`, sem modal) com
+      o campo de cupom antes do envio de fato
+- [x] Teste: linha de cupom presente com o percentual certo; omitida quando o código vem só espaços
+      — `tests/unit/build-invoice-message.test.ts` (246 testes na suíte completa)
+- [x] `next build`, `tsc --noEmit`, `eslint` verdes
 
 ### M9 — Sistema de botões, links e setas
 

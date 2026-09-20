@@ -1,5 +1,8 @@
 import { formatBRL, formatOrderDate } from "./labels";
 
+/** Desconto fixo do cupom de próxima encomenda, oferecido em toda cobrança. */
+export const INVOICE_COUPON_PERCENT = 10;
+
 export type InvoiceItem = {
   name: string;
   quantity: number;
@@ -13,12 +16,17 @@ export type BuildInvoiceMessageParams = {
   items: InvoiceItem[];
   totalAmount: number;
   pixKey: string | null;
+  /** Código do cupom para a próxima encomenda — por convenção, o nome da cliente. */
+  couponCode: string;
+  /** Percentual fixo de desconto do cupom (ex: 10 para 10%). */
+  couponPercent: number;
 };
 
 /**
  * Monta a mensagem de cobrança que a proprietária envia pelo WhatsApp:
- * cliente, data, itens (quantidade × preço unitário = subtotal), total e a
- * chave PIX — pedido do usuário, para não digitar isso na mão a cada pedido.
+ * cliente, data, itens (quantidade × preço unitário = subtotal), total,
+ * chave PIX e um cupom de desconto para a próxima encomenda — pedido do
+ * usuário, para não digitar isso na mão a cada pedido.
  *
  * Texto puro, não HTML/markdown: é colado direto no WhatsApp.
  */
@@ -29,6 +37,8 @@ export function buildInvoiceMessage({
   items,
   totalAmount,
   pixKey,
+  couponCode,
+  couponPercent,
 }: BuildInvoiceMessageParams): string {
   const lines = [
     `*${storeName}* — Cobrança`,
@@ -47,6 +57,13 @@ export function buildInvoiceMessage({
 
   if (pixKey) {
     lines.push("", `Chave PIX: ${pixKey}`);
+  }
+
+  if (couponCode.trim()) {
+    lines.push(
+      "",
+      `Presente pra próxima encomenda: cupom *${couponCode.trim()}* com ${couponPercent}% de desconto 💛`,
+    );
   }
 
   return lines.join("\n");

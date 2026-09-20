@@ -3,7 +3,7 @@ import { buildInvoiceMessage } from "@/lib/orders/build-invoice-message";
 import { formatBRL } from "@/lib/orders/labels";
 
 describe("buildInvoiceMessage", () => {
-  it("inclui loja, cliente, data, itens com subtotal, total e chave PIX", () => {
+  it("inclui loja, cliente, data, itens com subtotal, total, chave PIX e cupom", () => {
     const message = buildInvoiceMessage({
       storeName: "Blessing Collection",
       customerName: "Marli Sazaki",
@@ -14,6 +14,8 @@ describe("buildInvoiceMessage", () => {
       ],
       totalAmount: 529.6,
       pixKey: "blessing@pix.com",
+      couponCode: "MARLI",
+      couponPercent: 10,
     });
 
     expect(message).toContain("Blessing Collection");
@@ -27,6 +29,7 @@ describe("buildInvoiceMessage", () => {
     );
     expect(message).toContain(`Total: ${formatBRL(529.6)}`);
     expect(message).toContain("Chave PIX: blessing@pix.com");
+    expect(message).toContain("cupom *MARLI* com 10% de desconto");
   });
 
   it("omite a linha de chave PIX quando não configurada", () => {
@@ -37,8 +40,25 @@ describe("buildInvoiceMessage", () => {
       items: [{ name: "Bolsa", quantity: 1, unitPrice: 100 }],
       totalAmount: 100,
       pixKey: null,
+      couponCode: "ANA",
+      couponPercent: 10,
     });
 
     expect(message).not.toContain("Chave PIX");
+  });
+
+  it("omite a linha de cupom quando o código vem vazio", () => {
+    const message = buildInvoiceMessage({
+      storeName: "Blessing Collection",
+      customerName: "Ana",
+      orderDate: "2026-09-04",
+      items: [{ name: "Bolsa", quantity: 1, unitPrice: 100 }],
+      totalAmount: 100,
+      pixKey: null,
+      couponCode: "   ",
+      couponPercent: 10,
+    });
+
+    expect(message).not.toContain("cupom");
   });
 });
