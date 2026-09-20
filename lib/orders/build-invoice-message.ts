@@ -1,6 +1,6 @@
 import { formatBRL, formatOrderDate } from "./labels";
 
-/** Desconto fixo do cupom de próxima encomenda, oferecido em toda cobrança. */
+/** Desconto fixo do cupom de próxima encomenda, oferecido em todo resumo de pedido. */
 export const INVOICE_COUPON_PERCENT = 10;
 
 export type InvoiceItem = {
@@ -23,10 +23,10 @@ export type BuildInvoiceMessageParams = {
 };
 
 /**
- * Monta a mensagem de cobrança que a proprietária envia pelo WhatsApp:
- * cliente, data, itens (quantidade × preço unitário = subtotal), total,
- * chave PIX e um cupom de desconto para a próxima encomenda — pedido do
- * usuário, para não digitar isso na mão a cada pedido.
+ * Monta o resumo do pedido que a proprietária envia pelo WhatsApp: cliente,
+ * data, itens (quantidade × preço unitário = subtotal), total, chave PIX e
+ * um cupom de desconto para a próxima encomenda — pedido do usuário, para
+ * não digitar isso na mão a cada pedido.
  *
  * Texto puro, não HTML/markdown: é colado direto no WhatsApp.
  */
@@ -41,7 +41,7 @@ export function buildInvoiceMessage({
   couponPercent,
 }: BuildInvoiceMessageParams): string {
   const lines = [
-    `*${storeName}* — Cobrança`,
+    `*${storeName}* — Resumo do pedido`,
     "",
     `Cliente: ${customerName}`,
     `Data: ${formatOrderDate(orderDate)}`,
