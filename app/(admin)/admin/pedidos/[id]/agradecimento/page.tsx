@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { Playfair_Display, Cormorant_Garamond, Dancing_Script } from "next/font/google";
+import { Playfair_Display, Lora, Dancing_Script } from "next/font/google";
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { getOrder } from "@/lib/orders/queries";
 import { INVOICE_COUPON_PERCENT } from "@/lib/orders/build-invoice-message";
@@ -10,8 +10,11 @@ import { ThankYouCard } from "./thank-you-card";
 // Fontes fixas do cartão, independentes da fonte da marca configurada pela
 // loja: o cartão é uma peça editorial própria (pergaminho/dourado/cursiva),
 // não herda a identidade visual do catálogo/painel.
+//
+// Corpo em Lora (não Cormorant Garamond, trocada a pedido do usuário): mesmo
+// clima elegante, mas com traços mais grossos e legíveis em telas pequenas.
 const playfair = Playfair_Display({ subsets: ["latin"], weight: ["500", "600", "700"], variable: "--font-card-display" });
-const cormorant = Cormorant_Garamond({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-card-body" });
+const lora = Lora({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-card-body" });
 const dancingScript = Dancing_Script({ subsets: ["latin"], weight: ["600", "700"], variable: "--font-card-script" });
 
 export default async function OrderThankYouPage({ params }: { params: Promise<{ id: string }> }) {
@@ -32,7 +35,7 @@ export default async function OrderThankYouPage({ params }: { params: Promise<{ 
 
   return (
     <div
-      className={`${playfair.variable} ${cormorant.variable} ${dancingScript.variable} flex flex-col items-center gap-6 px-4 py-8`}
+      className={`${playfair.variable} ${lora.variable} ${dancingScript.variable} flex flex-col items-center gap-6 px-4 py-8`}
     >
       <div className="w-full max-w-xl">
         <BackLink href={`/admin/pedidos/${id}`}>Pedido</BackLink>

@@ -648,6 +648,9 @@ página + imagem manual no WhatsApp.
       "Cupom: FÁBIO MARCELO BARBOSA") — mais curto e fácil de digitar num checkout
 - [x] Bloco da chave PIX redesenhado: valor grande e centralizado, rótulo **"PIX CNPJ"** abaixo
       (antes era um bloco menor alinhado à esquerda com "Chave PIX" acima e o nome da loja abaixo)
+- [x] Fonte de corpo trocada de Cormorant Garamond (serifada bem fina) para **Lora** — mesmo clima
+      elegante, traços mais grossos e legíveis em telas pequenas; `Playfair Display` (títulos) e
+      `Dancing Script` (assinatura cursiva) mantidos
 - [x] `next build`, `tsc --noEmit`, `eslint` e suíte completa (246 testes) verdes
 
 ### M9 — Sistema de botões, links e setas
