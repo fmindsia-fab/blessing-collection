@@ -152,8 +152,8 @@ export function ThankYouCard({
         className="mx-auto mt-[26px] max-w-[46ch] text-center text-[1.14rem] leading-[1.6]"
         style={{ color: "#6b5645" }}
       >
-        Obrigada por escolher uma peça feita à mão, com tempo e atenção em cada detalhe. Esperamos
-        que ela se torne parte das suas próprias histórias.
+        Cada ponto carrega carinho. Cada detalhe, uma história. Que a sua {storeName} acompanhe
+        momentos inesquecíveis.
       </p>
       <p className="mt-[18px] text-center text-[1.7rem]" style={{ fontFamily: "var(--font-card-script), cursive", color: "#9c5c3a" }}>
         com carinho, {storeName}
