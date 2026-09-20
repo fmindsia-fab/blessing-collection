@@ -635,6 +635,12 @@ como foto no WhatsApp — nenhuma ferramenta do ambiente gera PNG/JPG diretament
       pedido" na tela de detalhe do pedido
 - [x] `next build`, `tsc --noEmit`, `eslint` e suíte completa (246 testes) verdes
 
+**Botão "Compartilhar" pedido em seguida:** abaixo do cartão, reaproveita `ShareButton` — como a
+página é protegida por login, o link compartilhado não abre para a cliente sem conta; decisão do
+usuário mesmo assim: só um atalho para o menu nativo de compartilhar do navegador/celular (Web
+Share API), não uma forma de entregar o cartão em si. O envio de fato continua sendo print da
+página + imagem manual no WhatsApp.
+
 ### M9 — Sistema de botões, links e setas
 
 - [x] `components/ui/action.tsx`: vocabulário único de ações (`solid`, `outline`, `quiet`, `underline`,

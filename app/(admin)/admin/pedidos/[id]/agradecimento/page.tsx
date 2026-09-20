@@ -4,6 +4,7 @@ import { getActiveStore } from "@/lib/store/get-active-store";
 import { getOrder } from "@/lib/orders/queries";
 import { INVOICE_COUPON_PERCENT } from "@/lib/orders/build-invoice-message";
 import { BackLink } from "@/components/shared/back-link";
+import { ShareButton } from "@/components/shared/share-button";
 import { ThankYouCard } from "./thank-you-card";
 
 // Fontes fixas do cartão, independentes da fonte da marca configurada pela
@@ -25,6 +26,9 @@ export default async function OrderThankYouPage({ params }: { params: Promise<{ 
   const instagramHandle = store.instagram_url
     ? `@${store.instagram_url.replace(/\/+$/, "").split("/").pop()}`
     : null;
+
+  const customerName = order.customer?.name ?? "Cliente";
+  const pageUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/admin/pedidos/${id}/agradecimento`;
 
   return (
     <div
@@ -51,6 +55,13 @@ export default async function OrderThankYouPage({ params }: { params: Promise<{ 
         couponPercent={INVOICE_COUPON_PERCENT}
         pixKey={store.pix_key ?? null}
         instagramHandle={instagramHandle}
+      />
+
+      <ShareButton
+        url={pageUrl}
+        title={`Cartão de agradecimento — ${customerName}`}
+        variant="outline"
+        label="Compartilhar"
       />
     </div>
   );
