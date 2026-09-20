@@ -48,6 +48,9 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               totalAmount={order.total_amount}
               pixKey={store.pix_key ?? null}
             />
+            <ActionLink href={`/admin/pedidos/${id}/agradecimento`} variant="outline" className="h-10 px-5">
+              Cartão de agradecimento
+            </ActionLink>
             <ActionLink href={`/admin/pedidos/${id}/editar`} variant="outline" className="h-10 px-5">
               Editar pedido
             </ActionLink>

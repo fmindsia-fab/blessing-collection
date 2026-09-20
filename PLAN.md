@@ -601,6 +601,40 @@ confirmado que é sempre a configurada no painel, nunca digitada na hora.
       — `tests/unit/build-invoice-message.test.ts` (246 testes na suíte completa)
 - [x] `next build`, `tsc --noEmit`, `eslint` verdes
 
+**"Enviar cobrança" virou "Enviar resumo do pedido"** — pedido do usuário, tom mais leve (botão do
+painel e título da mensagem do WhatsApp).
+
+### M17 — Cartão de agradecimento pós-venda (pedido do usuário)
+
+Nasceu de uma peça de divulgação que o usuário já usa (Canva, moldura floral/pergaminho) — pediu
+uma versão "obrigada pela compra" no mesmo estilo, pra mandar depois de cada venda. Depois de uma
+volta pelo artifact do Claude (link avulso, precisava pedir pra trocar produto/foto manualmente a
+cada pedido), decisão final do usuário: virar página real do painel, gerada a partir dos dados
+reais do pedido, com botão pra abrir a partir da tela de detalhe.
+
+Decisões confirmadas: mostra todos os itens do pedido (não só o primeiro) quando há mais de um;
+protegida por login como o resto do admin (não pública) — evita expor nome/telefone da cliente pra
+quem tiver o link. Sem geração de arquivo de imagem: a proprietária tira o print da página e envia
+como foto no WhatsApp — nenhuma ferramenta do ambiente gera PNG/JPG diretamente.
+
+- [x] Rota `/admin/pedidos/[id]/agradecimento`: busca o pedido via `getOrder` (já tinha
+      `coverImageUrl` por item desde o M13) e renderiza o cartão com dados reais — cliente, cada
+      item (nome + variação + foto de capa), cupom (nome da cliente, mesma convenção do M16) e
+      chave PIX de `store.pix_key`
+- [x] `thank-you-card.tsx`: adaptação do design do artifact para componente React — estilo
+      inline autocontido (não usa os tokens de tema `--background`/`--foreground` do painel), de
+      propósito: o resultado do print precisa ser sempre o mesmo cartão pergaminho/dourado,
+      independente do tema claro/escuro que a proprietária estiver usando no admin no momento
+- [x] Fontes próprias do cartão via `next/font/google` (`Playfair Display`, `Cormorant Garamond`,
+      `Dancing Script`) — não a fonte da marca configurada em Configurações; o cartão é peça
+      editorial própria, não uma extensão da identidade visual do catálogo
+- [x] Handle do Instagram extraído de `store.instagram_url`, mesmo padrão já usado em
+      `components/catalog/site-footer.tsx`; bloco todo omitido (grid vira 1 coluna) quando a loja
+      não tem Instagram configurado
+- [x] Botão "Cartão de agradecimento" adicionado ao lado de "Enviar resumo do pedido"/"Editar
+      pedido" na tela de detalhe do pedido
+- [x] `next build`, `tsc --noEmit`, `eslint` e suíte completa (246 testes) verdes
+
 ### M9 — Sistema de botões, links e setas
 
 - [x] `components/ui/action.tsx`: vocabulário único de ações (`solid`, `outline`, `quiet`, `underline`,
