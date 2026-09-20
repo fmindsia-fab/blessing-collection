@@ -554,6 +554,16 @@ bug), mas expôs que o card agregado não permitia conferir quais pedidos o comp
 seção "Pagamentos pendentes" no dashboard com link direto para cada pedido — 2 testes novos
 (`tests/unit/orders-dashboard-calculate.test.ts`, 243 testes na suíte completa).
 
+### M15 — Compartilhar produto individual (pedido do usuário)
+
+- [x] Botão "Compartilhar" na página pública de cada produto (`ProductPurchase`), ao lado de
+      "Encomendar esta peça"/"Adicionar à seleção" — reaproveita `ShareButton`
+      (`components/shared/share-button.tsx`) já existente (usado no rodapé para compartilhar o
+      catálogo inteiro), sem componente novo
+- [x] Mensagem inclui a variação escolhida quando houver (`selectionLabel`), consistente com a
+      mensagem que o botão do WhatsApp já monta para o mesmo produto
+- [x] `next build`, `tsc --noEmit`, `eslint` e suíte completa (243 testes) verdes
+
 ### M9 — Sistema de botões, links e setas
 
 - [x] `components/ui/action.tsx`: vocabulário único de ações (`solid`, `outline`, `quiet`, `underline`,

@@ -16,6 +16,7 @@ import {
 import { InstallmentOptions } from "./installment-options";
 import { WhatsappButton } from "./whatsapp-button";
 import { SelectionToggleButton } from "./selection-toggle-button";
+import { ShareButton } from "@/components/shared/share-button";
 import type { ProductStatus } from "@/types/database.types";
 
 type Props = {
@@ -197,6 +198,13 @@ export function ProductPurchase({
             coverImageUrl,
             variantName: selectionLabel,
           }}
+        />
+        <ShareButton
+          url={productUrl}
+          title={productName}
+          message={`Olha essa ${productName}${selectionLabel ? ` (${selectionLabel})` : ""} que eu encontrei!`}
+          label="Compartilhar"
+          variant="ghost"
         />
       </div>
     </>
