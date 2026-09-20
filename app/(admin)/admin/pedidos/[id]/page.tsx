@@ -7,6 +7,7 @@ import { PageHeading } from "@/components/admin/page-heading";
 import { BackLink } from "@/components/shared/back-link";
 import { ActionLink } from "@/components/ui/action";
 import { OrderStatusControl } from "./order-status-control";
+import { InvoiceButton } from "./invoice-button";
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -33,9 +34,24 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         title={order.customer?.name ?? "Cliente"}
         description={order.customer?.phone ? formatPhoneBR(order.customer.phone) : undefined}
         action={
-          <ActionLink href={`/admin/pedidos/${id}/editar`} variant="outline" className="h-10 px-5">
-            Editar pedido
-          </ActionLink>
+          <div className="flex flex-wrap items-center gap-3">
+            <InvoiceButton
+              storeName={store.name}
+              customerName={order.customer?.name ?? "Cliente"}
+              customerPhone={order.customer?.phone ?? null}
+              orderDate={order.order_date}
+              items={items.map((item) => ({
+                name: item.product?.name ?? item.custom_name ?? "Item",
+                quantity: item.quantity,
+                unitPrice: item.unit_price,
+              }))}
+              totalAmount={order.total_amount}
+              pixKey={store.pix_key ?? null}
+            />
+            <ActionLink href={`/admin/pedidos/${id}/editar`} variant="outline" className="h-10 px-5">
+              Editar pedido
+            </ActionLink>
+          </div>
         }
       />
 

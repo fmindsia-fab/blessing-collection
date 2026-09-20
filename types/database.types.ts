@@ -74,6 +74,8 @@ export interface Database {
           tax_percent: number;
           default_pricing_method: PricingMethodValue;
           default_margin_percent: number;
+          /** Chave PIX (migration 0026) — usada na cobrança que a proprietária monta pro cliente. */
+          pix_key: string | null;
           status: StoreStatus;
           created_at: string;
           updated_at: string;
@@ -101,6 +103,7 @@ export interface Database {
           tax_percent?: number;
           default_pricing_method?: PricingMethodValue;
           default_margin_percent?: number;
+          pix_key?: string | null;
           status?: StoreStatus;
           created_at?: string;
           updated_at?: string;

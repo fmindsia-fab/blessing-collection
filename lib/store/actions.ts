@@ -14,6 +14,7 @@ const storeSettingsSchema = z.object({
   // A lista curada cresce sem migration (o check do banco foi removido na
   // 0010), então a validação de valor conhecido é feita aqui.
   fontFamily: z.string().refine(isCuratedFont, "Selecione uma das fontes disponíveis"),
+  pixKey: z.string().trim().max(140).optional(),
 });
 
 export type StoreSettingsFormState = {
@@ -32,6 +33,7 @@ export async function updateStoreSettings(
     instagramUrl: formData.get("instagramUrl"),
     description: formData.get("description"),
     fontFamily: formData.get("fontFamily"),
+    pixKey: formData.get("pixKey"),
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
@@ -54,6 +56,7 @@ export async function updateStoreSettings(
       color_secondary: palette.colors[1] ?? palette.colors[0],
       color_accent: palette.colors[2] ?? palette.colors[0],
       font_family: parsed.data.fontFamily,
+      pix_key: parsed.data.pixKey || null,
     })
     .eq("id", store.id);
 

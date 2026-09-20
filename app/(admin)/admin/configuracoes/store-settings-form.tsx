@@ -24,6 +24,7 @@ type StoreSettingsFormProps = {
     font_family: FontFamily;
     custom_font_url?: string | null;
     custom_font_name?: string | null;
+    pix_key?: string | null;
   };
 };
 
@@ -59,6 +60,20 @@ export function StoreSettingsForm({ store }: StoreSettingsFormProps) {
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="description">Descrição da marca</Label>
         <Textarea id="description" name="description" defaultValue={store.description ?? ""} rows={4} />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="pixKey">Chave PIX</Label>
+        <Input
+          id="pixKey"
+          name="pixKey"
+          defaultValue={store.pix_key ?? ""}
+          placeholder="CPF, e-mail, telefone ou chave aleatória"
+          maxLength={140}
+        />
+        <span className="text-xs text-muted-foreground">
+          Usada ao montar a cobrança de um pedido para enviar à cliente.
+        </span>
       </div>
 
       <fieldset className="flex flex-col gap-6 border-t border-border pt-6">

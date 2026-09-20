@@ -564,6 +564,31 @@ seção "Pagamentos pendentes" no dashboard com link direto para cada pedido —
       mensagem que o botão do WhatsApp já monta para o mesmo produto
 - [x] `next build`, `tsc --noEmit`, `eslint` e suíte completa (243 testes) verdes
 
+### M16 — Cobrança de pedido para o cliente (pedido do usuário)
+
+Decisões confirmadas com o usuário: envio via mensagem de WhatsApp (não imagem/PDF); chave PIX
+cadastrada uma vez em `/admin/configuracoes` (campo texto livre — CPF, e-mail, telefone ou chave
+aleatória), reaproveitada em toda cobrança.
+
+- [x] Migration `0026_store_pix_key.sql`: coluna `stores.pix_key` (texto livre, opcional)
+- [x] Campo "Chave PIX" no formulário de configurações da loja (`store-settings-form.tsx` +
+      `lib/store/actions.ts`)
+- [x] `lib/orders/build-invoice-message.ts`: função pura (`buildInvoiceMessage`) monta o texto —
+      nome da loja, cliente, data, cada item com quantidade × preço unitário = subtotal, total e
+      chave PIX (omitida quando não configurada). Texto puro pronto para colar no WhatsApp
+- [x] Botão "Enviar cobrança" na tela de detalhe do pedido (`invoice-button.tsx`): abre
+      `wa.me/55<telefone-da-cliente>` com a mensagem pronta quando a cliente tem telefone
+      cadastrado; sem telefone, copia a mensagem para a área de transferência e abre o WhatsApp em
+      branco para a proprietária escolher o contato manualmente
+- [x] Teste: mensagem inclui todos os campos esperados, chave PIX omitida quando ausente —
+      `tests/unit/build-invoice-message.test.ts` (usa `formatBRL` real para comparar, não string
+      hardcoded — `Intl.NumberFormat` usa espaço não separável entre "R$" e o valor, não espaço
+      normal, o que quebrou a primeira versão do teste)
+- [x] `next build`, `tsc --noEmit`, `eslint` e suíte completa (245 testes) verdes
+
+**Pendente:** aplicar a migration `0026_store_pix_key.sql` em produção (usuário aplica manualmente
+no SQL Editor do Supabase Studio, mesma limitação de CLI não autenticado já registrada no M9/M12).
+
 ### M9 — Sistema de botões, links e setas
 
 - [x] `components/ui/action.tsx`: vocabulário único de ações (`solid`, `outline`, `quiet`, `underline`,
