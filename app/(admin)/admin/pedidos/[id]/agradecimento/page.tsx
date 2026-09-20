@@ -45,6 +45,7 @@ export default async function OrderThankYouPage({ params }: { params: Promise<{ 
 
       <ThankYouCard
         storeName={store.name}
+        storeLogoUrl={store.logo_url ?? null}
         customerName={order.customer?.name ?? "Cliente"}
         items={items.map((item) => ({
           name: item.product?.name ?? item.custom_name ?? "Item",

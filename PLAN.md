@@ -641,6 +641,15 @@ usuário mesmo assim: só um atalho para o menu nativo de compartilhar do navega
 Share API), não uma forma de entregar o cartão em si. O envio de fato continua sendo print da
 página + imagem manual no WhatsApp.
 
+**Ajustes finos pedidos após primeiro uso com dados reais:**
+- [x] Cabeçalho troca o nome da loja em cursiva pela **logo real** (`store.logo_url`, já cadastrada
+      em Configurações) — texto cursivo vira fallback só quando não há logo cadastrada
+- [x] Cupom passa a ser **primeiro nome da cliente + percentual, sem espaço** (ex: `FABIO10`, não
+      "Cupom: FÁBIO MARCELO BARBOSA") — mais curto e fácil de digitar num checkout
+- [x] Bloco da chave PIX redesenhado: valor grande e centralizado, rótulo **"PIX CNPJ"** abaixo
+      (antes era um bloco menor alinhado à esquerda com "Chave PIX" acima e o nome da loja abaixo)
+- [x] `next build`, `tsc --noEmit`, `eslint` e suíte completa (246 testes) verdes
+
 ### M9 — Sistema de botões, links e setas
 
 - [x] `components/ui/action.tsx`: vocabulário único de ações (`solid`, `outline`, `quiet`, `underline`,

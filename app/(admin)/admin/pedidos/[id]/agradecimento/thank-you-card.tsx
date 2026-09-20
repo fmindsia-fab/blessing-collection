@@ -18,6 +18,7 @@ type ThankYouItem = {
  */
 export function ThankYouCard({
   storeName,
+  storeLogoUrl,
   customerName,
   items,
   couponCode,
@@ -26,6 +27,7 @@ export function ThankYouCard({
   instagramHandle,
 }: {
   storeName: string;
+  storeLogoUrl: string | null;
   customerName: string;
   items: ThankYouItem[];
   couponCode: string;
@@ -35,6 +37,8 @@ export function ThankYouCard({
 }) {
   const firstItem = items[0];
   const extraCount = items.length - 1;
+  // Cupom = primeiro nome da cliente + percentual, sem espaço (ex: FABIO10).
+  const couponLabel = `${couponCode.trim().split(/\s+/)[0].toUpperCase()}${couponPercent}`;
 
   return (
     <div
@@ -60,13 +64,23 @@ export function ThankYouCard({
         Peça artesanal única
       </p>
 
-      <div className="mt-3.5 text-center">
-        <span
-          className="relative inline-block text-[2.6rem] leading-none sm:text-[3.4rem]"
-          style={{ fontFamily: "var(--font-card-script), cursive", color: "#3d2b22" }}
-        >
-          {storeName}
-        </span>
+      <div className="mt-3.5 flex justify-center">
+        {storeLogoUrl ? (
+          <Image
+            src={storeLogoUrl}
+            alt={storeName}
+            width={160}
+            height={72}
+            className="h-16 w-auto max-w-[220px] object-contain"
+          />
+        ) : (
+          <span
+            className="relative inline-block text-[2.6rem] leading-none sm:text-[3.4rem]"
+            style={{ fontFamily: "var(--font-card-script), cursive", color: "#3d2b22" }}
+          >
+            {storeName}
+          </span>
+        )}
       </div>
 
       <div aria-hidden className="mx-auto my-[22px] h-px w-[46px]" style={{ background: "#b08d57" }} />
@@ -160,7 +174,7 @@ export function ThankYouCard({
             {couponPercent}% OFF
           </p>
           <p className="text-[0.85rem]" style={{ color: "#6b5645" }}>
-            Cupom: {couponCode.toUpperCase()}
+            Cupom: {couponLabel}
           </p>
         </div>
 
@@ -187,23 +201,18 @@ export function ThankYouCard({
 
       {pixKey ? (
         <div
-          className="mt-3 flex items-center gap-3.5 rounded-[3px] border px-4 py-4"
+          className="mt-3 flex flex-col items-center gap-1 rounded-[3px] border px-4 py-5 text-center"
           style={{ borderColor: "#b08d57", background: "linear-gradient(135deg, #f6efe4, #d9c39a 220%)" }}
         >
-          <div className="min-w-0">
-            <p className="text-[9.5px] uppercase" style={{ letterSpacing: "0.22em", color: "#6b5645" }}>
-              Chave PIX
-            </p>
-            <p
-              className="mt-0.5 break-words text-[1.05rem] font-bold"
-              style={{ fontFamily: "var(--font-card-display), Georgia, serif", color: "#3d2b22" }}
-            >
-              {pixKey}
-            </p>
-            <p className="mt-0.5 text-[0.85rem]" style={{ color: "#6b5645" }}>
-              {storeName}
-            </p>
-          </div>
+          <p
+            className="break-words text-[1.5rem] font-bold sm:text-[1.75rem]"
+            style={{ fontFamily: "var(--font-card-display), Georgia, serif", color: "#3d2b22" }}
+          >
+            {pixKey}
+          </p>
+          <p className="text-[9.5px] uppercase" style={{ letterSpacing: "0.22em", color: "#6b5645" }}>
+            PIX CNPJ
+          </p>
         </div>
       ) : null}
 
