@@ -22,8 +22,8 @@ export type StoreSettingsFormState = {
   success?: boolean;
 };
 
-// A loja é resolvida no servidor via STORE_SLUG — nunca a partir de um id
-// enviado pelo formulário, que o client poderia forjar.
+// A loja é resolvida no servidor via getActiveStore() — nunca a partir de um
+// id enviado pelo formulário, que o client poderia forjar.
 export async function updateStoreSettings(
   _prevState: StoreSettingsFormState,
   formData: FormData,
