@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { getActiveStore } from "@/lib/store/get-active-store";
+import { getActiveStore, isPlatformRequest } from "@/lib/store/get-active-store";
 import { buildStoreTheme } from "@/lib/store/theme";
 import "./globals.css";
 
@@ -31,8 +31,12 @@ export default async function RootLayout({
   // `body { @apply bg-background }`). Um filho reescrevendo --background não
   // repinta um ancestral que já resolveu a variável — por isso a cor de fundo
   // configurada em Configurações nunca aparecia, mesmo depois de salva.
-  const store = await getActiveStore();
-  const theme = buildStoreTheme(store);
+  //
+  // No apex/www da plataforma (ex. atelifacil.com.br) não existe "a loja
+  // ativa" — é a área de marketing/cadastro do SaaS, sem marca de loja
+  // nenhuma. buildStoreTheme({}) cai nos tokens padrão do globals.css.
+  const isPlatform = await isPlatformRequest();
+  const theme = isPlatform ? buildStoreTheme({}) : buildStoreTheme(await getActiveStore());
 
   return (
     <html

@@ -41,6 +41,16 @@ async function findStoreByDomain(supabase: Supabase, domain: string) {
   return data;
 }
 
+// true só quando a requisição é para o apex/www da própria plataforma (ex.
+// atelifacil.com.br), onde não existe "a loja ativa" — é a área de marketing/
+// cadastro, não o catálogo de ninguém. No modo "env" nunca é true: sempre há
+// exatamente uma loja servida pelo deploy.
+export async function isPlatformRequest(): Promise<boolean> {
+  if ((process.env.TENANT_RESOLUTION_MODE ?? "env") !== "host") return false;
+  const headerList = await headers();
+  return headerList.get("x-tenant-none") === "1";
+}
+
 export const getActiveStore = cache(async () => {
   const mode = process.env.TENANT_RESOLUTION_MODE ?? "env";
   const supabase = await createServerSupabaseClient();

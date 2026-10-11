@@ -30,10 +30,13 @@ export async function proxy(request: NextRequest) {
     const requestHeaders = new Headers(request.headers);
     requestHeaders.delete("x-tenant-slug");
     requestHeaders.delete("x-tenant-domain");
+    requestHeaders.delete("x-tenant-none");
     if (tenant.kind === "tenant") {
       requestHeaders.set("x-tenant-slug", tenant.slug);
     } else if (tenant.kind === "tenant-domain") {
       requestHeaders.set("x-tenant-domain", tenant.domain);
+    } else {
+      requestHeaders.set("x-tenant-none", "1");
     }
 
     // Repropaga os headers de tenant para o Server Component mantendo os

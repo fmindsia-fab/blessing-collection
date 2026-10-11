@@ -626,6 +626,11 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      /** Onboarding self-service (migration 0028) — checagem de slug sem vazar dado de loja inativa. */
+      is_store_slug_available: {
+        Args: { p_slug: string };
+        Returns: boolean;
+      };
       get_product_rankings: {
         Args: { p_store_id: string; p_days?: number | null };
         Returns: {
