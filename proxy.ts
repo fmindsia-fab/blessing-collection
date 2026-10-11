@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createMiddlewareSupabaseClient } from "@/lib/supabase/middleware";
+import { resolveTenantFromHost } from "@/lib/store/resolve-tenant-from-host";
 
 export async function proxy(request: NextRequest) {
   const { supabase, response } = createMiddlewareSupabaseClient(request);
@@ -23,9 +24,33 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  if (process.env.TENANT_RESOLUTION_MODE === "host") {
+    const tenant = resolveTenantFromHost(request.headers.get("host"));
+
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.delete("x-tenant-slug");
+    requestHeaders.delete("x-tenant-domain");
+    if (tenant.kind === "tenant") {
+      requestHeaders.set("x-tenant-slug", tenant.slug);
+    } else if (tenant.kind === "tenant-domain") {
+      requestHeaders.set("x-tenant-domain", tenant.domain);
+    }
+
+    // Repropaga os headers de tenant para o Server Component mantendo os
+    // cookies de sessão que createMiddlewareSupabaseClient já definiu em
+    // `response` (necessário para o auth.getUser() acima não perder a sessão).
+    const tenantResponse = NextResponse.next({ request: { headers: requestHeaders } });
+    response.cookies.getAll().forEach((cookie) => tenantResponse.cookies.set(cookie));
+    return tenantResponse;
+  }
+
   return response;
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/login"],
+  matcher: [
+    "/admin/:path*",
+    "/login",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)",
+  ],
 };

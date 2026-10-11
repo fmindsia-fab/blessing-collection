@@ -111,6 +111,25 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["stores"]["Insert"]>;
         Relationships: [];
       };
+      /** Domínios customizados por loja (migration 0027), ex.: blessing.com.br. */
+      store_domains: {
+        Row: {
+          id: string;
+          store_id: string;
+          domain: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          store_id: string;
+          domain: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["store_domains"]["Insert"]>;
+        Relationships: [];
+      };
       categories: {
         Row: {
           id: string;
