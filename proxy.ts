@@ -25,14 +25,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (process.env.TENANT_RESOLUTION_MODE === "host") {
-    const rawHost = request.headers.get("host");
-    const tenant = resolveTenantFromHost(rawHost);
-    console.log("[tenant-debug]", {
-      rawHost,
-      xForwardedHost: request.headers.get("x-forwarded-host"),
-      platformDomain: process.env.PLATFORM_DOMAIN,
-      resolved: tenant,
-    });
+    const tenant = resolveTenantFromHost(request.headers.get("host"));
 
     const requestHeaders = new Headers(request.headers);
     requestHeaders.delete("x-tenant-slug");
