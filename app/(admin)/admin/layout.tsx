@@ -34,7 +34,7 @@ export default async function AdminAreaLayout({ children }: { children: React.Re
           <div className="flex items-center gap-8">
             <Link href="/admin" className="flex flex-col leading-none">
               <span className="font-[family-name:var(--font-brand)] text-base tracking-tight">
-                Blessing
+                {storeName}
               </span>
               <span className="text-[0.5625rem] uppercase tracking-[0.2em] text-muted-foreground">
                 Painel
