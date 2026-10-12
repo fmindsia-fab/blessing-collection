@@ -1,13 +1,22 @@
 import { getActiveStore } from "@/lib/store/get-active-store";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { StoreSettingsForm } from "./store-settings-form";
 import { StoreLogoForm } from "./store-logo-form";
 import { PageHeading } from "@/components/admin/page-heading";
 import { BrandFontUpload } from "./brand-font-upload";
 import { ShareButton } from "@/components/shared/share-button";
+import { BillingSection } from "./billing-section";
 
 export default async function AdminSettingsPage() {
   const store = await getActiveStore();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+
+  const supabase = await createServerSupabaseClient();
+  const { data: subscription } = await supabase
+    .from("store_subscriptions")
+    .select("status, stripe_customer_id")
+    .eq("store_id", store.id)
+    .maybeSingle();
 
   return (
     <div className="flex max-w-xl flex-col gap-8">
@@ -43,6 +52,11 @@ export default async function AdminSettingsPage() {
           {siteUrl || "Defina NEXT_PUBLIC_SITE_URL"}
         </code>
       </div>
+
+      <BillingSection
+        hasCustomer={Boolean(subscription?.stripe_customer_id)}
+        status={subscription?.status ?? null}
+      />
     </div>
   );
 }

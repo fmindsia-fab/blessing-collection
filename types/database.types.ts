@@ -22,6 +22,8 @@ export type AnalyticsEventType =
   | "collection_view";
 /** Fluxo completo de encomenda (migration 0025), do orçamento à entrega. */
 export type OrderStatus = "quote" | "confirmed" | "in_production" | "ready" | "delivered" | "cancelled";
+/** Espelha os status nativos do Stripe (migration 0029) — não reinventar vocabulário. */
+export type SubscriptionStatus = "trialing" | "active" | "past_due" | "canceled" | "unpaid";
 
 export interface Database {
   public: {
@@ -128,6 +130,35 @@ export interface Database {
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["store_domains"]["Insert"]>;
+        Relationships: [];
+      };
+      /** Billing por loja (migration 0029), 1:1 com stores. */
+      store_subscriptions: {
+        Row: {
+          id: string;
+          store_id: string;
+          stripe_customer_id: string | null;
+          stripe_subscription_id: string | null;
+          status: SubscriptionStatus;
+          price_id: string | null;
+          trial_ends_at: string | null;
+          current_period_end: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          store_id: string;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
+          status?: SubscriptionStatus;
+          price_id?: string | null;
+          trial_ends_at?: string | null;
+          current_period_end?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["store_subscriptions"]["Insert"]>;
         Relationships: [];
       };
       categories: {
