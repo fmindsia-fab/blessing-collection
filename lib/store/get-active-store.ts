@@ -9,11 +9,13 @@ type Supabase = Awaited<ReturnType<typeof createServerSupabaseClient>>;
 // process.env.STORE_SLUG, PLATFORM_DOMAIN nem os headers x-tenant-* fora
 // daqui — proxy.ts só parseia o host bruto e repassa o resultado já pronto.
 //
-// TENANT_RESOLUTION_MODE controla a fonte do slug (ver Milestone 1 do plano
-// de evolução SaaS):
-// - "env" (padrão atual): slug fixo via STORE_SLUG, um deploy = uma loja.
-// - "host": slug/domínio resolvido a partir do host da requisição, via
-//   headers propagados pelo proxy.ts (x-tenant-slug / x-tenant-domain).
+// TENANT_RESOLUTION_MODE controla a fonte do slug (ver Milestone 5 do plano
+// de evolução SaaS — concluído, a Blessing já roda em "host" em produção):
+// - "host" (padrão em produção desde o Milestone 5): slug/domínio resolvido
+//   a partir do host da requisição, via headers propagados pelo proxy.ts
+//   (x-tenant-slug / x-tenant-domain).
+// - "env" (legado/fallback de dev local): slug fixo via STORE_SLUG, um
+//   deploy = uma loja. Nunca usar em produção.
 async function findStoreBySlug(supabase: Supabase, slug: string) {
   const { data } = await supabase
     .from("stores")
