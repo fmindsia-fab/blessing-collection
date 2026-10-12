@@ -8,13 +8,33 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isAdminRoute = request.nextUrl.pathname.startsWith("/admin");
-  const isLoginRoute = request.nextUrl.pathname === "/login";
+  const pathname = request.nextUrl.pathname;
+  // "/admin-plataforma" também começa com "/admin" — checar primeiro e
+  // excluir do resto da lógica de /admin (loja), senão o redirect pós-login
+  // abaixo mandaria um platform admin de volta para o admin de uma loja.
+  const isPlatformAdminRoute = pathname.startsWith("/admin-plataforma");
+  const isAdminRoute = !isPlatformAdminRoute && pathname.startsWith("/admin");
+  const isLoginRoute = pathname === "/login";
+
+  if (isPlatformAdminRoute) {
+    if (!user) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("redirectTo", pathname);
+      return NextResponse.redirect(url);
+    }
+    const { data: isAdmin } = await supabase.rpc("is_platform_admin");
+    if (!isAdmin) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/";
+      return NextResponse.redirect(url);
+    }
+  }
 
   if (isAdminRoute && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    url.searchParams.set("redirectTo", request.nextUrl.pathname);
+    url.searchParams.set("redirectTo", pathname);
     return NextResponse.redirect(url);
   }
 

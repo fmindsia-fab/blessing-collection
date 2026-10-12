@@ -32,18 +32,22 @@ export interface Database {
         Row: {
           id: string;
           full_name: string | null;
+          /** Admin da plataforma (migration 0030) — flag manual, não self-service. */
+          is_platform_admin: boolean;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id: string;
           full_name?: string | null;
+          is_platform_admin?: boolean;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
           full_name?: string | null;
+          is_platform_admin?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -660,6 +664,11 @@ export interface Database {
       /** Onboarding self-service (migration 0028) — checagem de slug sem vazar dado de loja inativa. */
       is_store_slug_available: {
         Args: { p_slug: string };
+        Returns: boolean;
+      };
+      /** Painel da plataforma (migration 0030) — evita recursão de RLS em profiles. */
+      is_platform_admin: {
+        Args: Record<string, never>;
         Returns: boolean;
       };
       get_product_rankings: {
