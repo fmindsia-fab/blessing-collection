@@ -11,10 +11,10 @@ export default async function LoginPage({
     <main className="flex flex-1 items-center justify-center px-6 py-16">
       <div className="reveal flex w-full max-w-sm flex-col gap-10">
         <div className="flex flex-col items-center gap-3 text-center">
-          <span className="text-[0.625rem] uppercase tracking-[0.22em] text-muted-foreground">
+          <span className="text-xs font-medium text-muted-foreground">
             Blessing Collection
           </span>
-          <h1 className="font-[family-name:var(--font-brand)] text-3xl leading-none tracking-tight">
+          <h1 className="text-3xl leading-none font-semibold tracking-tight">
             Painel
           </h1>
           <span aria-hidden className="h-px w-10 bg-[var(--gold)]" />

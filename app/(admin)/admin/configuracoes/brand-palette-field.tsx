@@ -65,7 +65,7 @@ export function BrandPaletteField({ initialColors }: { initialColors: string[] }
           return (
             <div key={index} className="flex flex-col gap-1">
               <div className="flex items-center gap-3">
-                <span className="w-16 shrink-0 text-[0.6875rem] uppercase tracking-wider text-muted-foreground">
+                <span className="w-16 shrink-0 text-xs font-medium text-muted-foreground">
                   {role}
                 </span>
 
@@ -138,7 +138,7 @@ export function BrandPaletteField({ initialColors }: { initialColors: string[] }
       ) : null}
 
       <div className="flex flex-col gap-2 pt-1">
-        <span className="text-[0.6875rem] uppercase tracking-wider text-muted-foreground">Sugestões</span>
+        <span className="text-xs font-medium text-muted-foreground">Sugestões</span>
         <div className="flex flex-wrap gap-1.5">
           {SUGGESTED.map((suggestion) => (
             <button

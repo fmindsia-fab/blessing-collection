@@ -86,13 +86,13 @@ export default async function OrdersDashboardPage({
       ) : null}
 
       <section className="flex flex-col gap-3">
-        <span className="kicker">Pedidos por status</span>
+        <span className="admin-kicker">Pedidos por status</span>
         <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {ORDER_STATUS_ORDER.map((status) => {
             const entry = statusMap.get(status);
             return (
               <div key={status} className="flex flex-col gap-1 rounded-[var(--radius)] border border-border p-3">
-                <span className="text-[0.625rem] uppercase tracking-[0.1em] text-muted-foreground">
+                <span className="text-xs font-medium text-muted-foreground">
                   {ORDER_STATUS_LABEL[status]}
                 </span>
                 <span className="text-lg font-medium tabular-nums">{entry?.count ?? 0}</span>
@@ -107,7 +107,7 @@ export default async function OrdersDashboardPage({
 
       {pendingPayments.length > 0 ? (
         <section className="flex flex-col gap-3">
-          <span className="kicker">Pagamentos pendentes</span>
+          <span className="admin-kicker">Pagamentos pendentes</span>
           <ul className="flex flex-col divide-y divide-border border-y border-border">
             {pendingPayments.map((entry) => (
               <li key={entry.orderId} className="flex items-center justify-between gap-3 py-2.5 text-sm">
@@ -126,13 +126,13 @@ export default async function OrdersDashboardPage({
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="flex flex-col gap-3">
-          <span className="kicker">Top produtos pedidos</span>
+          <span className="admin-kicker">Top produtos pedidos</span>
           {topProducts.length > 0 ? (
             <ul className="flex flex-col divide-y divide-border border-y border-border">
               {topProducts.map((entry, index) => (
                 <li key={entry.key} className="flex items-center justify-between gap-3 py-2.5">
                   <span className="flex items-center gap-2.5 truncate text-sm">
-                    <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--gold)]/15 text-[0.625rem] tabular-nums">
+                    <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--gold)]/15 text-xs tabular-nums">
                       {index + 1}
                     </span>
                     <span className="truncate">{entry.label}</span>
@@ -149,13 +149,13 @@ export default async function OrdersDashboardPage({
         </section>
 
         <section className="flex flex-col gap-3">
-          <span className="kicker">Top clientes</span>
+          <span className="admin-kicker">Top clientes</span>
           {topCustomers.length > 0 ? (
             <ul className="flex flex-col divide-y divide-border border-y border-border">
               {topCustomers.map((entry, index) => (
                 <li key={entry.key} className="flex items-center justify-between gap-3 py-2.5">
                   <span className="flex items-center gap-2.5 truncate text-sm">
-                    <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--gold)]/15 text-[0.625rem] tabular-nums">
+                    <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--gold)]/15 text-xs tabular-nums">
                       {index + 1}
                     </span>
                     <span className="truncate">{entry.label}</span>
@@ -173,7 +173,7 @@ export default async function OrdersDashboardPage({
       </div>
 
       <section className="flex flex-col gap-3">
-        <span className="kicker">Materiais a comprar</span>
+        <span className="admin-kicker">Materiais a comprar</span>
         <p className="text-xs text-muted-foreground">
           Soma dos materiais cadastrados nas peças de pedidos com status &quot;Confirmado&quot; —
           não considera período nem outros status.

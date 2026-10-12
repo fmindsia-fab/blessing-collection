@@ -32,7 +32,7 @@ export function BrandFontUpload({
         <div className="flex flex-wrap items-center justify-between gap-3 border border-border bg-secondary/60 px-4 py-3">
           <div className="flex flex-col">
             <span className="text-sm">{customFontName}</span>
-            <span className="text-[0.625rem] uppercase tracking-wider text-muted-foreground">
+            <span className="text-xs font-medium text-muted-foreground">
               Em uso no catálogo
             </span>
           </div>

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { NativeSelect } from "@/components/ui/native-select";
 
 type ProductOption = {
   id: string;
@@ -137,17 +138,16 @@ export function OrderForm({
       <input type="hidden" name="itemCount" value={items.length} />
 
       <section className="flex flex-col gap-4">
-        <span className="kicker">Cliente e datas</span>
+        <span className="admin-kicker">Cliente e datas</span>
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="customerId">Cliente</Label>
-            <select
+            <NativeSelect
               id="customerId"
               name="customerId"
               required
               value={customerId}
               onChange={(e) => setCustomerId(e.target.value)}
-              className="h-9 rounded-[var(--radius)] border border-input bg-background px-3 text-sm outline-none transition-colors focus-visible:border-foreground/40 focus-visible:ring-2 focus-visible:ring-[var(--gold)]/40"
             >
               <option value="" disabled>
                 Selecione…
@@ -158,7 +158,7 @@ export function OrderForm({
                   {customer.phone ? ` — ${formatPhoneBR(customer.phone)}` : ""}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
             <NewCustomerInline
               onCreated={(customer) => {
                 setCustomerList((prev) => [...prev, customer].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")));
@@ -199,7 +199,7 @@ export function OrderForm({
       </section>
 
       <section className="flex flex-col gap-3">
-        <span className="kicker">Itens do pedido</span>
+        <span className="admin-kicker">Itens do pedido</span>
 
         <div className="flex flex-col gap-4">
           {items.map((item, index) => {
@@ -213,12 +213,11 @@ export function OrderForm({
                       submit sem depender de um hidden input espelhando o state, que
                       dessincronizava (valor selecionado no <select> não chegava ao
                       servidor). */}
-                  <select
+                  <NativeSelect
                     name={`items[${index}].productId`}
                     value={item.productId}
                     onChange={(e) => selectProduct(item.key, e.target.value)}
                     aria-label="Produto"
-                    className="h-9 rounded-[var(--radius)] border border-input bg-background px-3 text-sm outline-none transition-colors focus-visible:border-foreground/40 focus-visible:ring-2 focus-visible:ring-[var(--gold)]/40"
                   >
                     <option value="">Item avulso / personalizado…</option>
                     {products.map((p) => (
@@ -226,7 +225,7 @@ export function OrderForm({
                         {p.name}
                       </option>
                     ))}
-                  </select>
+                  </NativeSelect>
 
                   <button
                     type="button"
@@ -240,12 +239,12 @@ export function OrderForm({
                 </div>
 
                 {!isCustom && product && product.variants.length > 0 ? (
-                  <select
+                  <NativeSelect
                     name={`items[${index}].variantId`}
                     value={item.variantId}
                     onChange={(e) => selectVariant(item.key, item, e.target.value)}
                     aria-label="Variação"
-                    className="mt-3 h-9 w-full rounded-[var(--radius)] border border-input bg-background px-3 text-sm outline-none transition-colors focus-visible:border-foreground/40 focus-visible:ring-2 focus-visible:ring-[var(--gold)]/40"
+                    className="mt-3"
                   >
                     <option value="">Sem variação específica</option>
                     {product.variants.map((v) => (
@@ -255,7 +254,7 @@ export function OrderForm({
                         {v.size ? ` — ${v.size}` : ""}
                       </option>
                     ))}
-                  </select>
+                  </NativeSelect>
                 ) : (
                   <input type="hidden" name={`items[${index}].variantId`} value="" />
                 )}
@@ -331,7 +330,7 @@ export function OrderForm({
       </section>
 
       <section className="flex flex-col gap-4">
-        <span className="kicker">Pagamento</span>
+        <span className="admin-kicker">Pagamento</span>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-3 rounded-[var(--radius-image)] border border-border p-4">
             <span className="text-sm font-medium">Sinal</span>
@@ -352,11 +351,10 @@ export function OrderForm({
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="depositPaymentMethodId">Forma de pagamento</Label>
-              <select
+              <NativeSelect
                 id="depositPaymentMethodId"
                 name="depositPaymentMethodId"
                 defaultValue={order?.deposit_payment_method_id ?? ""}
-                className="h-9 rounded-[var(--radius)] border border-input bg-background px-3 text-sm outline-none transition-colors focus-visible:border-foreground/40 focus-visible:ring-2 focus-visible:ring-[var(--gold)]/40"
               >
                 <option value="">—</option>
                 {paymentMethods.map((pm) => (
@@ -364,7 +362,7 @@ export function OrderForm({
                     {pm.label}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </div>
           </div>
 
@@ -387,11 +385,10 @@ export function OrderForm({
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="balancePaymentMethodId">Forma de pagamento</Label>
-              <select
+              <NativeSelect
                 id="balancePaymentMethodId"
                 name="balancePaymentMethodId"
                 defaultValue={order?.balance_payment_method_id ?? ""}
-                className="h-9 rounded-[var(--radius)] border border-input bg-background px-3 text-sm outline-none transition-colors focus-visible:border-foreground/40 focus-visible:ring-2 focus-visible:ring-[var(--gold)]/40"
               >
                 <option value="">—</option>
                 {paymentMethods.map((pm) => (
@@ -399,14 +396,14 @@ export function OrderForm({
                     {pm.label}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </div>
           </div>
         </div>
       </section>
 
       <section className="flex flex-col gap-4">
-        <span className="kicker">Observações e produção</span>
+        <span className="admin-kicker">Observações e produção</span>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="notes">Observações gerais</Label>
           <Textarea id="notes" name="notes" rows={3} defaultValue={order?.notes ?? ""} />

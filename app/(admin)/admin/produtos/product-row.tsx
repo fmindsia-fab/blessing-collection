@@ -76,7 +76,7 @@ export function ProductRow({ product, statusLabel, isFirst, isLast, drag }: Prod
       <div className="flex flex-1 flex-col gap-2">
         <Link
           href={`/admin/produtos/${product.id}/editar`}
-          className="font-[family-name:var(--font-brand)] text-base outline-none transition-colors hover:text-[var(--gold)] focus-visible:text-[var(--gold)] focus-visible:underline focus-visible:underline-offset-4"
+          className="font-semibold text-base outline-none transition-colors hover:text-[var(--gold)] focus-visible:text-[var(--gold)] focus-visible:underline focus-visible:underline-offset-4"
         >
           {product.name}
         </Link>

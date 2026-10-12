@@ -33,7 +33,7 @@ export function BrandFontField({ fontFamily, customFontName, hasCustomFont }: Br
       <div className="flex flex-col gap-4">
         {GROUPS.map((group) => (
           <div key={group} className="flex flex-col gap-2">
-            <span className="text-[0.625rem] uppercase tracking-[0.16em] text-muted-foreground">
+            <span className="text-xs font-medium text-muted-foreground">
               {FONT_GROUP_LABEL[group]}
             </span>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -65,7 +65,7 @@ export function BrandFontField({ fontFamily, customFontName, hasCustomFont }: Br
                     >
                       {option.label}
                     </span>
-                    <span className="text-[0.625rem] uppercase tracking-wider text-muted-foreground">
+                    <span className="text-xs font-medium text-muted-foreground">
                       {active ? "Selecionada" : "Aa Bb Cc"}
                     </span>
                   </label>

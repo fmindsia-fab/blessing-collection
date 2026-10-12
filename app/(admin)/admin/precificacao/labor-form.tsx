@@ -7,6 +7,7 @@ import { formatBRL, toCents } from "@/lib/pricing/money";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import type { PricingMethodValue, TaxRegime } from "@/types/database.types";
 
 const initialState: PricingFormState = {};
@@ -57,7 +58,7 @@ export function LaborForm({ settings }: { settings: Settings }) {
   return (
     <form action={formAction} className="flex flex-col gap-6">
       <fieldset className="flex flex-col gap-4">
-        <legend className="kicker mb-3">Sua hora de trabalho</legend>
+        <legend className="admin-kicker mb-3">Sua hora de trabalho</legend>
 
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="flex flex-col gap-1.5">
@@ -151,23 +152,22 @@ export function LaborForm({ settings }: { settings: Settings }) {
       </fieldset>
 
       <fieldset className="flex flex-col gap-4 border-t border-border pt-6">
-        <legend className="kicker mb-3">Tributação</legend>
+        <legend className="admin-kicker mb-3">Tributação</legend>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="taxRegime">Regime</Label>
-            <select
+            <NativeSelect
               id="taxRegime"
               name="taxRegime"
               value={regime}
               onChange={(e) => setRegime(e.target.value as TaxRegime)}
-              className="h-9 rounded-[var(--radius)] border border-input bg-background px-3 text-sm outline-none transition-colors focus-visible:border-foreground/40 focus-visible:ring-2 focus-visible:ring-[var(--gold)]/40"
             >
               <option value="none">Nenhum</option>
               <option value="mei">MEI</option>
               <option value="simples">Simples Nacional</option>
               <option value="other">Outro</option>
-            </select>
+            </NativeSelect>
             <span className="text-xs text-muted-foreground">{REGIME_HINT[regime]}</span>
           </div>
 
@@ -192,21 +192,20 @@ export function LaborForm({ settings }: { settings: Settings }) {
       </fieldset>
 
       <fieldset className="flex flex-col gap-4 border-t border-border pt-6">
-        <legend className="kicker mb-3">Método padrão</legend>
+        <legend className="admin-kicker mb-3">Método padrão</legend>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="defaultMethod">Como calcular o preço</Label>
-            <select
+            <NativeSelect
               id="defaultMethod"
               name="defaultMethod"
               value={method}
               onChange={(e) => setMethod(e.target.value as PricingMethodValue)}
-              className="h-9 rounded-[var(--radius)] border border-input bg-background px-3 text-sm outline-none transition-colors focus-visible:border-foreground/40 focus-visible:ring-2 focus-visible:ring-[var(--gold)]/40"
             >
               <option value="margin">Margem sobre o preço de venda</option>
               <option value="markup">Markup sobre o custo</option>
-            </select>
+            </NativeSelect>
             <span className="text-xs text-muted-foreground">
               {method === "margin"
                 ? "O percentual é o que sobra de fato, já descontadas as taxas."

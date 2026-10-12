@@ -72,7 +72,7 @@ export function InvoiceButton({
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="group inline-flex h-10 items-center justify-center gap-2.5 whitespace-nowrap rounded-full border border-foreground/30 px-5 text-[0.6875rem] uppercase tracking-[0.16em] text-foreground outline-none transition-colors duration-300 hover:border-foreground hover:bg-foreground hover:text-background focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-4 focus-visible:ring-offset-background"
+        className="group inline-flex h-10 items-center justify-center gap-2.5 whitespace-nowrap rounded-full border border-foreground/30 px-5 text-sm font-medium text-foreground outline-none transition-colors duration-300 hover:border-foreground hover:bg-foreground hover:text-background focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-4 focus-visible:ring-offset-background"
       >
         <ReceiptIcon className="size-3.5" />
         Enviar resumo do pedido

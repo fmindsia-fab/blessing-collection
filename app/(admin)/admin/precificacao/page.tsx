@@ -33,7 +33,7 @@ export default async function PricingSettingsPage() {
       </section>
 
       <section className="flex flex-col gap-5 rounded-[var(--radius-image)] border border-border bg-card p-6 shadow-sm">
-        <h2 className="font-[family-name:var(--font-brand)] text-xl">Formas de pagamento</h2>
+        <h2 className="font-semibold text-xl">Formas de pagamento</h2>
         <PaymentMethods methods={methods} />
       </section>
     </div>

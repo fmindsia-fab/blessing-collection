@@ -6,6 +6,7 @@ import { createVariant, type VariantFormState } from "@/lib/products/variant-act
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import { VariantRow, type StoreColor, type Variant } from "./variant-row";
 
 type ProductVariantsProps = {
@@ -65,19 +66,14 @@ export function ProductVariants({ productId, variants, colors, catalogGroups }: 
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="variant-color">Cor (opcional)</Label>
-          <select
-            id="variant-color"
-            name="colorId"
-            defaultValue=""
-            className="h-9 rounded-[var(--radius)] border border-input bg-background px-3 text-sm outline-none transition-colors focus-visible:border-foreground/40 focus-visible:ring-2 focus-visible:ring-[var(--gold)]/40"
-          >
+          <NativeSelect id="variant-color" name="colorId" defaultValue="">
             <option value="">Sem cor</option>
             {colors.map((color) => (
               <option key={color.id} value={color.id}>
                 {color.name}
               </option>
             ))}
-          </select>
+          </NativeSelect>
           {colors.length === 0 ? (
             <span className="text-xs text-muted-foreground">
               Nenhuma cor cadastrada —{" "}

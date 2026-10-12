@@ -30,6 +30,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
 import type { PricingMethodValue } from "@/types/database.types";
 
@@ -217,7 +218,7 @@ export function ProductPricing({
 
       {/* MATERIAIS */}
       <section className="flex flex-col gap-3">
-        <span className="kicker">Materiais</span>
+        <span className="admin-kicker">Materiais</span>
 
         {materials.length > 0 ? (
           <div className="flex flex-col divide-y divide-border border-y border-border">
@@ -263,12 +264,11 @@ export function ProductPricing({
 
         <form action={addMaterialAction} className="flex flex-col gap-2">
           <div className="grid gap-2 sm:grid-cols-[1fr_5rem_4rem_6rem_auto]">
-            <select
+            <NativeSelect
               name="materialId"
               value={selectedMaterialId}
               onChange={(e) => setSelectedMaterialId(e.target.value)}
               aria-label="Material"
-              className="h-9 rounded-[var(--radius)] border border-input bg-background px-3 text-sm outline-none transition-colors focus-visible:border-foreground/40 focus-visible:ring-2 focus-visible:ring-[var(--gold)]/40"
             >
               <option value="">Outro (digitar)…</option>
               {catalogMaterials.map((material) => (
@@ -276,7 +276,7 @@ export function ProductPricing({
                   {material.name} — {formatBRL(toCents(material.unit_cost))}/{material.unit}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
 
             {isAvulso ? (
               <Input name="description" required maxLength={80} placeholder="Fio" aria-label="Nome do material" />
@@ -364,12 +364,11 @@ export function ProductPricing({
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="pricingMethod">Método</Label>
-            <select
+            <NativeSelect
               id="pricingMethod"
               name="method"
               value={method}
               onChange={(e) => setMethod(e.target.value as PricingMethodValue | "inherit")}
-              className="h-9 rounded-[var(--radius)] border border-input bg-background px-3 text-sm outline-none transition-colors focus-visible:border-foreground/40 focus-visible:ring-2 focus-visible:ring-[var(--gold)]/40"
             >
               <option value="inherit">
                 Padrão da loja ({storeDefaultMethod === "margin" ? "margem" : "markup"}{" "}
@@ -377,7 +376,7 @@ export function ProductPricing({
               </option>
               <option value="margin">Margem sobre o preço</option>
               <option value="markup">Markup sobre o custo</option>
-            </select>
+            </NativeSelect>
           </div>
 
           {method !== "inherit" ? (
@@ -411,7 +410,7 @@ export function ProductPricing({
 
       {/* RESULTADO */}
       <section className="flex flex-col gap-4 rounded-[var(--radius-image)] bg-secondary/50 p-5">
-        <span className="kicker">Resultado</span>
+        <span className="admin-kicker">Resultado</span>
 
         <div className="flex flex-col">
           <Row label="Materiais" value={formatBRL(cost.materialsCents)} />
@@ -436,7 +435,7 @@ export function ProductPricing({
                       {formatBRL(suggestedCents)}
                     </span>
                   ) : null}
-                  <span className="font-[family-name:var(--font-brand)] text-2xl tabular-nums">
+                  <span className="font-semibold text-2xl tabular-nums">
                     {formatBRL(finalCents)}
                   </span>
                 </span>
@@ -510,7 +509,7 @@ export function ProductPricing({
 
             {installmentOptions.length > 0 ? (
               <div className="flex flex-col gap-2 border-t border-border pt-4">
-                <span className="kicker">Preço por forma de pagamento</span>
+                <span className="admin-kicker">Preço por forma de pagamento</span>
                 <p className="text-xs text-muted-foreground">
                   A taxa do cartão é repassada ao cliente, então o que você recebe é o mesmo em
                   todas as modalidades.

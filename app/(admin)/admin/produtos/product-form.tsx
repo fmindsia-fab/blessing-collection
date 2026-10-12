@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { NativeSelect } from "@/components/ui/native-select";
 import type { ProductStatus } from "@/types/database.types";
 
 type ProductFormProps = {
@@ -78,18 +79,13 @@ export function ProductForm({ categories, collections, models, product }: Produc
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="status">Status</Label>
-          <select
-            id="status"
-            name="status"
-            defaultValue={product?.status ?? "available"}
-            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-          >
+          <NativeSelect id="status" name="status" defaultValue={product?.status ?? "available"}>
             {STATUS_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </div>
       </div>
 
@@ -167,51 +163,36 @@ export function ProductForm({ categories, collections, models, product }: Produc
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="categoryId">Categoria</Label>
-          <select
-            id="categoryId"
-            name="categoryId"
-            defaultValue={product?.category_id ?? ""}
-            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-          >
+          <NativeSelect id="categoryId" name="categoryId" defaultValue={product?.category_id ?? ""}>
             <option value="">Sem categoria</option>
             {categories.map((category) => (
               <option key={category.id} value={category.id}>
                 {category.name}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="collectionId">Coleção</Label>
-          <select
-            id="collectionId"
-            name="collectionId"
-            defaultValue={product?.collection_id ?? ""}
-            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-          >
+          <NativeSelect id="collectionId" name="collectionId" defaultValue={product?.collection_id ?? ""}>
             <option value="">Sem coleção</option>
             {collections.map((collection) => (
               <option key={collection.id} value={collection.id}>
                 {collection.name}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="modelId">Modelo</Label>
-          <select
-            id="modelId"
-            name="modelId"
-            defaultValue={product?.model_id ?? ""}
-            className="h-9 border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
-          >
+          <NativeSelect id="modelId" name="modelId" defaultValue={product?.model_id ?? ""}>
             <option value="">Sem modelo</option>
             {models.map((model) => (
               <option key={model.id} value={model.id}>
                 {model.name}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </div>
       </div>
 

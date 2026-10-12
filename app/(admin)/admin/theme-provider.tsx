@@ -1,7 +1,8 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, useSyncExternalStore } from "react";
-import { DARK_MODE_STORAGE_KEY, DARK_MODE_VARS } from "@/lib/store/dark-mode";
+import { ADMIN_DARK_VARS, ADMIN_LIGHT_VARS, DARK_MODE_STORAGE_KEY } from "@/lib/store/admin-theme";
+import { cn } from "@/lib/utils";
 
 type ThemeContextValue = {
   isDark: boolean;
@@ -21,23 +22,25 @@ function readStoredPreference(): boolean {
 }
 
 /**
- * Tema escuro só do painel administrativo (decisão do usuário: o catálogo
- * público mantém sempre a identidade visual da loja). Preferência por
- * navegador via localStorage — não é dado de negócio, não precisa do banco.
+ * Paleta do painel administrativo — sempre neutra (ADMIN_LIGHT_VARS ou
+ * ADMIN_DARK_VARS), nunca a identidade visual da loja logada. O catálogo
+ * público continua usando buildStoreTheme (paleta da loja) normalmente.
+ * Alternância claro/escuro é preferência por navegador via localStorage —
+ * não é dado de negócio, não precisa do banco.
  *
- * Sobrescreve as variáveis de cor via `style` inline neste wrapper: o
- * `<body>` já aplica `buildStoreTheme` (paleta da loja) também via `style`,
- * e inline sempre vence regra de classe para a mesma custom property — por
- * isso o dark mode não pode depender só da classe `.dark` do CSS.
+ * Sobrescreve as variáveis de cor via `style` inline neste wrapper em
+ * AMBOS os modos: o `<body>` já aplica `buildStoreTheme` (paleta da loja)
+ * também via `style`, e inline sempre vence regra de classe para a mesma
+ * custom property — por isso o admin não pode depender só de uma classe CSS
+ * para deixar de herdar a cor da marca.
  *
  * `text-foreground`/`bg-background` explícitos aqui (não só a variável) são
  * essenciais: `color` é herdado pelo valor JÁ COMPUTADO, não recalculado a
  * cada elemento. O `<body>` fixa `color: var(--foreground)` resolvido para o
- * tema claro da loja (globals.css, `body { @apply text-foreground }`); sem
- * este wrapper recalcular `color` no ponto onde `--foreground` já foi
- * sobrescrito, todo texto sem classe de cor própria (a maioria das células
- * de tabela, por exemplo) herdava a cor clara do body — café escuro sobre
- * fundo escuro, quase ilegível.
+ * tema da loja (globals.css, `body { @apply text-foreground }`); sem este
+ * wrapper recalcular `color` no ponto onde `--foreground` já foi
+ * sobrescrito, todo texto sem classe de cor própria herdava a cor da marca
+ * da loja em vez da paleta neutra do admin.
  *
  * Mesmo padrão de lib/selection/selection-context.tsx: inicialização
  * preguiçosa no useState (sem setState em efeito) + useSyncExternalStore só
@@ -67,8 +70,11 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
   return (
     <ThemeContext.Provider value={{ isDark, toggle: () => setIsDark((v) => !v) }}>
       <div
-        className={isDark ? "dark flex flex-1 flex-col bg-background text-foreground" : "flex flex-1 flex-col"}
-        style={isDark ? (DARK_MODE_VARS as React.CSSProperties) : undefined}
+        className={cn(
+          "flex flex-1 flex-col bg-background text-foreground",
+          isDark && "dark",
+        )}
+        style={(isDark ? ADMIN_DARK_VARS : ADMIN_LIGHT_VARS) as React.CSSProperties}
       >
         {children}
       </div>

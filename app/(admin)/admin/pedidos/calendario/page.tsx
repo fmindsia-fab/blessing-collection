@@ -1,11 +1,10 @@
-import Link from "next/link";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { listOrdersForMonth } from "@/lib/orders/queries";
-import { ORDER_STATUS_LABEL } from "@/lib/orders/labels";
 import { PageHeading } from "@/components/admin/page-heading";
 import { BackLink } from "@/components/shared/back-link";
 import { ActionLink } from "@/components/ui/action";
+import { OrderCalendarEntry } from "./order-calendar-entry";
 
 const MONTH_NAMES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -112,7 +111,7 @@ export default async function OrdersCalendarPage({
           {WEEKDAY_LABELS.map((label) => (
             <div
               key={label}
-              className="p-2.5 text-center text-[0.625rem] font-medium uppercase tracking-[0.14em] text-muted-foreground"
+              className="p-2.5 text-center text-xs font-medium text-muted-foreground"
             >
               {label}
             </div>
@@ -145,25 +144,15 @@ export default async function OrdersCalendarPage({
 
                     <div className="flex flex-col gap-1">
                       {dayOrders.map((order) => (
-                        <Link
+                        <OrderCalendarEntry
                           key={order.id}
-                          href={`/admin/pedidos/${order.id}`}
-                          className="group flex flex-col gap-0.5 rounded-[var(--radius)] border border-border/60 bg-secondary/30 px-2 py-1.5 outline-none transition-colors hover:border-[var(--gold)] hover:bg-secondary/60 focus-visible:border-[var(--gold)] focus-visible:ring-1 focus-visible:ring-[var(--gold)]"
-                          title={ORDER_STATUS_LABEL[order.status]}
-                        >
-                          <span className="flex items-center gap-1.5">
-                            <span
-                              aria-hidden
-                              className={`size-1.5 shrink-0 rounded-full ${STATUS_DOT[order.status] ?? "bg-muted-foreground"}`}
-                            />
-                            <span className="truncate text-[0.6875rem] font-medium underline-offset-2 group-hover:underline">
-                              {order.customer?.name ?? "Cliente"}
-                            </span>
-                          </span>
-                          <span className="truncate pl-3 text-[0.625rem] text-muted-foreground">
-                            {order.itemsSummary.label}
-                          </span>
-                        </Link>
+                          orderId={order.id}
+                          customerName={order.customer?.name ?? "Cliente"}
+                          itemsSummaryLabel={order.itemsSummary.label}
+                          status={order.status}
+                          expectedDeliveryDate={order.expected_delivery_date}
+                          statusDotClassName={STATUS_DOT[order.status] ?? "bg-muted-foreground"}
+                        />
                       ))}
                     </div>
                   </>

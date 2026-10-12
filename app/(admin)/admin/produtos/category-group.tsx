@@ -38,7 +38,7 @@ export function CategoryGroup({
             !open && "-rotate-90",
           )}
         />
-        <span className="font-[family-name:var(--font-brand)] text-lg">{name}</span>
+        <span className="font-semibold text-lg">{name}</span>
         <span className="text-xs tabular-nums text-muted-foreground">
           {count} {count === 1 ? "peça" : "peças"}
         </span>

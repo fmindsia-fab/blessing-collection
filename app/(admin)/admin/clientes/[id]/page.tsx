@@ -23,7 +23,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
       <CustomerForm customer={customer} />
 
       <section className="flex flex-col gap-3">
-        <span className="kicker">Histórico de pedidos</span>
+        <span className="admin-kicker">Histórico de pedidos</span>
         {orders.length > 0 ? (
           <div className="flex flex-col divide-y divide-border border-y border-border">
             {orders.map((order) => (

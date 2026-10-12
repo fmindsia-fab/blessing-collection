@@ -61,7 +61,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       <OrderStatusControl orderId={id} status={order.status} />
 
       <section className="flex flex-col gap-3">
-        <span className="kicker">Itens</span>
+        <span className="admin-kicker">Itens</span>
         <div className="flex flex-col divide-y divide-border border-y border-border">
           {items.map((item) => (
             <div key={item.id} className="flex items-center gap-3 py-3">
@@ -74,7 +74,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                   className="size-12 shrink-0 rounded-[var(--radius)] border border-border object-cover"
                 />
               ) : (
-                <div className="flex size-12 shrink-0 items-center justify-center rounded-[var(--radius)] border border-dashed border-border text-[0.5625rem] text-muted-foreground">
+                <div className="flex size-12 shrink-0 items-center justify-center rounded-[var(--radius)] border border-dashed border-border text-xs text-muted-foreground">
                   s/foto
                 </div>
               )}
@@ -121,7 +121,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       </section>
 
       <section className="flex flex-col gap-3">
-        <span className="kicker">Prazos</span>
+        <span className="admin-kicker">Prazos</span>
         <p className="text-sm">Pedido em {formatDate(order.order_date)}</p>
         <p className="text-sm">Previsão de entrega: {formatDate(order.expected_delivery_date)}</p>
         {order.delivered_at ? (
@@ -130,7 +130,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       </section>
 
       <section className="flex flex-col gap-3">
-        <span className="kicker">Lista de produção</span>
+        <span className="admin-kicker">Lista de produção</span>
         <p className="text-xs text-muted-foreground">
           Materiais somados a partir do cadastro de cada peça do pedido, multiplicados pela
           quantidade encomendada.
@@ -164,7 +164,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
       {order.notes ? (
         <section className="flex flex-col gap-2">
-          <span className="kicker">Observações</span>
+          <span className="admin-kicker">Observações</span>
           <p className="whitespace-pre-wrap text-sm">{order.notes}</p>
         </section>
       ) : null}

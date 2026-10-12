@@ -101,7 +101,7 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
                   </span>
                 </button>
                 {image.is_cover ? (
-                  <span className="absolute left-2 top-2 rounded-full bg-background/92 px-2.5 py-1 text-[0.625rem] uppercase tracking-wider shadow-sm backdrop-blur-sm">
+                  <span className="absolute left-2 top-2 rounded-full bg-background/92 px-2.5 py-1 text-xs font-medium shadow-sm backdrop-blur-sm">
                     Capa
                   </span>
                 ) : null}
@@ -226,7 +226,7 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
                 if (file) void submitFile(file);
                 e.target.value = "";
               }}
-              className="max-w-full text-[0.6875rem]"
+              className="max-w-full text-sm"
             />
           </label>
 

@@ -8,10 +8,12 @@ export function AdminNavLink({
   href,
   label,
   className,
+  onClick,
 }: {
   href: string;
   label: string;
   className?: string;
+  onClick?: () => void;
 }) {
   const pathname = usePathname();
   // "/admin" só está ativo na raiz exata; as demais também nas subrotas.
@@ -20,22 +22,15 @@ export function AdminNavLink({
   return (
     <Link
       href={href}
+      onClick={onClick}
       aria-current={isActive ? "page" : undefined}
       className={cn(
-        "group relative pb-1 text-[0.6875rem] uppercase tracking-[0.14em] outline-none transition-colors duration-300 focus-visible:text-foreground",
-        isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+        "group relative rounded-lg px-3 py-2 text-sm font-medium outline-none transition-colors",
+        isActive ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground",
         className,
       )}
     >
       {label}
-      {/* Fio dourado: fixo no item ativo, cresce no hover dos demais. */}
-      <span
-        aria-hidden
-        className={cn(
-          "absolute bottom-0 left-0 h-px bg-[var(--gold)] transition-all duration-400 ease-out",
-          isActive ? "w-full" : "w-0 group-hover:w-full group-focus-visible:w-full",
-        )}
-      />
     </Link>
   );
 }

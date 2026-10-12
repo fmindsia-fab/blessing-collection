@@ -75,7 +75,7 @@ export function OrdersKanban({ orders }: { orders: OrderKanbanRow[] }) {
               <span className="text-xs font-semibold uppercase tracking-[0.12em] text-foreground">
                 {ORDER_STATUS_LABEL[status]}
               </span>
-              <span className="flex size-5 items-center justify-center rounded-full bg-secondary text-[0.625rem] font-medium tabular-nums text-muted-foreground">
+              <span className="flex size-5 items-center justify-center rounded-full bg-secondary text-xs font-medium tabular-nums text-muted-foreground">
                 {columnOrders.length}
               </span>
             </div>
@@ -112,7 +112,7 @@ export function OrdersKanban({ orders }: { orders: OrderKanbanRow[] }) {
                         className="size-11 shrink-0 rounded-[var(--radius)] border border-border object-cover"
                       />
                     ) : (
-                      <div className="flex size-11 shrink-0 items-center justify-center rounded-[var(--radius)] border border-dashed border-border text-[0.5625rem] text-muted-foreground">
+                      <div className="flex size-11 shrink-0 items-center justify-center rounded-[var(--radius)] border border-dashed border-border text-xs text-muted-foreground">
                         s/foto
                       </div>
                     )}
@@ -152,7 +152,7 @@ export function OrdersKanban({ orders }: { orders: OrderKanbanRow[] }) {
               ))}
 
               {columnOrders.length === 0 ? (
-                <p className="rounded-[var(--radius)] border border-dashed border-border/60 py-4 text-center text-[0.6875rem] text-muted-foreground">
+                <p className="rounded-[var(--radius)] border border-dashed border-border/60 py-4 text-center text-sm text-muted-foreground">
                   Vazio
                 </p>
               ) : null}

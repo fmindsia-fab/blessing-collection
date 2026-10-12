@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import type { VariantStatus } from "@/types/database.types";
 
 export type StoreColor = { id: string; name: string; hex: string; hex_secondary: string | null };
@@ -110,19 +111,14 @@ export function VariantRow({
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor={`color-${variant.id}`}>Cor</Label>
-            <select
-              id={`color-${variant.id}`}
-              name="colorId"
-              defaultValue={variant.color_id ?? ""}
-              className="h-9 rounded-[var(--radius)] border border-input bg-background px-3 text-sm outline-none transition-colors focus-visible:border-foreground/40 focus-visible:ring-2 focus-visible:ring-[var(--gold)]/40"
-            >
+            <NativeSelect id={`color-${variant.id}`} name="colorId" defaultValue={variant.color_id ?? ""}>
               <option value="">Sem cor</option>
               {colors.map((option) => (
                 <option key={option.id} value={option.id}>
                   {option.name}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </div>
 
           <div className="flex flex-col gap-1.5">

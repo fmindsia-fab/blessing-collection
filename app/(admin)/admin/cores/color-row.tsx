@@ -97,7 +97,7 @@ export function ColorRow({ color }: { color: Color }) {
       <div className="flex min-w-0 items-center gap-3">
         <Swatch hex={color.hex} hexSecondary={color.hex_secondary} />
         <div className="flex min-w-0 flex-col gap-0.5">
-          <span className="truncate font-[family-name:var(--font-brand)] text-base">{color.name}</span>
+          <span className="truncate font-semibold text-base">{color.name}</span>
           <span className="font-mono text-xs text-muted-foreground">
             {color.hex}
             {color.hex_secondary ? ` · ${color.hex_secondary}` : ""}

@@ -23,7 +23,7 @@ export function StatusPill({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full border px-2.5 py-1 text-[0.625rem] uppercase tracking-[0.12em]",
+        "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium",
         TONES[tone],
         className,
       )}

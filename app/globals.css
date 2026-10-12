@@ -165,9 +165,17 @@
 }
 
 @layer components {
-  /* Kicker: rótulo em versalete espaçado, marca registrada do editorial. */
+  /* Kicker: rótulo em versalete espaçado, marca registrada do editorial.
+     Só o catálogo público ((public)) usa esta classe — o admin usa
+     .admin-kicker, tipografia neutra sem versalete (ver reforma visual). */
   .kicker {
     @apply text-[0.6875rem] font-medium uppercase tracking-[0.22em] text-muted-foreground;
+  }
+
+  /* Rótulo de seção do painel administrativo — mesmo papel do .kicker do
+     catálogo, mas sem a estética editorial (sem versalete, fonte maior). */
+  .admin-kicker {
+    @apply text-sm font-medium text-muted-foreground;
   }
 
   /* Título de seção com fio dourado — substitui o h2 solto. */

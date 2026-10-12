@@ -29,7 +29,7 @@ export function ProductSlug({
 
   return (
     <div className="flex flex-col gap-2 rounded-[var(--radius-image)] border border-border bg-card px-5 py-4">
-      <span className="text-[0.625rem] uppercase tracking-[0.18em] text-muted-foreground">
+      <span className="text-xs font-medium text-muted-foreground">
         URL da página
       </span>
 
