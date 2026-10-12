@@ -18,12 +18,14 @@ export async function proxy(request: NextRequest) {
 
   if (isPlatformAdminRoute) {
     if (!user) {
+      console.log("[platform-admin-debug] sem user", { pathname });
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       url.searchParams.set("redirectTo", pathname);
       return NextResponse.redirect(url);
     }
-    const { data: isAdmin } = await supabase.rpc("is_platform_admin");
+    const { data: isAdmin, error: rpcError } = await supabase.rpc("is_platform_admin");
+    console.log("[platform-admin-debug]", { userId: user.id, isAdmin, rpcError });
     if (!isAdmin) {
       const url = request.nextUrl.clone();
       url.pathname = "/cadastro";
