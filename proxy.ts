@@ -26,22 +26,9 @@ export async function proxy(request: NextRequest) {
     const { data: isAdmin } = await supabase.rpc("is_platform_admin");
     if (!isAdmin) {
       const url = request.nextUrl.clone();
-      url.pathname = "/cadastro";
+      url.pathname = "/";
       return NextResponse.redirect(url);
     }
-  }
-
-  // Apex/www da plataforma ainda não tem landing page própria — "/" caindo
-  // em app/(public)/page.tsx (que espera uma loja ativa) resultaria em 404.
-  // Redireciona para a única página de marketing que existe hoje.
-  if (
-    pathname === "/" &&
-    process.env.TENANT_RESOLUTION_MODE === "host" &&
-    resolveTenantFromHost(request.headers.get("host")).kind === "none"
-  ) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/cadastro";
-    return NextResponse.redirect(url);
   }
 
   if (isAdminRoute && !user) {

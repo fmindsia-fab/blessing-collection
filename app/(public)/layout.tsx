@@ -1,7 +1,7 @@
 import { SelectionProvider } from "@/lib/selection/selection-context";
 import { SelectionFloatingButton } from "@/components/catalog/selection-floating-button";
 import { SiteFooter } from "@/components/catalog/site-footer";
-import { getActiveStore } from "@/lib/store/get-active-store";
+import { getActiveStore, isPlatformRequest } from "@/lib/store/get-active-store";
 import { getBrandFontVariable } from "@/lib/store/fonts";
 import { isSafeBrandFontUrl } from "@/lib/store/branding";
 
@@ -9,11 +9,19 @@ import { isSafeBrandFontUrl } from "@/lib/store/branding";
 // precisa estar lá, não aqui, porque --background só pinta o body se for
 // definido no próprio body ou num ancestral dele (CSS custom properties
 // herdam de pai para filho, nunca o contrário).
+//
+// No apex/www da plataforma não há loja nenhuma — app/(public)/page.tsx já
+// decide renderizar a landing institucional em vez do catálogo; este layout
+// só precisa não quebrar nesse caso (sem rodapé/seleção de loja nenhuma).
 export default async function PublicLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  if (await isPlatformRequest()) {
+    return <div className="flex flex-1 flex-col">{children}</div>;
+  }
+
   const store = await getActiveStore();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
 

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getActiveStore } from "@/lib/store/get-active-store";
+import { getActiveStore, isPlatformRequest } from "@/lib/store/get-active-store";
 import { getFeaturedProducts, getNewArrivals } from "@/lib/products/queries";
 import { listCategories } from "@/lib/categories/queries";
 import { listCollections } from "@/lib/collections/queries";
@@ -10,6 +10,7 @@ import { ProductCard } from "@/components/catalog/product-card";
 import { VitrineCard } from "@/components/catalog/vitrine-card";
 import { SectionHeading } from "@/components/catalog/section-heading";
 import { ActionLink } from "@/components/ui/action";
+import { MarketingHome } from "@/app/(marketing)/marketing-home";
 import type { Metadata } from "next";
 
 // A capa é sorteada a cada visita: sem isto o Next poderia servir uma versão
@@ -19,8 +20,16 @@ import type { Metadata } from "next";
 export const dynamic = "force-dynamic";
 
 // Título e preview de compartilhamento da home — antes herdava o metadata
-// genérico do layout raiz, sem imagem nem descrição da loja.
+// genérico do layout raiz, sem imagem nem descrição da loja. No apex da
+// plataforma (sem loja nenhuma) cai no metadata institucional da landing.
 export async function generateMetadata(): Promise<Metadata> {
+  if (await isPlatformRequest()) {
+    return {
+      title: "Ateliê Fácil | Catálogo digital para artesãs",
+      description: "Monte seu catálogo online e venda pelo WhatsApp — sem taxa por venda.",
+    };
+  }
+
   const store = await getActiveStore();
   const description =
     store.description ?? `Catálogo de bolsas e acessórios artesanais da ${store.name}.`;
@@ -40,6 +49,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
+  if (await isPlatformRequest()) {
+    return <MarketingHome />;
+  }
+
   const store = await getActiveStore();
   const [featured, newArrivals, allCategories, allCollections, categoryCovers, collectionCovers] =
     await Promise.all([
