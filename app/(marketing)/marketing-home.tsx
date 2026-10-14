@@ -188,42 +188,28 @@ export function MarketingHome() {
         </div>
       </section>
 
-      {/* Prova social — Blessing Collection, com foto ao lado do depoimento. */}
+      {/* Prova social — depoimento real da Cris, da Blessing Collection. A
+          citação e a assinatura já vêm embutidas na própria arte da foto. */}
       <section className="relative overflow-hidden border-y border-[var(--craft-border)] bg-[var(--craft-bg-warm)] px-6 py-16 lg:px-10">
         <YarnTangle className="pointer-events-none absolute -top-10 right-[8%] hidden w-28 text-[var(--craft-terracotta)]/25 md:block" />
-        <div className="relative mx-auto grid max-w-4xl items-center gap-10 sm:grid-cols-[0.8fr_1.2fr]">
+        <div className="relative mx-auto flex max-w-2xl flex-col items-center gap-5">
           <div className="relative aspect-square w-full overflow-hidden rounded-[var(--radius-image)] bg-[var(--craft-card)] shadow-md">
             <Image
-              src={VALENTINA_PHOTO_URL}
-              alt="Bolsa Valentina, peça da Blessing Collection"
+              src="/marketing/blessing-depoimento-cris.png"
+              alt={'"A plataforma aumentou minha visibilidade, facilitou minhas vendas e encomendas, e hoje estou sabendo precificar melhor minhas peças." — Cris, da Blessing Bolsas'}
               fill
               className="object-cover"
-              sizes="(min-width: 640px) 32vw, 100vw"
+              sizes="(min-width: 640px) 42rem, 100vw"
             />
           </div>
-          <div className="flex flex-col items-center gap-5 text-center sm:items-start sm:text-left">
-            <span className="text-[0.625rem] font-medium uppercase tracking-[0.2em] text-[var(--craft-terracotta)]">
-              Já em uso
-            </span>
-            <p className="font-[family-name:var(--font-brand)] text-xl leading-snug italic sm:text-2xl">
-              &ldquo;Meus pedidos chegam pelo WhatsApp já com a peça, a variação e o preço
-              certinho — não preciso mais explicar tudo do zero toda vez.&rdquo;
-            </p>
-            <div className="flex items-center gap-2 text-sm">
-              <span className="font-medium">Blessing Collection</span>
-              <span aria-hidden className="text-[var(--craft-muted)]">
-                ·
-              </span>
-              <Link
-                href="https://blessingcollection.com.br"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[var(--craft-muted)] underline underline-offset-4 outline-none transition-colors hover:text-[var(--craft-ink)] focus-visible:text-[var(--craft-ink)]"
-              >
-                ver catálogo ↗
-              </Link>
-            </div>
-          </div>
+          <Link
+            href="https://blessingcollection.com.br"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-[var(--craft-muted)] underline underline-offset-4 outline-none transition-colors hover:text-[var(--craft-ink)] focus-visible:text-[var(--craft-ink)]"
+          >
+            ver catálogo da Blessing Collection ↗
+          </Link>
         </div>
       </section>
 
