@@ -9,22 +9,26 @@ import { YarnSkein, StitchWave, CrochetDots, YarnTangle } from "./craft-motifs";
 const VALENTINA_PHOTO_URL =
   "https://bipadxpcbmgoatlnnyfw.supabase.co/storage/v1/object/public/product-images/17566e34-c629-429a-999a-3cd28fea7366/61ea7b5b-8f76-4f0b-9d6a-22532f5b720b/ed49601d-557f-4b36-be8d-8fdc0ef92ae6.jpg";
 
+// Prints reais do painel administrativo e do catálogo público da
+// Blessing — mostram o produto funcionando de verdade, não só peças.
+// Valores em R$ foram borrados antes do envio (não são dados fictícios,
+// são números reais da loja, sem necessidade de aparecer na landing).
 const GALLERY_PHOTOS = [
   {
-    url: "https://bipadxpcbmgoatlnnyfw.supabase.co/storage/v1/object/public/product-images/17566e34-c629-429a-999a-3cd28fea7366/9bf29be5-53d7-4447-ba44-0e3840eda3c5/ce975eb0-6040-4be1-a969-45be6487eb37.jpg",
-    alt: "Clutch de crochê dourada, peça artesanal",
+    url: "/marketing/painel-catalogo-publico.jpg",
+    alt: "Página de produto no catálogo público, com fotos e galeria da peça",
   },
   {
-    url: "https://bipadxpcbmgoatlnnyfw.supabase.co/storage/v1/object/public/product-images/17566e34-c629-429a-999a-3cd28fea7366/99041794-a366-4439-8e66-73c256cd21ae/a022b823-46d2-4eb3-9128-144dfbbf3dfa.png",
-    alt: "Colar artesanal com pedra, usado por modelo",
+    url: "/marketing/painel-menu.jpg",
+    alt: "Menu do painel administrativo com todas as seções: pedidos, clientes, produtos, analytics",
   },
   {
-    url: "https://bipadxpcbmgoatlnnyfw.supabase.co/storage/v1/object/public/product-images/17566e34-c629-429a-999a-3cd28fea7366/bfe3b96b-5d78-4b19-ab2d-424c50163b0d/875a96a6-0298-4049-b4e4-651fcbfdb513.png",
-    alt: "Case de crochê terracota com cordão",
+    url: "/marketing/painel-produto-detalhe.jpg",
+    alt: "Detalhes de um produto no catálogo, com materiais e medidas",
   },
   {
-    url: "https://bipadxpcbmgoatlnnyfw.supabase.co/storage/v1/object/public/product-images/17566e34-c629-429a-999a-3cd28fea7366/84f99a08-258a-47f8-9de3-b0a09843cb2f/cd8ecf8d-ecd0-47ac-9b7e-b7227817dbce.png",
-    alt: "Colar artesanal com pingente em formato de estrela-do-mar",
+    url: "/marketing/painel-precificacao.jpg",
+    alt: "Calculadora de precificação do painel administrativo",
   },
 ];
 
@@ -169,7 +173,7 @@ export function MarketingHome() {
                 src={photo.url}
                 alt={photo.alt}
                 fill
-                className="object-cover"
+                className="object-cover object-top"
                 sizes="(min-width: 640px) 23vw, 48vw"
               />
             </div>
