@@ -48,6 +48,86 @@ export function CrochetDots({ className }: { className?: string }) {
   );
 }
 
+// Ilustração do passo 1 ("Crie sua loja") — uma etiqueta pendurada por um
+// fio, remetendo às etiquetas de marca costuradas nas peças artesanais.
+export function StoreTagIllustration({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 160 140" fill="none" className={className} aria-hidden>
+      <path d="M80 8v24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.5" />
+      <rect
+        x="34"
+        y="32"
+        width="92"
+        height="68"
+        rx="14"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        fill="none"
+      />
+      <circle cx="80" cy="24" r="6" stroke="currentColor" strokeWidth="2" fill="none" />
+      <path d="M58 58h44M58 72h44M58 86h26" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+      <path
+        d="M20 110c18 10 40 10 60 0s42-10 60 0"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        opacity="0.4"
+      />
+    </svg>
+  );
+}
+
+// Ilustração do passo 2 ("Monte seu catálogo") — grade de peças, como um
+// mosaico de fotos de produto.
+export function CatalogGridIllustration({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 160 140" fill="none" className={className} aria-hidden>
+      <rect x="22" y="22" width="48" height="48" rx="10" stroke="currentColor" strokeWidth="2.5" />
+      <rect x="90" y="22" width="48" height="48" rx="10" stroke="currentColor" strokeWidth="2.5" opacity="0.7" />
+      <rect x="22" y="90" width="48" height="48" rx="10" stroke="currentColor" strokeWidth="2.5" opacity="0.7" />
+      <rect x="90" y="90" width="48" height="48" rx="10" stroke="currentColor" strokeWidth="2.5" opacity="0.45" />
+      <circle cx="46" cy="46" r="8" fill="currentColor" opacity="0.35" />
+      <path
+        d="M98 54l10-14 10 14M98 54h22"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        opacity="0.6"
+      />
+    </svg>
+  );
+}
+
+// Ilustração do passo 3 ("Venda pelo WhatsApp") — balão de mensagem com um
+// coração, no mesmo traço orgânico dos outros motivos de fio.
+export function WhatsappBubbleIllustration({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 160 140" fill="none" className={className} aria-hidden>
+      <path
+        d="M30 32h100a10 10 0 0 1 10 10v48a10 10 0 0 1-10 10H70l-24 18v-18H30a10 10 0 0 1-10-10V42a10 10 0 0 1 10-10Z"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M80 58c-4-6-13-6-16 1-2 5 2 10 16 22 14-12 18-17 16-22-3-7-12-7-16-1Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+        opacity="0.75"
+      />
+      <path
+        d="M20 100c-6 4-10 10-10 18"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        opacity="0.35"
+      />
+    </svg>
+  );
+}
+
 export function YarnTangle({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 140 140" fill="none" className={className} aria-hidden>

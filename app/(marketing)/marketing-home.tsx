@@ -1,7 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRightIcon, ImageIcon } from "lucide-react";
-import { YarnSkein, StitchWave, CrochetDots, YarnTangle } from "./craft-motifs";
+import { ArrowRightIcon } from "lucide-react";
+import {
+  YarnSkein,
+  StitchWave,
+  CrochetDots,
+  YarnTangle,
+  StoreTagIllustration,
+  CatalogGridIllustration,
+  WhatsappBubbleIllustration,
+} from "./craft-motifs";
 
 // Fotos reais de peças da Blessing Collection (primeira loja da
 // plataforma) — usadas no hero, na galeria e na prova social enquanto
@@ -33,16 +41,19 @@ const STEPS = [
     number: "01",
     title: "Crie sua loja",
     text: "Nome, endereço e WhatsApp — sua loja fica pronta em poucos minutos, sem precisar de cartão de crédito.",
+    Illustration: StoreTagIllustration,
   },
   {
     number: "02",
     title: "Monte seu catálogo",
     text: "Fotos, preços, variações e coleções. Organize suas peças do seu jeito, direto do celular.",
+    Illustration: CatalogGridIllustration,
   },
   {
     number: "03",
     title: "Venda pelo WhatsApp",
     text: "Cada peça gera um link com mensagem pronta — a cliente clica e já chega até você com tudo preenchido.",
+    Illustration: WhatsappBubbleIllustration,
   },
 ];
 
@@ -92,20 +103,6 @@ function PrimaryCta({ className, label = "Criar minha loja grátis" }: { classNa
       <span className="relative">{label}</span>
       <ArrowRightIcon className="relative size-4 transition-transform duration-300 group-hover:translate-x-1" />
     </Link>
-  );
-}
-
-// Placeholder de imagem — moldura artesanal (borda tracejada, cantos macios)
-// até as fotos reais entrarem. Mantém a proporção certa reservada no layout
-// para a troca ser só de conteúdo, sem redesenhar nada.
-function ImagePlaceholder({ label, className }: { label: string; className?: string }) {
-  return (
-    <div
-      className={`flex flex-col items-center justify-center gap-2 rounded-[var(--radius-image)] border-2 border-dashed border-[var(--craft-terracotta)]/30 bg-[var(--craft-card)] text-[var(--craft-muted)] ${className ?? ""}`}
-    >
-      <ImageIcon className="size-7 opacity-50" aria-hidden />
-      <span className="px-4 text-center text-xs">{label}</span>
-    </div>
   );
 }
 
@@ -231,7 +228,9 @@ export function MarketingHome() {
                 {index < STEPS.length - 1 ? (
                   <StitchWave className="pointer-events-none absolute top-6 left-[calc(100%+0.5rem)] hidden w-14 text-[var(--craft-border)] sm:block" />
                 ) : null}
-                <ImagePlaceholder label={`Ilustração do passo ${step.number}`} className="aspect-[4/3] w-full" />
+                <div className="flex aspect-[4/3] w-full items-center justify-center rounded-[var(--radius-image)] border border-[var(--craft-border)] bg-[var(--craft-card)]">
+                  <step.Illustration className="w-24 text-[var(--craft-terracotta)] sm:w-28" />
+                </div>
                 <div className="flex flex-col gap-2">
                   <span className="font-[family-name:var(--font-brand)] text-2xl text-[var(--craft-mustard)]">
                     {step.number}
