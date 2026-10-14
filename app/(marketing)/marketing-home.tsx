@@ -1,15 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
-import {
-  YarnSkein,
-  StitchWave,
-  CrochetDots,
-  YarnTangle,
-  StoreTagIllustration,
-  CatalogGridIllustration,
-  WhatsappBubbleIllustration,
-} from "./craft-motifs";
+import { YarnSkein, StitchWave, CrochetDots, YarnTangle } from "./craft-motifs";
 
 // Fotos reais de peças da Blessing Collection (primeira loja da
 // plataforma) — usadas no hero, na galeria e na prova social enquanto
@@ -41,19 +33,19 @@ const STEPS = [
     number: "01",
     title: "Crie sua loja",
     text: "Nome, endereço e WhatsApp — sua loja fica pronta em poucos minutos, sem precisar de cartão de crédito.",
-    Illustration: StoreTagIllustration,
+    image: "/marketing/passo-01-loja.png",
   },
   {
     number: "02",
     title: "Monte seu catálogo",
     text: "Fotos, preços, variações e coleções. Organize suas peças do seu jeito, direto do celular.",
-    Illustration: CatalogGridIllustration,
+    image: "/marketing/passo-02-catalogo.png",
   },
   {
     number: "03",
     title: "Venda pelo WhatsApp",
     text: "Cada peça gera um link com mensagem pronta — a cliente clica e já chega até você com tudo preenchido.",
-    Illustration: WhatsappBubbleIllustration,
+    image: "/marketing/passo-03-whatsapp.png",
   },
 ];
 
@@ -228,8 +220,14 @@ export function MarketingHome() {
                 {index < STEPS.length - 1 ? (
                   <StitchWave className="pointer-events-none absolute top-6 left-[calc(100%+0.5rem)] hidden w-14 text-[var(--craft-border)] sm:block" />
                 ) : null}
-                <div className="flex aspect-[4/3] w-full items-center justify-center rounded-[var(--radius-image)] border border-[var(--craft-border)] bg-[var(--craft-card)]">
-                  <step.Illustration className="w-24 text-[var(--craft-terracotta)] sm:w-28" />
+                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[var(--radius-image)] border border-[var(--craft-border)] bg-[var(--craft-card)]">
+                  <Image
+                    src={step.image}
+                    alt={step.title}
+                    fill
+                    className="object-cover"
+                    sizes="(min-width: 640px) 30vw, 90vw"
+                  />
                 </div>
                 <div className="flex flex-col gap-2">
                   <span className="font-[family-name:var(--font-brand)] text-2xl text-[var(--craft-mustard)]">
