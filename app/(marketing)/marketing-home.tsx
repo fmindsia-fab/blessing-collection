@@ -1,6 +1,32 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRightIcon, ImageIcon } from "lucide-react";
 import { YarnSkein, StitchWave, CrochetDots, YarnTangle } from "./craft-motifs";
+
+// Fotos reais de peças da Blessing Collection (primeira loja da
+// plataforma) — usadas no hero, na galeria e na prova social enquanto
+// outras artesãs ainda não enviaram fotos próprias.
+const VALENTINA_PHOTO_URL =
+  "https://bipadxpcbmgoatlnnyfw.supabase.co/storage/v1/object/public/product-images/17566e34-c629-429a-999a-3cd28fea7366/61ea7b5b-8f76-4f0b-9d6a-22532f5b720b/ed49601d-557f-4b36-be8d-8fdc0ef92ae6.jpg";
+
+const GALLERY_PHOTOS = [
+  {
+    url: "https://bipadxpcbmgoatlnnyfw.supabase.co/storage/v1/object/public/product-images/17566e34-c629-429a-999a-3cd28fea7366/9bf29be5-53d7-4447-ba44-0e3840eda3c5/ce975eb0-6040-4be1-a969-45be6487eb37.jpg",
+    alt: "Clutch de crochê dourada, peça artesanal",
+  },
+  {
+    url: "https://bipadxpcbmgoatlnnyfw.supabase.co/storage/v1/object/public/product-images/17566e34-c629-429a-999a-3cd28fea7366/99041794-a366-4439-8e66-73c256cd21ae/a022b823-46d2-4eb3-9128-144dfbbf3dfa.png",
+    alt: "Colar artesanal com pedra, usado por modelo",
+  },
+  {
+    url: "https://bipadxpcbmgoatlnnyfw.supabase.co/storage/v1/object/public/product-images/17566e34-c629-429a-999a-3cd28fea7366/bfe3b96b-5d78-4b19-ab2d-424c50163b0d/875a96a6-0298-4049-b4e4-651fcbfdb513.png",
+    alt: "Case de crochê terracota com cordão",
+  },
+  {
+    url: "https://bipadxpcbmgoatlnnyfw.supabase.co/storage/v1/object/public/product-images/17566e34-c629-429a-999a-3cd28fea7366/84f99a08-258a-47f8-9de3-b0a09843cb2f/cd8ecf8d-ecd0-47ac-9b7e-b7227817dbce.png",
+    alt: "Colar artesanal com pingente em formato de estrela-do-mar",
+  },
+];
 
 const STEPS = [
   {
@@ -124,10 +150,16 @@ export function MarketingHome() {
           </div>
 
           <div className="relative">
-            <ImagePlaceholder
-              label="Foto de peça artesanal (ex.: tricô, crochê) em close, fundo claro"
-              className="aspect-[4/5] w-full"
-            />
+            <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[var(--radius-image)] bg-[var(--craft-card)] shadow-lg">
+              <Image
+                src={VALENTINA_PHOTO_URL}
+                alt="Bolsa de crochê artesanal feita por uma loja na plataforma"
+                fill
+                priority
+                className="object-cover"
+                sizes="(min-width: 1024px) 45vw, 100vw"
+              />
+            </div>
             <div
               aria-hidden
               className="absolute -bottom-5 -left-5 hidden size-24 rounded-full border-2 border-[var(--craft-mustard)]/40 sm:block"
@@ -139,10 +171,20 @@ export function MarketingHome() {
       {/* Galeria — mosaico dedicado só para variedade de peças artesanais. */}
       <section className="px-6 pb-20 lg:px-10">
         <div className="mx-auto grid max-w-6xl grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
-          <ImagePlaceholder label="Peça 1" className="aspect-square" />
-          <ImagePlaceholder label="Peça 2" className="aspect-square sm:mt-6" />
-          <ImagePlaceholder label="Peça 3" className="aspect-square" />
-          <ImagePlaceholder label="Peça 4" className="aspect-square sm:mt-6" />
+          {GALLERY_PHOTOS.map((photo, index) => (
+            <div
+              key={photo.url}
+              className={`relative aspect-square w-full overflow-hidden rounded-[var(--radius-image)] bg-[var(--craft-card)] shadow-sm ${index % 2 === 1 ? "sm:mt-6" : ""}`}
+            >
+              <Image
+                src={photo.url}
+                alt={photo.alt}
+                fill
+                className="object-cover"
+                sizes="(min-width: 640px) 23vw, 48vw"
+              />
+            </div>
+          ))}
         </div>
       </section>
 
@@ -150,10 +192,15 @@ export function MarketingHome() {
       <section className="relative overflow-hidden border-y border-[var(--craft-border)] bg-[var(--craft-bg-warm)] px-6 py-16 lg:px-10">
         <YarnTangle className="pointer-events-none absolute -top-10 right-[8%] hidden w-28 text-[var(--craft-terracotta)]/25 md:block" />
         <div className="relative mx-auto grid max-w-4xl items-center gap-10 sm:grid-cols-[0.8fr_1.2fr]">
-          <ImagePlaceholder
-            label="Foto da Blessing Collection (produto ou proprietária)"
-            className="aspect-square w-full"
-          />
+          <div className="relative aspect-square w-full overflow-hidden rounded-[var(--radius-image)] bg-[var(--craft-card)] shadow-md">
+            <Image
+              src={VALENTINA_PHOTO_URL}
+              alt="Bolsa Valentina, peça da Blessing Collection"
+              fill
+              className="object-cover"
+              sizes="(min-width: 640px) 32vw, 100vw"
+            />
+          </div>
           <div className="flex flex-col items-center gap-5 text-center sm:items-start sm:text-left">
             <span className="text-[0.625rem] font-medium uppercase tracking-[0.2em] text-[var(--craft-terracotta)]">
               Já em uso
