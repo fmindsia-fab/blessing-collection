@@ -45,3 +45,26 @@ export function formatCpfCnpj(value: string): string {
   if (d.length <= 12) return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8)}`;
   return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
 }
+
+export const INVALID_DOCUMENT_MESSAGE = "CPF ou CNPJ inválido. Confira os números.";
+
+/**
+ * Mensagem de erro ao vivo para o campo CPF/CNPJ, ou null se não há o que
+ * avisar ainda. Um CPF inválido de 11 dígitos pode ser o começo de um CNPJ,
+ * então só avisa de imediato quando já tem 14 dígitos; antes disso, avisa ao
+ * sair do campo (blur).
+ */
+export function documentFeedback(value: string, blurred: boolean): string | null {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length === 0) return null;
+  if (digits.length === 14) return isValidCnpj(digits) ? null : INVALID_DOCUMENT_MESSAGE;
+  if (!blurred) return null;
+  if (digits.length === 11) return isValidCpf(digits) ? null : INVALID_DOCUMENT_MESSAGE;
+  return INVALID_DOCUMENT_MESSAGE;
+}
+
+/** CPF ou CNPJ completo e válido — usado para liberar o envio do formulário. */
+export function isCompleteValidDocument(value: string): boolean {
+  const digits = value.replace(/\D/g, "");
+  return (digits.length === 11 || digits.length === 14) && isValidCpfOrCnpj(digits);
+}

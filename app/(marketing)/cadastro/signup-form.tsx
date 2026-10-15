@@ -8,8 +8,8 @@ import { z } from "zod";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { createStore, checkSlugAvailability, type CreateStoreFormState } from "@/lib/onboarding/actions";
 import { signupSchema, createStoreSchema, slugify } from "@/lib/onboarding/schema";
-import { formatCpfCnpj } from "@/lib/br/document";
-import { formatWhatsappBR } from "@/lib/customers/phone-mask";
+import { documentFeedback, formatCpfCnpj, isCompleteValidDocument } from "@/lib/br/document";
+import { formatWhatsappBR, normalizeWhatsappBR } from "@/lib/customers/phone-mask";
 import { CraftProfileFields } from "@/components/shared/craft-profile-fields";
 import { MarketplaceProfileFields } from "@/components/shared/marketplace-profile-fields";
 import { Textarea } from "@/components/ui/textarea";
@@ -89,6 +89,12 @@ function StoreForm({ platformDomain }: { platformDomain: string }) {
   const router = useRouter();
   const [state, formAction, isPending] = useActionState(createStore, INITIAL_STATE);
   const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
+  // Validação ao vivo de CPF/CNPJ e WhatsApp: o formulário envia via server
+  // action (sem handleSubmit), então o aviso precisa ser local ao campo.
+  const [documentValue, setDocumentValue] = useState("");
+  const [documentBlurred, setDocumentBlurred] = useState(false);
+  const [whatsappValue, setWhatsappValue] = useState("");
+  const [whatsappBlurred, setWhatsappBlurred] = useState(false);
 
   const {
     register,
@@ -127,6 +133,15 @@ function StoreForm({ platformDomain }: { platformDomain: string }) {
     }
   }, [state.success, state.storeSlug, platformDomain, router]);
 
+  const documentError = documentFeedback(documentValue, documentBlurred);
+  const whatsappDigits = whatsappValue.replace(/\D/g, "");
+  const whatsappError =
+    whatsappDigits.length > 0 && (whatsappBlurred || whatsappDigits.length >= 11) && !normalizeWhatsappBR(whatsappValue)
+      ? "WhatsApp inválido. Informe DDD e número."
+      : null;
+  const contactInvalid =
+    !isCompleteValidDocument(documentValue) || !normalizeWhatsappBR(whatsappValue);
+
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
@@ -146,11 +161,16 @@ function StoreForm({ platformDomain }: { platformDomain: string }) {
           {...register("ownerDocument", {
             onChange: (e) => {
               e.target.value = formatCpfCnpj(e.target.value);
+              setDocumentValue(e.target.value);
             },
+            onBlur: () => setDocumentBlurred(true),
           })}
+          aria-invalid={documentError ? true : undefined}
         />
-        {errors.ownerDocument ? (
-          <p className="text-xs text-destructive">{errors.ownerDocument.message}</p>
+        {documentError ? (
+          <p role="alert" className="text-xs text-destructive">
+            {documentError}
+          </p>
         ) : null}
       </div>
 
@@ -192,11 +212,16 @@ function StoreForm({ platformDomain }: { platformDomain: string }) {
           {...register("whatsappNumber", {
             onChange: (e) => {
               e.target.value = formatWhatsappBR(e.target.value);
+              setWhatsappValue(e.target.value);
             },
+            onBlur: () => setWhatsappBlurred(true),
           })}
+          aria-invalid={whatsappError ? true : undefined}
         />
-        {errors.whatsappNumber ? (
-          <p className="text-xs text-destructive">{errors.whatsappNumber.message}</p>
+        {whatsappError ? (
+          <p role="alert" className="text-xs text-destructive">
+            {whatsappError}
+          </p>
         ) : null}
       </div>
 
@@ -223,7 +248,11 @@ function StoreForm({ platformDomain }: { platformDomain: string }) {
 
       {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
 
-      <Button type="submit" disabled={isPending || slugStatus === "taken"} className="mt-2">
+      <Button
+        type="submit"
+        disabled={isPending || slugStatus === "taken" || contactInvalid}
+        className="mt-2"
+      >
         {isPending ? "Criando loja..." : "Criar minha loja"}
       </Button>
     </form>

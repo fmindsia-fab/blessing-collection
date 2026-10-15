@@ -54,3 +54,30 @@ describe("formatCpfCnpj", () => {
     expect(formatCpfCnpj("5299")).toBe("529.9");
   });
 });
+
+import { documentFeedback, isCompleteValidDocument } from "@/lib/br/document";
+
+describe("documentFeedback (aviso ao vivo de CPF/CNPJ)", () => {
+  it("avisa na hora quando o CNPJ completo é inválido", () => {
+    expect(documentFeedback("11.222.333/0001-82", false)).toMatch(/inválido/i);
+    expect(documentFeedback("11.222.333/0001-81", false)).toBeNull();
+  });
+
+  it("não avisa cedo demais: CPF de 11 dígitos só ao sair do campo", () => {
+    expect(documentFeedback("529.982.247-26", false)).toBeNull();
+    expect(documentFeedback("529.982.247-26", true)).toMatch(/inválido/i);
+    expect(documentFeedback("529.982.247-25", true)).toBeNull();
+  });
+
+  it("avisa ao sair do campo com número incompleto, mas não em campo vazio", () => {
+    expect(documentFeedback("5299", true)).toMatch(/inválido/i);
+    expect(documentFeedback("", true)).toBeNull();
+  });
+
+  it("só libera o envio com CPF/CNPJ completo e válido", () => {
+    expect(isCompleteValidDocument("529.982.247-25")).toBe(true);
+    expect(isCompleteValidDocument("11.222.333/0001-81")).toBe(true);
+    expect(isCompleteValidDocument("529.982.247-26")).toBe(false);
+    expect(isCompleteValidDocument("")).toBe(false);
+  });
+});
