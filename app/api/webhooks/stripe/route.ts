@@ -93,10 +93,9 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ received: true });
 }
 
-// store_subscriptions.status cobre só os 5 estados que o fluxo de bloqueio
-// de acesso (proxy.ts) precisa distinguir. O Stripe tem mais alguns
-// (incomplete*, paused) para o primeiro pagamento falhar antes de confirmar,
-// ou pausa manual — mapeados para o mais próximo semanticamente, nunca
+// store_subscriptions.status cobre os estados comerciais que a regra de
+// acesso (store_has_access) distingue. O Stripe tem mais alguns (incomplete*,
+// unpaid, paused) — mapeados para o mais próximo semanticamente, nunca
 // descartados em silêncio.
 function toStoreSubscriptionStatus(stripeStatus: Stripe.Subscription.Status): SubscriptionStatus {
   switch (stripeStatus) {
@@ -109,14 +108,14 @@ function toStoreSubscriptionStatus(stripeStatus: Stripe.Subscription.Status): Su
     case "canceled":
       return "canceled";
     case "unpaid":
-      return "unpaid";
     case "incomplete":
+      return "past_due";
     case "incomplete_expired":
-      return "unpaid";
+      return "expired";
     case "paused":
       return "canceled";
     default:
-      return "unpaid";
+      return "past_due";
   }
 }
 
@@ -136,23 +135,22 @@ async function syncSubscription(
   const currentPeriodEnd = subscription.items.data[0]?.current_period_end;
   const status = toStoreSubscriptionStatus(subscription.status);
 
-  await supabase
-    .from("store_subscriptions")
-    .upsert(
-      {
-        store_id: storeId,
-        stripe_customer_id: customerId,
-        stripe_subscription_id: subscription.id,
-        status,
-        price_id: priceId,
-        current_period_end: currentPeriodEnd ? new Date(currentPeriodEnd * 1000).toISOString() : null,
-      },
-      { onConflict: "store_id" },
-    );
-
-  // stores.status é o único campo operacional consumido por RLS/queries do
-  // resto do schema (ver plano, Milestone 3.2) — nunca duplicar a fonte de
-  // verdade de "a loja está ativa" criando um segundo mecanismo paralelo.
-  const isUsable = status === "trialing" || status === "active";
-  await supabase.from("stores").update({ status: isUsable ? "active" : "inactive" }).eq("id", storeId);
+  // Atualiza a MESMA linha criada pelo trigger de trial (onConflict store_id):
+  // nunca cria uma segunda assinatura para a loja. stores.status NÃO é tocado
+  // aqui — status da loja (administrativo) e da assinatura (comercial) são
+  // conceitos separados; o acesso do catálogo vem de store_has_access().
+  const trialEnd = subscription.trial_end;
+  await supabase.from("store_subscriptions").upsert(
+    {
+      store_id: storeId,
+      stripe_customer_id: customerId,
+      stripe_subscription_id: subscription.id,
+      status,
+      billing_type: "stripe",
+      price_id: priceId,
+      current_period_end: currentPeriodEnd ? new Date(currentPeriodEnd * 1000).toISOString() : null,
+      ...(trialEnd ? { trial_ends_at: new Date(trialEnd * 1000).toISOString() } : {}),
+    },
+    { onConflict: "store_id" },
+  );
 }

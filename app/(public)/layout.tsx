@@ -4,6 +4,8 @@ import { SiteFooter } from "@/components/catalog/site-footer";
 import { getActiveStore, isPlatformRequest } from "@/lib/store/get-active-store";
 import { getBrandFontVariable } from "@/lib/store/fonts";
 import { isSafeBrandFontUrl } from "@/lib/store/branding";
+import { hasStoreAccess } from "@/lib/billing/access";
+import { CatalogUnavailable } from "@/components/catalog/catalog-unavailable";
 
 // O tema de cores (buildStoreTheme) é aplicado no <body>, em app/layout.tsx —
 // precisa estar lá, não aqui, porque --background só pinta o body se for
@@ -24,6 +26,13 @@ export default async function PublicLayout({
 
   const store = await getActiveStore();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+
+  // Trial expirado / assinatura vencida: catálogo fora do ar, mas a loja
+  // segue resolvendo como tenant (o /admin do proprietário não é afetado).
+  // Avaliado em tempo real a cada requisição, sem depender de cron.
+  if (!(await hasStoreAccess(store.id))) {
+    return <CatalogUnavailable storeName={store.name} />;
+  }
 
   // Fonte própria enviada pela proprietária tem precedência sobre a curada —
   // desde que a URL seja comprovadamente do nosso bucket de fontes.

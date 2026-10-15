@@ -37,19 +37,19 @@ describe("setStoreStatus", () => {
   it("rejeita quem não é platform admin, sem tocar no banco", async () => {
     state.isAdmin = false;
     const { setStoreStatus } = await import("@/lib/platform/actions");
-    const result = await setStoreStatus("store-1", "inactive");
+    const result = await setStoreStatus("store-1", "suspended");
 
     expect(result.success).toBeUndefined();
     expect(result.error).toMatch(/restrito/i);
     expect(state.updatedPayload).toBeNull();
   });
 
-  it("suspende a loja (status=inactive) quando chamado por um platform admin", async () => {
+  it("suspende a loja (status=suspended) quando chamado por um platform admin", async () => {
     const { setStoreStatus } = await import("@/lib/platform/actions");
-    const result = await setStoreStatus("store-1", "inactive");
+    const result = await setStoreStatus("store-1", "suspended");
 
     expect(result.success).toBe(true);
-    expect(state.updatedPayload).toEqual({ status: "inactive" });
+    expect(state.updatedPayload).toEqual({ status: "suspended" });
   });
 
   it("reativa a loja (status=active)", async () => {

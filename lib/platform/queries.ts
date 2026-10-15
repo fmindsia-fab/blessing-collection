@@ -6,7 +6,7 @@ export async function listStoresForPlatformAdmin() {
   const supabase = await createServerSupabaseClient();
   const { data } = await supabase
     .from("stores")
-    .select("id, slug, name, status, created_at, store_subscriptions(status, current_period_end)")
+    .select("id, slug, name, status, created_at, store_subscriptions(status, billing_type, current_period_end, trial_ends_at)")
     .order("created_at", { ascending: false });
 
   return (data ?? []).map((row) => ({
@@ -22,7 +22,7 @@ export async function getStoreForPlatformAdmin(storeId: string) {
   const { data } = await supabase
     .from("stores")
     .select(
-      "id, slug, name, status, owner_user_id, whatsapp_number, created_at, store_subscriptions(status, stripe_customer_id, stripe_subscription_id, current_period_end, trial_ends_at)",
+      "id, slug, name, status, owner_user_id, whatsapp_number, created_at, store_subscriptions(status, billing_type, stripe_customer_id, stripe_subscription_id, current_period_end, trial_ends_at)",
     )
     .eq("id", storeId)
     .maybeSingle();

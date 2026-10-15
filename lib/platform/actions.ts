@@ -9,15 +9,15 @@ export type PlatformActionState = {
   success?: boolean;
 };
 
-// Suspender/reativar manualmente (escopo mínimo do painel, ver plano do
-// Milestone 4) — reaproveita a mesma coluna stores.status que o webhook do
-// Stripe sincroniza (ver app/api/webhooks/stripe/route.ts), sem criar um
-// segundo mecanismo paralelo de "a loja está ativa". A RLS
+// Suspender/reativar manualmente: bloqueio ADMINISTRATIVO da plataforma
+// (fraude, violação etc.), em stores.status. Não tem relação com cobrança —
+// trial expirado/inadimplência vivem em store_subscriptions e não passam por
+// aqui (ver migration 0032). A RLS
 // (stores_platform_admin_update) é quem de fato garante que só um platform
 // admin consegue escrever aqui; esta checagem é defesa em profundidade.
 export async function setStoreStatus(
   storeId: string,
-  status: "active" | "inactive",
+  status: "active" | "suspended",
 ): Promise<PlatformActionState> {
   if (!(await isPlatformAdmin())) {
     return { error: "Acesso restrito ao administrador da plataforma." };

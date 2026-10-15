@@ -5,7 +5,8 @@
 export type ProductStatus = "available" | "made_to_order" | "sold_out" | "inactive";
 export type VariantStatus = "available" | "sold_out" | "archived";
 export type ArchivableStatus = "active" | "archived";
-export type StoreStatus = "active" | "inactive";
+/** active | suspended (bloqueio manual da plataforma) | archived (migration 0032). */
+export type StoreStatus = "active" | "suspended" | "archived";
 /** MEI não entra como percentual: o DAS é custo fixo mensal (migration 0014). */
 export type TaxRegime = "none" | "mei" | "simples" | "other";
 export type PricingMethodValue = "margin" | "markup";
@@ -23,7 +24,9 @@ export type AnalyticsEventType =
 /** Fluxo completo de encomenda (migration 0025), do orçamento à entrega. */
 export type OrderStatus = "quote" | "confirmed" | "in_production" | "ready" | "delivered" | "cancelled";
 /** Espelha os status nativos do Stripe (migration 0029) — não reinventar vocabulário. */
-export type SubscriptionStatus = "trialing" | "active" | "past_due" | "canceled" | "unpaid";
+export type SubscriptionStatus = "trialing" | "active" | "past_due" | "canceled" | "expired";
+/** Origem da cobrança (migration 0032). */
+export type BillingType = "stripe" | "complimentary" | "manual";
 
 export interface Database {
   public: {
@@ -148,7 +151,9 @@ export interface Database {
           stripe_customer_id: string | null;
           stripe_subscription_id: string | null;
           status: SubscriptionStatus;
+          billing_type: BillingType;
           price_id: string | null;
+          trial_started_at: string | null;
           trial_ends_at: string | null;
           current_period_end: string | null;
           created_at: string;
@@ -160,7 +165,9 @@ export interface Database {
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;
           status?: SubscriptionStatus;
+          billing_type?: BillingType;
           price_id?: string | null;
+          trial_started_at?: string | null;
           trial_ends_at?: string | null;
           current_period_end?: string | null;
           created_at?: string;
@@ -665,6 +672,11 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      /** Acesso comercial em tempo real (migration 0032) — boolean, sem dados de cobrança. */
+      store_has_access: {
+        Args: { p_store_id: string };
+        Returns: boolean;
+      };
       /** Painel da plataforma (migration 0031) — e-mail do dono da loja, só para platform admin. */
       platform_admin_store_owner_email: {
         Args: { p_store_id: string };

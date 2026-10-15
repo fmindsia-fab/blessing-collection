@@ -1,20 +1,18 @@
 import { notFound } from "next/navigation";
 import { getStoreForPlatformAdmin } from "@/lib/platform/queries";
+import { billingState, daysUntil } from "@/lib/platform/metrics";
+import { BILLING_STATE_LABEL, BILLING_STATE_TONE } from "@/lib/platform/billing-labels";
 import { PageHeading } from "@/components/admin/page-heading";
 import { StatusPill } from "@/components/admin/status-pill";
 import { BackLink } from "@/components/shared/back-link";
 import { StoreStatusToggle } from "./store-status-toggle";
 
-const SUBSCRIPTION_LABEL: Record<string, string> = {
-  trialing: "Em teste",
-  active: "Ativa",
-  past_due: "Pagamento atrasado",
-  canceled: "Cancelada",
-  unpaid: "Não paga",
-};
-
 function formatCpf(digits: string): string {
   return digits.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
+}
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("pt-BR");
 }
 
 export default async function PlatformAdminStorePage({ params }: { params: Promise<{ id: string }> }) {
@@ -22,57 +20,70 @@ export default async function PlatformAdminStorePage({ params }: { params: Promi
   const store = await getStoreForPlatformAdmin(id);
   if (!store) notFound();
 
+  const now = new Date();
+  const state = billingState(store.subscription, now);
+  const trialEnds = store.subscription?.trial_ends_at ?? null;
+  const renewal = store.subscription?.current_period_end ?? null;
+
   return (
-    <div className="flex max-w-xl flex-col gap-8">
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-8">
       <BackLink href="/admin-plataforma">Lojas</BackLink>
       <PageHeading
         kicker={store.slug}
         title={store.name}
-        action={<StatusPill tone={store.status === "active" ? "positive" : "muted"}>
-          {store.status === "active" ? "Ativa" : "Inativa"}
-        </StatusPill>}
+        description={`Cadastrada em ${formatDate(store.created_at)}`}
+        action={
+          <div className="flex items-center gap-2">
+            <StatusPill tone={store.status === "active" ? "positive" : "muted"}>
+              {store.status === "active" ? "Loja ativa" : "Suspensa"}
+            </StatusPill>
+            <StatusPill tone={BILLING_STATE_TONE[state]}>{BILLING_STATE_LABEL[state]}</StatusPill>
+          </div>
+        }
       />
 
-      <dl className="flex flex-col gap-3 rounded-[var(--radius-image)] border border-border bg-card p-5 text-sm">
-        <div className="flex justify-between gap-3">
-          <dt className="text-muted-foreground">Responsável</dt>
-          <dd className="font-medium">{store.owner.name ?? "—"}</dd>
-        </div>
-        <div className="flex justify-between gap-3">
-          <dt className="text-muted-foreground">CPF</dt>
-          <dd className="font-medium">{store.owner.cpf ? formatCpf(store.owner.cpf) : "—"}</dd>
-        </div>
-        <div className="flex justify-between gap-3">
-          <dt className="text-muted-foreground">E-mail</dt>
-          <dd className="font-medium break-all">{store.owner.email ?? "—"}</dd>
-        </div>
-        <div className="flex justify-between gap-3">
-          <dt className="text-muted-foreground">Telefone / WhatsApp</dt>
-          <dd className="font-medium">{store.whatsapp_number}</dd>
-        </div>
-        <div className="flex justify-between gap-3">
-          <dt className="text-muted-foreground">Criada em</dt>
-          <dd className="font-medium">{new Date(store.created_at).toLocaleDateString("pt-BR")}</dd>
-        </div>
-        <div className="flex justify-between gap-3">
-          <dt className="text-muted-foreground">Assinatura</dt>
-          <dd className="font-medium">
-            {store.subscription
-              ? (SUBSCRIPTION_LABEL[store.subscription.status] ?? store.subscription.status)
-              : "Sem assinatura"}
-          </dd>
-        </div>
-        {store.subscription?.current_period_end ? (
-          <div className="flex justify-between gap-3">
-            <dt className="text-muted-foreground">Próxima renovação</dt>
-            <dd className="font-medium">
-              {new Date(store.subscription.current_period_end).toLocaleDateString("pt-BR")}
-            </dd>
-          </div>
-        ) : null}
-      </dl>
+      <div className="grid gap-4 md:grid-cols-2">
+        <InfoCard title="Responsável">
+          <InfoRow label="Nome" value={store.owner.name ?? "—"} />
+          <InfoRow label="CPF" value={store.owner.cpf ? formatCpf(store.owner.cpf) : "—"} />
+          <InfoRow label="E-mail" value={store.owner.email ?? "—"} breakAll />
+          <InfoRow label="WhatsApp" value={store.whatsapp_number} />
+        </InfoCard>
+
+        <InfoCard title="Assinatura">
+          <InfoRow label="Situação" value={BILLING_STATE_LABEL[state]} />
+          {state === "trial" && trialEnds ? (
+            <>
+              <InfoRow label="Teste termina em" value={formatDate(trialEnds)} />
+              <InfoRow label="Dias restantes" value={String(Math.max(daysUntil(trialEnds, now), 0))} />
+            </>
+          ) : null}
+          {state === "trial_expired" && trialEnds ? (
+            <InfoRow label="Teste terminou em" value={formatDate(trialEnds)} />
+          ) : null}
+          {renewal ? <InfoRow label="Próxima renovação" value={formatDate(renewal)} /> : null}
+        </InfoCard>
+      </div>
 
       <StoreStatusToggle storeId={store.id} status={store.status} />
+    </div>
+  );
+}
+
+function InfoCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="flex flex-col gap-4 rounded-[var(--radius-image)] border border-border bg-card p-5">
+      <h2 className="text-sm font-medium text-muted-foreground">{title}</h2>
+      <dl className="flex flex-col gap-3 text-sm">{children}</dl>
+    </section>
+  );
+}
+
+function InfoRow({ label, value, breakAll }: { label: string; value: string; breakAll?: boolean }) {
+  return (
+    <div className="flex justify-between gap-4">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className={breakAll ? "text-right font-medium break-all" : "text-right font-medium"}>{value}</dd>
     </div>
   );
 }

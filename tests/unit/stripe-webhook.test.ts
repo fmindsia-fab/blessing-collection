@@ -5,7 +5,7 @@ const { state } = vi.hoisted(() => ({
     event: null as { type: string; data: { object: unknown } } | null,
     verifyShouldThrow: false,
     upsertedSubscription: null as Record<string, unknown> | null,
-    updatedStoreStatus: null as { id: string; status: string } | null,
+    storesTouched: false,
     retrievedSubscriptionId: null as string | null,
     subscriptionToReturn: null as Record<string, unknown> | null,
   },
@@ -40,14 +40,9 @@ vi.mock("@/app/api/webhooks/stripe/service-role-client", () => ({
         };
       }
       if (table === "stores") {
-        return {
-          update: (payload: { status: string }) => ({
-            eq: (_col: string, id: string) => {
-              state.updatedStoreStatus = { id, status: payload.status };
-              return Promise.resolve({ error: null });
-            },
-          }),
-        };
+        // O webhook não pode escrever em stores: status da loja é
+        // administrativo, separado da assinatura (migration 0032).
+        state.storesTouched = true;
       }
       throw new Error(`tabela inesperada: ${table}`);
     },
@@ -78,7 +73,7 @@ describe("webhook do Stripe", () => {
     state.event = null;
     state.verifyShouldThrow = false;
     state.upsertedSubscription = null;
-    state.updatedStoreStatus = null;
+    state.storesTouched = false;
     state.retrievedSubscriptionId = null;
     state.subscriptionToReturn = null;
   });
@@ -91,7 +86,7 @@ describe("webhook do Stripe", () => {
     expect(state.upsertedSubscription).toBeNull();
   });
 
-  it("sincroniza store_subscriptions e ativa a loja em customer.subscription.updated (active)", async () => {
+  it("atualiza a mesma linha de store_subscriptions em customer.subscription.updated (active)", async () => {
     const subscription = makeSubscription({ status: "active" });
     state.event = { type: "customer.subscription.updated", data: { object: subscription } };
 
@@ -103,11 +98,12 @@ describe("webhook do Stripe", () => {
       store_id: "store-1",
       stripe_subscription_id: "sub_123",
       status: "active",
+      billing_type: "stripe",
     });
-    expect(state.updatedStoreStatus).toEqual({ id: "store-1", status: "active" });
+    expect(state.storesTouched).toBe(false);
   });
 
-  it("marca a loja como inactive quando a assinatura é cancelada", async () => {
+  it("marca a assinatura como canceled sem alterar stores.status", async () => {
     const subscription = makeSubscription({ status: "canceled" });
     state.event = { type: "customer.subscription.deleted", data: { object: subscription } };
 
@@ -115,27 +111,28 @@ describe("webhook do Stripe", () => {
     await POST(makeRequest("{}"));
 
     expect(state.upsertedSubscription).toMatchObject({ status: "canceled" });
-    expect(state.updatedStoreStatus).toEqual({ id: "store-1", status: "inactive" });
+    expect(state.storesTouched).toBe(false);
   });
 
-  it("marca a loja como inactive quando a assinatura fica past_due", async () => {
+  it("marca a assinatura como past_due sem alterar stores.status", async () => {
     const subscription = makeSubscription({ status: "past_due" });
     state.event = { type: "customer.subscription.updated", data: { object: subscription } };
 
     const { POST } = await import("@/app/api/webhooks/stripe/route");
     await POST(makeRequest("{}"));
 
-    expect(state.updatedStoreStatus).toEqual({ id: "store-1", status: "inactive" });
+    expect(state.upsertedSubscription).toMatchObject({ status: "past_due" });
+    expect(state.storesTouched).toBe(false);
   });
 
-  it("mapeia status fora do enum (incomplete) para unpaid, sem descartar o evento", async () => {
+  it("mapeia status fora do enum (incomplete) para past_due, sem descartar o evento", async () => {
     const subscription = makeSubscription({ status: "incomplete" });
     state.event = { type: "customer.subscription.updated", data: { object: subscription } };
 
     const { POST } = await import("@/app/api/webhooks/stripe/route");
     await POST(makeRequest("{}"));
 
-    expect(state.upsertedSubscription).toMatchObject({ status: "unpaid" });
+    expect(state.upsertedSubscription).toMatchObject({ status: "past_due" });
   });
 
   it("ignora subscription sem store_id em metadata, sem lançar erro", async () => {

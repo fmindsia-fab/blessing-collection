@@ -6,6 +6,7 @@ import { ThemeToggle } from "./theme-toggle";
 import { MobileNav } from "./mobile-nav";
 import { ShareButton } from "@/components/shared/share-button";
 import { getActiveStore } from "@/lib/store/get-active-store";
+import { SubscriptionBanner } from "./subscription-banner";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard" },
@@ -67,6 +68,8 @@ export default async function AdminAreaLayout({ children }: { children: React.Re
           </div>
         </div>
       </header>
+
+      <SubscriptionBanner storeId={store.id} />
 
       <div className="flex flex-1 flex-col px-6 py-10 lg:px-10">{children}</div>
     </AdminThemeProvider>

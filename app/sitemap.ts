@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getActiveStore } from "@/lib/store/get-active-store";
+import { hasStoreAccess } from "@/lib/billing/access";
 import { absoluteUrl, getSitemapEntries } from "@/lib/seo/sitemap-entries";
 
 // Lê o banco a cada requisição: um produto novo entra no sitemap sem redeploy.
@@ -13,6 +14,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (!siteUrl) return [];
 
   const store = await getActiveStore();
+  // Catálogo indisponível não deve ser indexado.
+  if (!(await hasStoreAccess(store.id))) return [];
   const entries = await getSitemapEntries(store.id);
 
   return entries.map((entry) => ({

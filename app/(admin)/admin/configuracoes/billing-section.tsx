@@ -7,7 +7,7 @@ const STATUS_LABEL: Record<SubscriptionStatus, string> = {
   active: "Ativa",
   past_due: "Pagamento atrasado",
   canceled: "Cancelada",
-  unpaid: "Pagamento não efetuado",
+  expired: "Período gratuito encerrado",
 };
 
 export function BillingSection({

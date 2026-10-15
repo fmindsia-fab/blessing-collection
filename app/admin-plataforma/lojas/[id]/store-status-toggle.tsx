@@ -4,13 +4,13 @@ import { useState, useTransition } from "react";
 import { setStoreStatus } from "@/lib/platform/actions";
 import { Button } from "@/components/ui/button";
 
-export function StoreStatusToggle({ storeId, status }: { storeId: string; status: "active" | "inactive" }) {
+export function StoreStatusToggle({ storeId, status }: { storeId: string; status: string }) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
   function handleToggle() {
     setError(null);
-    const nextStatus = status === "active" ? "inactive" : "active";
+    const nextStatus = status === "active" ? "suspended" : "active";
     startTransition(async () => {
       const result = await setStoreStatus(storeId, nextStatus);
       if (result.error) setError(result.error);
