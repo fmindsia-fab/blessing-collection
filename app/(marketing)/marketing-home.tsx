@@ -44,16 +44,90 @@ const STEPS = [
 
 const BENEFITS = [
   {
-    title: "Catálogo que parece seu",
-    text: "Cores, fonte e logo da sua marca. Nada de modelo genérico — o visual é todo seu.",
+    title: "Catálogo profissional",
+    text: "Organize suas peças, fotos, preços, variações e coleções — tudo num só lugar, sem planilha e sem bagunça.",
   },
   {
-    title: "Sem comissão por venda",
-    text: "Você negocia e fecha direto com a cliente, pelo seu próprio WhatsApp. O que você vende é seu.",
+    title: "Encomendas organizadas",
+    text: "Prazo, personalização e sinal registrados em cada pedido. Nada mais de anotar no caderno ou esquecer no chat.",
   },
   {
-    title: "Saiba o que funciona",
-    text: "Veja quais peças têm mais visualizações e mais contatos — sem depender de achismo.",
+    title: "Pedidos pelo WhatsApp",
+    text: "A cliente escolhe a peça e já chega até você com produto, variação e preço preenchidos — sem reexplicar tudo.",
+  },
+  {
+    title: "Sua identidade visual",
+    text: "Cores, fonte e logo do seu próprio ateliê. Nada de modelo genérico — o catálogo tem a cara da sua marca.",
+  },
+  {
+    title: "Precificação com mais segurança",
+    text: "Organize seus custos e saiba exatamente quanto cobrar — valorize seu trabalho com números, não achismo.",
+  },
+  {
+    title: "Mais visibilidade e vendas",
+    text: "Compartilhe o link da sua loja onde quiser e leve cada cliente direto para o catálogo certo.",
+  },
+];
+
+const BEFORE_AFTER = {
+  before: [
+    "Fotos espalhadas no celular",
+    "Cliente perguntando preço toda hora",
+    "Pedidos anotados no caderno",
+    "Encomendas perdidas no WhatsApp",
+    "Difícil mostrar todas as opções",
+    "Difícil parecer profissional",
+  ],
+  after: [
+    "Catálogo organizado e sempre à mão",
+    "Preços e informações já disponíveis",
+    "Pedidos centralizados num só lugar",
+    "Encomendas com prazo e sinal registrados",
+    "Cliente vê todas as peças de uma vez",
+    "Marca com cara de negócio sério",
+  ],
+};
+
+const FAQ_ITEMS = [
+  {
+    question: "Preciso saber criar site?",
+    answer: "Não. Você preenche nome, fotos e preços — o catálogo é montado automaticamente, sem nenhum conhecimento técnico.",
+  },
+  {
+    question: "Preciso ter CNPJ?",
+    answer: "Não é obrigatório. Muitas artesãs usam a plataforma vendendo como pessoa física.",
+  },
+  {
+    question: "Posso usar só o plano gratuito?",
+    answer: "Sim. Você cria sua loja e começa a vender sem precisar de cartão de crédito.",
+  },
+  {
+    question: "O Ateliê Fácil cobra comissão por venda?",
+    answer: "Não. A negociação e o pagamento acontecem direto entre você e a cliente, pelo seu WhatsApp — o que você vende é seu.",
+  },
+  {
+    question: "Minha cliente precisa instalar algum aplicativo?",
+    answer: "Não. Ela acessa seu catálogo pelo navegador e fala com você pelo WhatsApp normal, sem instalar nada.",
+  },
+  {
+    question: "Posso receber pedidos pelo WhatsApp?",
+    answer: "Sim. Cada peça gera um link com mensagem pronta — a cliente clica e chega até você com tudo preenchido.",
+  },
+  {
+    question: "Posso cadastrar produtos sob encomenda?",
+    answer: "Sim. Você marca a peça como sob encomenda e define prazo, personalização e sinal.",
+  },
+  {
+    question: "Posso personalizar minha loja?",
+    answer: "Sim. Cores, fonte e logo seguem a identidade do seu próprio ateliê.",
+  },
+  {
+    question: "Funciona no celular?",
+    answer: "Sim, tanto para você gerenciar a loja quanto para suas clientes navegarem no catálogo — pensado para o celular desde o início.",
+  },
+  {
+    question: "Posso cancelar quando quiser?",
+    answer: "Sim, sem burocracia e sem multa.",
   },
 ];
 
@@ -123,8 +197,8 @@ export function MarketingHome() {
               <span className="italic text-[var(--craft-terracotta)]">à sua altura</span>
             </h1>
             <p className="max-w-xl text-pretty text-base leading-relaxed text-[var(--craft-muted)] sm:text-lg">
-              Monte seu catálogo online em minutos, com a cara da sua marca, e venda direto pelo
-              WhatsApp — sem taxa por venda, sem complicação.
+              Crie seu catálogo, organize suas encomendas e receba pedidos direto no WhatsApp —
+              sem comissão por venda.
             </p>
             <div className="mt-2 flex flex-col items-center gap-3 sm:flex-row">
               <PrimaryCta />
@@ -238,6 +312,51 @@ export function MarketingHome() {
         </div>
       </section>
 
+      {/* Antes / Depois — contraste emocional entre a rotina sem e com a
+          plataforma, pensado para a visitante se reconhecer no "antes". */}
+      <section className="relative overflow-hidden border-t border-[var(--craft-border)] px-6 py-24 lg:px-10">
+        <div className="mx-auto flex max-w-5xl flex-col gap-14">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <span className="text-[0.625rem] font-medium uppercase tracking-[0.2em] text-[var(--craft-terracotta)]">
+              A diferença no dia a dia
+            </span>
+            <h2 className="font-[family-name:var(--font-brand)] text-3xl tracking-tight sm:text-4xl">
+              Do jeito antigo para o jeito fácil
+            </h2>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div className="flex flex-col gap-4 rounded-[var(--radius-image)] border border-[var(--craft-border)] bg-[var(--craft-card)] p-7">
+              <h3 className="text-xs font-medium uppercase tracking-[0.18em] text-[var(--craft-muted)]">
+                Antes
+              </h3>
+              <ul className="flex flex-col gap-3">
+                {BEFORE_AFTER.before.map((item) => (
+                  <li key={item} className="flex items-start gap-3 text-sm leading-relaxed text-[var(--craft-muted)]">
+                    <span aria-hidden className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[var(--craft-border)]" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="flex flex-col gap-4 rounded-[var(--radius-image)] border border-[var(--craft-terracotta)]/30 bg-[var(--craft-bg-warm)] p-7 shadow-sm">
+              <h3 className="text-xs font-medium uppercase tracking-[0.18em] text-[var(--craft-terracotta)]">
+                Com o Ateliê Fácil
+              </h3>
+              <ul className="flex flex-col gap-3">
+                {BEFORE_AFTER.after.map((item) => (
+                  <li key={item} className="flex items-start gap-3 text-sm leading-relaxed text-[var(--craft-ink)]">
+                    <span aria-hidden className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[var(--craft-terracotta)]" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Benefícios */}
       <section className="relative overflow-hidden border-t border-[var(--craft-border)] bg-[var(--craft-bg-warm)] px-6 py-24 lg:px-10">
         <YarnSkein className="pointer-events-none absolute bottom-[-2rem] left-[-2rem] hidden w-32 text-[var(--craft-mustard)]/30 lg:block" />
@@ -248,11 +367,11 @@ export function MarketingHome() {
               Por que o Ateliê Fácil
             </span>
             <h2 className="font-[family-name:var(--font-brand)] text-3xl tracking-tight sm:text-4xl">
-              Feito para quem faz à mão
+              Tudo que seu ateliê precisa para vender melhor
             </h2>
           </div>
 
-          <div className="grid gap-8 sm:grid-cols-3">
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {BENEFITS.map((benefit) => (
               <div
                 key={benefit.title}
@@ -270,6 +389,29 @@ export function MarketingHome() {
         </div>
       </section>
 
+      {/* FAQ — respostas às objeções mais comuns antes do cadastro. */}
+      <section className="relative overflow-hidden px-6 py-24 lg:px-10">
+        <div className="mx-auto flex max-w-3xl flex-col gap-10">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <span className="text-[0.625rem] font-medium uppercase tracking-[0.2em] text-[var(--craft-terracotta)]">
+              Perguntas frequentes
+            </span>
+            <h2 className="font-[family-name:var(--font-brand)] text-3xl tracking-tight sm:text-4xl">
+              Tire suas dúvidas
+            </h2>
+          </div>
+
+          <dl className="flex flex-col divide-y divide-[var(--craft-border)] rounded-[var(--radius-image)] border border-[var(--craft-border)] bg-[var(--craft-card)]">
+            {FAQ_ITEMS.map((item) => (
+              <div key={item.question} className="flex flex-col gap-2 p-6">
+                <dt className="text-base font-medium">{item.question}</dt>
+                <dd className="text-sm leading-relaxed text-[var(--craft-muted)]">{item.answer}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+
       {/* CTA final — maior destaque, bloco colorido sólido para fechar com
           urgência visual diferente do resto da página. */}
       <section className="relative overflow-hidden bg-[var(--craft-terracotta)] px-6 py-24 text-[var(--craft-bg)] lg:px-10">
@@ -281,10 +423,10 @@ export function MarketingHome() {
         <StitchWave className="pointer-events-none absolute bottom-10 right-[10%] hidden w-40 text-white/25 md:block" />
         <div className="relative mx-auto flex max-w-xl flex-col items-center gap-6 text-center">
           <h2 className="font-[family-name:var(--font-brand)] text-3xl tracking-tight sm:text-4xl">
-            Pronta para começar?
+            Seu talento merece ser visto. E valorizado.
           </h2>
           <p className="text-sm text-white/80 sm:text-base">
-            Leva poucos minutos, não precisa de cartão de crédito.
+            Crie seu catálogo gratuitamente — sem cartão de crédito, pronto em poucos minutos.
           </p>
           <Link
             href="/cadastro"
