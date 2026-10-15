@@ -533,7 +533,7 @@ export function MarketingHome() {
         <span>
           Desenvolvido por FMinds — Suporte:{" "}
           <Link
-            href="https://wa.me/5543991434124"
+            href="https://wa.me/5543991434124?text=Oi%2C%20vi%20o%20AteliF%C3%A1cil%20e%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es."
             target="_blank"
             rel="noopener noreferrer"
             className="underline underline-offset-4 outline-none transition-colors hover:text-[var(--craft-ink)] focus-visible:text-[var(--craft-ink)]"
