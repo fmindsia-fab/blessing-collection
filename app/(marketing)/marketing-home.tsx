@@ -479,9 +479,18 @@ export function MarketingHome() {
         </div>
       </section>
 
-      {/* CTA final — maior destaque, bloco colorido sólido para fechar com
-          urgência visual diferente do resto da página. */}
+      {/* CTA final — maior destaque, foto de fundo (mãos trabalhando em
+          crochê) com overlay terracota para manter o texto branco legível,
+          fechando a página com urgência visual diferente do resto. */}
       <section className="relative overflow-hidden bg-[var(--craft-terracotta)] px-6 py-24 text-[var(--craft-bg)] lg:px-10">
+        <Image
+          src="/marketing/cta-background.jpg"
+          alt=""
+          fill
+          className="object-cover"
+          sizes="100vw"
+        />
+        <div aria-hidden className="absolute inset-0 bg-[var(--craft-terracotta)]/80" />
         <div
           aria-hidden
           className="pointer-events-none absolute top-1/2 left-1/2 size-[34rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/10 blur-3xl"
