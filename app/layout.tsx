@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: process.env.NEXT_PUBLIC_SITE_URL ? new URL(process.env.NEXT_PUBLIC_SITE_URL) : undefined,
-  title: "Blessing Collection",
+  title: "AteliFácil",
   description: "Catálogo digital de bolsas e acessórios artesanais.",
 };
 

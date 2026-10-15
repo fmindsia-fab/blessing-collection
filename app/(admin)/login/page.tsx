@@ -12,7 +12,7 @@ export default async function LoginPage({
       <div className="reveal flex w-full max-w-sm flex-col gap-10">
         <div className="flex flex-col items-center gap-3 text-center">
           <span className="text-xs font-medium text-muted-foreground">
-            Blessing Collection
+            AteliFácil
           </span>
           <h1 className="text-3xl leading-none font-semibold tracking-tight">
             Painel
