@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { NativeSelect } from "@/components/ui/native-select";
+import { QuickCreateSelect } from "./quick-create-select";
 import type { ProductStatus } from "@/types/database.types";
 
 type ProductFormProps = {
@@ -161,39 +162,36 @@ export function ProductForm({ categories, collections, models, product }: Produc
       </fieldset>
 
       <div className="grid grid-cols-2 gap-4">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="categoryId">Categoria</Label>
-          <NativeSelect id="categoryId" name="categoryId" defaultValue={product?.category_id ?? ""}>
-            <option value="">Sem categoria</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </NativeSelect>
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="collectionId">Coleção</Label>
-          <NativeSelect id="collectionId" name="collectionId" defaultValue={product?.collection_id ?? ""}>
-            <option value="">Sem coleção</option>
-            {collections.map((collection) => (
-              <option key={collection.id} value={collection.id}>
-                {collection.name}
-              </option>
-            ))}
-          </NativeSelect>
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="modelId">Modelo</Label>
-          <NativeSelect id="modelId" name="modelId" defaultValue={product?.model_id ?? ""}>
-            <option value="">Sem modelo</option>
-            {models.map((model) => (
-              <option key={model.id} value={model.id}>
-                {model.name}
-              </option>
-            ))}
-          </NativeSelect>
-        </div>
+        <QuickCreateSelect
+          kind="category"
+          id="categoryId"
+          name="categoryId"
+          label="Categoria"
+          emptyLabel="Sem categoria"
+          noun="categoria"
+          options={categories}
+          defaultValue={product?.category_id ?? ""}
+        />
+        <QuickCreateSelect
+          kind="collection"
+          id="collectionId"
+          name="collectionId"
+          label="Coleção"
+          emptyLabel="Sem coleção"
+          noun="coleção"
+          options={collections}
+          defaultValue={product?.collection_id ?? ""}
+        />
+        <QuickCreateSelect
+          kind="model"
+          id="modelId"
+          name="modelId"
+          label="Modelo"
+          emptyLabel="Sem modelo"
+          noun="modelo"
+          options={models}
+          defaultValue={product?.model_id ?? ""}
+        />
       </div>
 
       <div className="flex gap-6">

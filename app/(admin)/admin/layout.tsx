@@ -5,7 +5,7 @@ import { AdminThemeProvider } from "./theme-provider";
 import { ThemeToggle } from "./theme-toggle";
 import { MobileNav } from "./mobile-nav";
 import { ShareButton } from "@/components/shared/share-button";
-import { getActiveStore } from "@/lib/store/get-active-store";
+import { getActiveStore, getSiteUrl } from "@/lib/store/get-active-store";
 import { SubscriptionBanner } from "./subscription-banner";
 import { TrialDaysBadge } from "./trial-days-badge";
 
@@ -28,7 +28,7 @@ const NAV_ITEMS = [
 export default async function AdminAreaLayout({ children }: { children: React.ReactNode }) {
   const store = await getActiveStore();
   const storeName = store.name;
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+  const siteUrl = await getSiteUrl();
 
   return (
     <AdminThemeProvider>

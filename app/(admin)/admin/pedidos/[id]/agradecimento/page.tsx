@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { Playfair_Display, Lora, Dancing_Script } from "next/font/google";
-import { getActiveStore } from "@/lib/store/get-active-store";
+import { getActiveStore, getSiteUrl } from "@/lib/store/get-active-store";
 import { getOrder } from "@/lib/orders/queries";
 import { INVOICE_COUPON_PERCENT } from "@/lib/orders/build-invoice-message";
 import { BackLink } from "@/components/shared/back-link";
@@ -31,7 +31,7 @@ export default async function OrderThankYouPage({ params }: { params: Promise<{ 
     : null;
 
   const customerName = order.customer?.name ?? "Cliente";
-  const pageUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/admin/pedidos/${id}/agradecimento`;
+  const pageUrl = `${await getSiteUrl()}/admin/pedidos/${id}/agradecimento`;
 
   return (
     <div

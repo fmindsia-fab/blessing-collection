@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getActiveStore, isPlatformRequest } from "@/lib/store/get-active-store";
+import { getActiveStore, getSiteUrl, isPlatformRequest } from "@/lib/store/get-active-store";
 import { getFeaturedProducts, getNewArrivals } from "@/lib/products/queries";
 import { listCategories } from "@/lib/categories/queries";
 import { listCollections } from "@/lib/collections/queries";
@@ -43,7 +43,7 @@ export async function generateMetadata(): Promise<Metadata> {
       description,
       type: "website",
       siteName: store.name,
-      url: process.env.NEXT_PUBLIC_SITE_URL,
+      url: await getSiteUrl(),
       images: store.logo_url ? [{ url: store.logo_url, alt: store.name }] : [],
     },
   };

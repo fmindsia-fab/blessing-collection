@@ -1,4 +1,4 @@
-import { getActiveStore } from "@/lib/store/get-active-store";
+import { getActiveStore, getSiteUrl } from "@/lib/store/get-active-store";
 import { BackLink } from "@/components/shared/back-link";
 import { SelectionReview } from "./selection-review";
 
@@ -20,7 +20,7 @@ export default async function SelectionPage() {
         storeId={store.id}
         storeName={store.name}
         storeWhatsapp={store.whatsapp_number}
-        siteUrl={process.env.NEXT_PUBLIC_SITE_URL ?? ""}
+        siteUrl={await getSiteUrl()}
       />
     </main>
   );

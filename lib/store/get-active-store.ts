@@ -87,3 +87,30 @@ export const getActiveStore = cache(async () => {
   }
   return store;
 });
+
+// URL pública base (sem barra final) do site que está respondendo a
+// requisição. Cada loja vive no próprio host (subdomínio ou domínio
+// próprio), então links de compartilhamento, OG e retorno do Stripe precisam
+// ser derivados do host real — nunca de uma variável de ambiente única, que
+// só descreveria uma das lojas.
+//
+// Modo "env" (um deploy = uma loja): mantém NEXT_PUBLIC_SITE_URL.
+export async function getSiteUrl(): Promise<string> {
+  const mode = process.env.TENANT_RESOLUTION_MODE ?? "env";
+  const fromEnv = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/+$/, "");
+  if (mode !== "host" && fromEnv) return fromEnv;
+
+  // Fora de um escopo de requisição (ex.: teste, build) não há host a ler.
+  let headerList: Awaited<ReturnType<typeof headers>>;
+  try {
+    headerList = await headers();
+  } catch {
+    return fromEnv;
+  }
+  const host = headerList.get("x-forwarded-host") ?? headerList.get("host");
+  if (!host) return fromEnv;
+
+  const isLocal = /^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host);
+  const proto = headerList.get("x-forwarded-proto")?.split(",")[0] ?? (isLocal ? "http" : "https");
+  return `${proto}://${host}`;
+}

@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { stripe } from "@/lib/stripe/client";
-import { getActiveStore } from "@/lib/store/get-active-store";
+import { getActiveStore, getSiteUrl } from "@/lib/store/get-active-store";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 // Cria (ou reaproveita) o stripe_customer_id da loja antes de abrir o
@@ -40,7 +40,7 @@ export async function startCheckout() {
 
   const customerId = await ensureStripeCustomerId(store.id, store.name, user?.email ?? null);
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+  const siteUrl = await getSiteUrl();
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     customer: customerId,
@@ -73,7 +73,7 @@ export async function openBillingPortal() {
     throw new Error("Esta loja ainda não tem uma assinatura para gerenciar.");
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+  const siteUrl = await getSiteUrl();
   const session = await stripe.billingPortal.sessions.create({
     customer: data.stripe_customer_id,
     return_url: `${siteUrl}/admin/configuracoes`,

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getActiveStore } from "@/lib/store/get-active-store";
+import { getActiveStore, getSiteUrl } from "@/lib/store/get-active-store";
 import { getProductBySlug, getRelatedProducts } from "@/lib/products/queries";
 import { listPaymentMethods } from "@/lib/pricing/queries";
 import { ProductCard } from "@/components/catalog/product-card";
@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title,
       description,
       type: "website",
-      url: `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/produtos/${product.slug}`,
+      url: `${await getSiteUrl()}/produtos/${product.slug}`,
       siteName: store.name,
       images: coverImage ? [{ url: coverImage.url, alt: coverImage.alt_text ?? product.name }] : [],
     },
@@ -72,7 +72,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   // O preço exibido depende da variação escolhida, então o cálculo vive em
   // ProductPurchase, que é quem tem esse estado.
-  const productUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/produtos/${product.slug}`;
+  const productUrl = `${await getSiteUrl()}/produtos/${product.slug}`;
 
   return (
     <main className="flex flex-1 flex-col gap-10 px-6 py-12 sm:px-10 lg:px-16">

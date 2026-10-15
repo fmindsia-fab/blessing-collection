@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getActiveStore } from "@/lib/store/get-active-store";
+import { getActiveStore, getSiteUrl } from "@/lib/store/get-active-store";
 import { hasStoreAccess } from "@/lib/billing/access";
 import { absoluteUrl, getSitemapEntries } from "@/lib/seo/sitemap-entries";
 
@@ -7,7 +7,7 @@ import { absoluteUrl, getSitemapEntries } from "@/lib/seo/sitemap-entries";
 export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const siteUrl = await getSiteUrl();
 
   // Sem a URL pública não há como montar `loc` absoluto — melhor devolver
   // sitemap vazio que URLs relativas, que os buscadores rejeitam.

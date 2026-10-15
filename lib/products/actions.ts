@@ -65,30 +65,64 @@ export async function createProduct(_prevState: ProductFormState, formData: Form
   const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
 
-  const { data: product, error } = await supabase
-    .from("products")
-    .insert({
-      store_id: store.id,
-      category_id: parsed.data.categoryId || null,
-      collection_id: parsed.data.collectionId || null,
-      model_id: parsed.data.modelId || null,
-      name: parsed.data.name,
-      slug: slugify(parsed.data.name),
-      description: parsed.data.description || null,
-      price: parsed.data.price,
-      materials: parsed.data.materials || null,
-      weight_kg: parsed.data.weightKg,
-      length_cm: parsed.data.lengthCm,
-      width_cm: parsed.data.widthCm,
-      height_cm: parsed.data.heightCm,
-      status: parsed.data.status,
-      is_featured: parsed.data.isFeatured ?? false,
-      is_new_arrival: parsed.data.isNewArrival ?? false,
-    })
-    .select("id")
-    .single();
+  const baseSlug = slugify(parsed.data.name);
 
-  if (error || !product) return { error: "Não foi possível criar o produto. Verifique se o nome já existe." };
+  // Nome repetido só importa dentro da MESMA loja: a URL do produto é
+  // unique(store_id, slug). Outra conta ter um produto com o mesmo nome não
+  // é conflito — cada loja vive no próprio endereço.
+  const { data: sameStore } = await supabase
+    .from("products")
+    .select("id, archived_at")
+    .eq("store_id", store.id)
+    .eq("slug", baseSlug)
+    .maybeSingle();
+
+  if (sameStore) {
+    return {
+      error: sameStore.archived_at
+        ? "Você já tem um produto arquivado com esse nome. Restaure-o ou escolha outro nome."
+        : "Você já tem um produto com esse nome. Escolha um nome diferente.",
+    };
+  }
+
+  const insertProduct = (slug: string) =>
+    supabase
+      .from("products")
+      .insert({
+        store_id: store.id,
+        category_id: parsed.data.categoryId || null,
+        collection_id: parsed.data.collectionId || null,
+        model_id: parsed.data.modelId || null,
+        name: parsed.data.name,
+        slug,
+        description: parsed.data.description || null,
+        price: parsed.data.price,
+        materials: parsed.data.materials || null,
+        weight_kg: parsed.data.weightKg,
+        length_cm: parsed.data.lengthCm,
+        width_cm: parsed.data.widthCm,
+        height_cm: parsed.data.heightCm,
+        status: parsed.data.status,
+        is_featured: parsed.data.isFeatured ?? false,
+        is_new_arrival: parsed.data.isNewArrival ?? false,
+      })
+      .select("id")
+      .single();
+
+  let { data: product, error } = await insertProduct(baseSlug);
+
+  // 23505 aqui, já descartada a duplicata na própria loja, só pode ser uma
+  // colisão de slug fora dela (índice mais amplo que (store_id, slug)) ou uma
+  // corrida entre dois envios. Tenta de novo com sufixo em vez de barrar.
+  if (error?.code === "23505") {
+    const suffix = Math.random().toString(36).slice(2, 6);
+    ({ data: product, error } = await insertProduct(`${baseSlug}-${suffix}`));
+  }
+
+  if (error || !product) {
+    console.error("[createProduct]", error?.code, error?.message, error?.details);
+    return { error: "Não foi possível criar o produto. Tente novamente." };
+  }
 
   revalidatePath("/admin/produtos");
   redirect(`/admin/produtos/${product.id}/editar`);

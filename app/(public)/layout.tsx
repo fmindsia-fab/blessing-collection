@@ -1,7 +1,7 @@
 import { SelectionProvider } from "@/lib/selection/selection-context";
 import { SelectionFloatingButton } from "@/components/catalog/selection-floating-button";
 import { SiteFooter } from "@/components/catalog/site-footer";
-import { getActiveStore, isPlatformRequest } from "@/lib/store/get-active-store";
+import { getActiveStore, getSiteUrl, isPlatformRequest } from "@/lib/store/get-active-store";
 import { getBrandFontVariable } from "@/lib/store/fonts";
 import { isSafeBrandFontUrl } from "@/lib/store/branding";
 import { hasStoreAccess } from "@/lib/billing/access";
@@ -25,7 +25,7 @@ export default async function PublicLayout({
   }
 
   const store = await getActiveStore();
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+  const siteUrl = await getSiteUrl();
 
   // Trial expirado / assinatura vencida: catálogo fora do ar, mas a loja
   // segue resolvendo como tenant (o /admin do proprietário não é afetado).

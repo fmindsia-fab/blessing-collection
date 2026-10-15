@@ -1,4 +1,4 @@
-import { getActiveStore } from "@/lib/store/get-active-store";
+import { getActiveStore, getSiteUrl } from "@/lib/store/get-active-store";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { StoreSettingsForm } from "./store-settings-form";
 import { StoreLogoForm } from "./store-logo-form";
@@ -9,7 +9,7 @@ import { BillingSection } from "./billing-section";
 
 export default async function AdminSettingsPage() {
   const store = await getActiveStore();
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+  const siteUrl = await getSiteUrl();
 
   const supabase = await createServerSupabaseClient();
   const { data: subscription } = await supabase

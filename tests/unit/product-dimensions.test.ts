@@ -3,7 +3,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // `vi.mock` sofre hoisting acima dos imports, então o array precisa ser criado
 // dentro da factory e exposto via vi.hoisted — uma const normal aqui ainda
 // seria undefined quando o mock rodar.
-const { inserted } = vi.hoisted(() => ({ inserted: [] as Record<string, unknown>[] }));
+const { inserted, existing } = vi.hoisted(() => ({
+  inserted: [] as Record<string, unknown>[],
+  // Produto já existente na MESMA loja com o slug pedido (null = nenhum).
+  existing: { value: null as { id: string; archived_at: string | null } | null },
+}));
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
@@ -21,6 +25,7 @@ vi.mock("@/lib/supabase/server", () => ({
         },
         select: () => chain,
         single: () => Promise.resolve({ data: { id: "novo" }, error: null }),
+        maybeSingle: () => Promise.resolve({ data: existing.value, error: null }),
         update: () => chain,
         eq: () => chain,
       };

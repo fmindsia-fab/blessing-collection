@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { getActiveStore, isPlatformRequest } from "@/lib/store/get-active-store";
+import { getActiveStore, getSiteUrl, isPlatformRequest } from "@/lib/store/get-active-store";
 import { buildStoreTheme } from "@/lib/store/theme";
 import "./globals.css";
 
@@ -14,11 +14,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  metadataBase: process.env.NEXT_PUBLIC_SITE_URL ? new URL(process.env.NEXT_PUBLIC_SITE_URL) : undefined,
-  title: "AteliFácil",
-  description: "Catálogo digital de bolsas e acessórios artesanais.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const siteUrl = await getSiteUrl();
+
+  return {
+    // Por host: as URLs absolutas de OG/canonical seguem o domínio da loja.
+    metadataBase: siteUrl ? new URL(siteUrl) : undefined,
+    title: "AteliFácil",
+    description: "Catálogo digital de bolsas e acessórios artesanais.",
+  };
+}
 
 export default async function RootLayout({
   children,
