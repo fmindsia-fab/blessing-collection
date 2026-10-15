@@ -3,7 +3,11 @@ import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 import { YarnSkein, StitchWave, CrochetDots, YarnTangle, YarnBall, CrochetHooks } from "./craft-motifs";
 
-// Foto real de produto no catálogo público da Blessing — destaque do hero.
+// Foto de produto em alta resolução (1122×1402, proporção ~4/5 — bate com
+// o container do hero) da Blessing Collection, não um screenshot de página.
+// Usar o asset original da foto, e não um print da UI, evita o crop
+// agressivo e a perda de nitidez que um object-cover sobre uma imagem larga
+// de tela causaria.
 const HERO_PHOTO_URL = "/marketing/hero-produto.jpg";
 
 // 2 prints reais, grandes, mostrando o painel e o catálogo funcionando de
@@ -232,10 +236,10 @@ export function MarketingHome() {
             <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[var(--radius-image)] bg-[var(--craft-card)] shadow-xl ring-1 ring-[var(--craft-border)]">
               <Image
                 src={HERO_PHOTO_URL}
-                alt="Exemplo de uma loja criada na plataforma: página de produto com fotos, preço e botão de encomenda"
+                alt="Bolsa de crochê artesanal com alça e corrente dourada, peça real cadastrada na plataforma"
                 fill
                 priority
-                className="object-cover object-top"
+                className="object-cover"
                 sizes="(min-width: 1024px) 45vw, 90vw"
               />
             </div>
