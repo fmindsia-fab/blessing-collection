@@ -192,16 +192,16 @@ export function MarketingHome() {
       style={PALETTE_VARS}
       className="flex flex-1 flex-col bg-[var(--craft-bg)] text-[var(--craft-ink)]"
     >
-      <header className="px-6 py-4 lg:px-10">
+      <header className="px-6 py-5 lg:px-10">
         <div className="mx-auto flex max-w-6xl justify-center lg:justify-start">
-          <div className="relative h-9 w-[140px] sm:h-10 sm:w-[160px]">
+          <div className="relative h-14 w-[220px] sm:h-16 sm:w-[260px]">
             <Image
               src="/marketing/logo-atelifacil.png"
               alt="AteliFácil"
               fill
               priority
               className="object-contain object-left"
-              sizes="160px"
+              sizes="260px"
             />
           </div>
         </div>
