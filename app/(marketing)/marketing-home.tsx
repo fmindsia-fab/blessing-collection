@@ -10,18 +10,27 @@ import { YarnSkein, StitchWave, CrochetDots, YarnTangle, YarnBall, CrochetHooks 
 // de tela causaria.
 const HERO_PHOTO_URL = "/marketing/hero-produto.jpg";
 
-// 2 prints reais, grandes, mostrando o painel e o catálogo funcionando de
-// verdade — poucos e bem enquadrados em vez de muitos pequenos.
-// Valores em R$ foram borrados antes do envio (não são dados fictícios,
-// são números reais da loja, sem necessidade de aparecer na landing).
-const GALLERY_PHOTOS = [
+// "Por dentro do AteliFácil" — 3 cards com imagem real + título + texto,
+// dando contexto a cada print em vez de deixá-los soltos. Reaproveita a
+// foto do hero (card 1) e os 2 prints que já existiam na galeria.
+const SHOWCASE_CARDS = [
+  {
+    url: HERO_PHOTO_URL,
+    alt: "Página de produto com fotos, identidade visual e detalhes da peça",
+    title: "Sua vitrine, com a sua identidade",
+    text: "Apresente suas peças com fotos, preços, variações e todos os detalhes que sua cliente precisa.",
+  },
   {
     url: "/marketing/galeria-pedidos.jpg",
     alt: "Painel de pedidos organizados por etapa: orçamento, confirmado, em produção, entregue",
+    title: "Pedidos sem bagunça",
+    text: "Saiba o que está em orçamento, confirmado, em produção ou já foi entregue.",
   },
   {
     url: "/marketing/galeria-colecoes.jpg",
     alt: "Coleções do catálogo público: Blessing, Moda Praia, Casual, Festa",
+    title: "Coleções que facilitam a escolha",
+    text: "Organize seus produtos por categoria, estilo ou ocasião e deixe seu catálogo mais fácil de navegar.",
   },
 ];
 
@@ -247,25 +256,44 @@ export function MarketingHome() {
         </div>
       </section>
 
-      {/* Galeria — só 2 prints grandes, bem enquadrados, mostrando o
-          painel e o catálogo funcionando de verdade. */}
-      <section className="relative overflow-hidden px-6 pb-20 lg:px-10">
+      {/* Por dentro do AteliFácil — demonstração de valor com contexto:
+          cada print vira um card com título e texto, em vez de imagens
+          soltas sem explicação. */}
+      <section className="relative overflow-hidden px-6 pb-24 lg:px-10">
         <CrochetHooks className="pointer-events-none absolute -top-2 right-[6%] hidden w-16 text-[var(--craft-terracotta)]/35 md:block" />
-        <div className="mx-auto grid max-w-5xl gap-6 sm:grid-cols-2">
-          {GALLERY_PHOTOS.map((photo) => (
-            <div
-              key={photo.url}
-              className="relative aspect-[4/3] w-full overflow-hidden rounded-[var(--radius-image)] border border-[var(--craft-border)] bg-[var(--craft-card)] shadow-md"
-            >
-              <Image
-                src={photo.url}
-                alt={photo.alt}
-                fill
-                className="object-contain"
-                sizes="(min-width: 640px) 45vw, 100vw"
-              />
-            </div>
-          ))}
+        <div className="mx-auto flex max-w-5xl flex-col gap-12">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <span className="text-[0.625rem] font-medium uppercase tracking-[0.2em] text-[var(--craft-terracotta)]">
+              Por dentro do AteliFácil
+            </span>
+            <h2 className="font-[family-name:var(--font-brand)] text-3xl tracking-tight sm:text-4xl">
+              Tudo do seu ateliê, organizado em um só lugar
+            </h2>
+            <p className="max-w-xl text-pretty text-base leading-relaxed text-[var(--craft-muted)]">
+              Do catálogo ao pedido, você apresenta melhor suas peças e mantém suas vendas e
+              encomendas mais organizadas.
+            </p>
+          </div>
+
+          <div className="grid gap-8 sm:grid-cols-3">
+            {SHOWCASE_CARDS.map((card) => (
+              <div key={card.title} className="flex flex-col gap-4">
+                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[var(--radius-image)] border border-[var(--craft-border)] bg-[var(--craft-card)] shadow-sm">
+                  <Image
+                    src={card.url}
+                    alt={card.alt}
+                    fill
+                    className="object-cover object-top"
+                    sizes="(min-width: 640px) 30vw, 90vw"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <h3 className="text-base font-medium">{card.title}</h3>
+                  <p className="text-sm leading-relaxed text-[var(--craft-muted)]">{card.text}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
