@@ -20,7 +20,26 @@ export const signupSchema = z.object({
   password: z.string().min(8, "A senha precisa ter pelo menos 8 caracteres"),
 });
 
+// Valida CPF pelos dois dígitos verificadores (rejeita também sequências
+// repetidas como 111.111.111-11, que passam na conta mas não existem).
+export function isValidCpf(digits: string): boolean {
+  if (!/^\d{11}$/.test(digits) || /^(\d)\1{10}$/.test(digits)) return false;
+  const check = (len: number) => {
+    let sum = 0;
+    for (let i = 0; i < len; i++) sum += Number(digits[i]) * (len + 1 - i);
+    const rest = (sum * 10) % 11;
+    return rest === 10 ? 0 : rest;
+  };
+  return check(9) === Number(digits[9]) && check(10) === Number(digits[10]);
+}
+
 export const createStoreSchema = z.object({
+  ownerName: z.string().trim().min(3, "Informe seu nome completo"),
+  ownerCpf: z
+    .string()
+    .trim()
+    .transform((v) => v.replace(/\D/g, ""))
+    .refine(isValidCpf, "Informe um CPF válido"),
   name: z.string().trim().min(2, "Informe o nome da loja"),
   slug: slugSchema,
   whatsappNumber: z

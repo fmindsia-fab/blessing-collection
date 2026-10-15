@@ -13,6 +13,10 @@ const SUBSCRIPTION_LABEL: Record<string, string> = {
   unpaid: "Não paga",
 };
 
+function formatCpf(digits: string): string {
+  return digits.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
+}
+
 export default async function PlatformAdminStorePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const store = await getStoreForPlatformAdmin(id);
@@ -31,7 +35,19 @@ export default async function PlatformAdminStorePage({ params }: { params: Promi
 
       <dl className="flex flex-col gap-3 rounded-[var(--radius-image)] border border-border bg-card p-5 text-sm">
         <div className="flex justify-between gap-3">
-          <dt className="text-muted-foreground">WhatsApp</dt>
+          <dt className="text-muted-foreground">Responsável</dt>
+          <dd className="font-medium">{store.owner.name ?? "—"}</dd>
+        </div>
+        <div className="flex justify-between gap-3">
+          <dt className="text-muted-foreground">CPF</dt>
+          <dd className="font-medium">{store.owner.cpf ? formatCpf(store.owner.cpf) : "—"}</dd>
+        </div>
+        <div className="flex justify-between gap-3">
+          <dt className="text-muted-foreground">E-mail</dt>
+          <dd className="font-medium break-all">{store.owner.email ?? "—"}</dd>
+        </div>
+        <div className="flex justify-between gap-3">
+          <dt className="text-muted-foreground">Telefone / WhatsApp</dt>
           <dd className="font-medium">{store.whatsapp_number}</dd>
         </div>
         <div className="flex justify-between gap-3">

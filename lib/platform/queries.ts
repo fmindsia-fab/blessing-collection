@@ -29,9 +29,21 @@ export async function getStoreForPlatformAdmin(storeId: string) {
 
   if (!data) return null;
 
+  // Dados do dono: nome/CPF vêm de profiles (policy profile_select_platform_admin);
+  // o e-mail está em auth.users, só acessível pela RPC restrita a platform admin.
+  const [{ data: owner }, { data: ownerEmail }] = await Promise.all([
+    supabase.from("profiles").select("full_name, cpf").eq("id", data.owner_user_id).maybeSingle(),
+    supabase.rpc("platform_admin_store_owner_email", { p_store_id: storeId }),
+  ]);
+
   const { store_subscriptions, ...store } = data;
   return {
     ...store,
+    owner: {
+      name: owner?.full_name ?? null,
+      cpf: owner?.cpf ?? null,
+      email: (ownerEmail as string | null) ?? null,
+    },
     subscription: Array.isArray(store_subscriptions) ? (store_subscriptions[0] ?? null) : store_subscriptions,
   };
 }

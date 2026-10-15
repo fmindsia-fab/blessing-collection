@@ -32,6 +32,8 @@ export interface Database {
         Row: {
           id: string;
           full_name: string | null;
+          /** CPF só dígitos (migration 0031) — visível só ao dono e ao platform admin. */
+          cpf: string | null;
           /** Admin da plataforma (migration 0030) — flag manual, não self-service. */
           is_platform_admin: boolean;
           created_at: string;
@@ -40,6 +42,7 @@ export interface Database {
         Insert: {
           id: string;
           full_name?: string | null;
+          cpf?: string | null;
           is_platform_admin?: boolean;
           created_at?: string;
           updated_at?: string;
@@ -47,6 +50,7 @@ export interface Database {
         Update: {
           id?: string;
           full_name?: string | null;
+          cpf?: string | null;
           is_platform_admin?: boolean;
           created_at?: string;
           updated_at?: string;
@@ -661,6 +665,11 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      /** Painel da plataforma (migration 0031) — e-mail do dono da loja, só para platform admin. */
+      platform_admin_store_owner_email: {
+        Args: { p_store_id: string };
+        Returns: string | null;
+      };
       /** Onboarding self-service (migration 0028) — checagem de slug sem vazar dado de loja inativa. */
       is_store_slug_available: {
         Args: { p_slug: string };

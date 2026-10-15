@@ -34,6 +34,8 @@ describe("slugSchema", () => {
 describe("createStoreSchema", () => {
   it("normaliza o WhatsApp removendo caracteres não numéricos", () => {
     const result = createStoreSchema.safeParse({
+      ownerName: "Maria da Silva",
+      ownerCpf: "529.982.247-25",
       name: "Maria Bolsas",
       slug: "mariabolsas",
       whatsappNumber: "(11) 99999-9999",
@@ -44,6 +46,8 @@ describe("createStoreSchema", () => {
 
   it("rejeita WhatsApp com poucos dígitos", () => {
     const result = createStoreSchema.safeParse({
+      ownerName: "Maria da Silva",
+      ownerCpf: "529.982.247-25",
       name: "Maria Bolsas",
       slug: "mariabolsas",
       whatsappNumber: "123",
@@ -60,5 +64,20 @@ describe("slugify", () => {
   it("trunca no limite de 63 caracteres de um subdomínio", () => {
     const longName = "a".repeat(100);
     expect(slugify(longName).length).toBeLessThanOrEqual(63);
+  });
+});
+
+describe("createStoreSchema — CPF do responsável", () => {
+  const base = { ownerName: "Maria da Silva", name: "Maria Bolsas", slug: "mariabolsas", whatsappNumber: "11999999999" };
+
+  it("normaliza o CPF removendo pontuação", () => {
+    const result = createStoreSchema.safeParse({ ...base, ownerCpf: "529.982.247-25" });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.ownerCpf).toBe("52998224725");
+  });
+
+  it("rejeita CPF com dígito verificador errado ou sequência repetida", () => {
+    expect(createStoreSchema.safeParse({ ...base, ownerCpf: "529.982.247-26" }).success).toBe(false);
+    expect(createStoreSchema.safeParse({ ...base, ownerCpf: "111.111.111-11" }).success).toBe(false);
   });
 });

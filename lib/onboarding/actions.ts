@@ -28,11 +28,24 @@ export async function createStore(
   }
 
   const parsed = createStoreSchema.safeParse({
+    ownerName: formData.get("ownerName"),
+    ownerCpf: formData.get("ownerCpf"),
     name: formData.get("name"),
     slug: formData.get("slug"),
     whatsappNumber: formData.get("whatsappNumber"),
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
+
+  // profiles.id = auth.uid() (RLS profile_insert_own / profile_update_own).
+  // Upsert porque o perfil pode ou não existir ainda para este usuário.
+  const { error: profileError } = await supabase.from("profiles").upsert({
+    id: user.id,
+    full_name: parsed.data.ownerName,
+    cpf: parsed.data.ownerCpf,
+  });
+  if (profileError) {
+    return { error: "Não foi possível salvar seus dados. Tente novamente." };
+  }
 
   const { data, error } = await supabase
     .from("stores")

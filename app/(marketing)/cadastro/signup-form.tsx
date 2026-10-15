@@ -122,6 +122,27 @@ function StoreForm({ platformDomain }: { platformDomain: string }) {
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
+        <Label htmlFor="ownerName">Seu nome completo</Label>
+        <Input id="ownerName" autoComplete="name" {...register("ownerName")} />
+        {errors.ownerName ? (
+          <p className="text-xs text-destructive">{errors.ownerName.message}</p>
+        ) : null}
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="ownerCpf">Seu CPF</Label>
+        <Input
+          id="ownerCpf"
+          inputMode="numeric"
+          placeholder="000.000.000-00"
+          {...register("ownerCpf")}
+        />
+        {errors.ownerCpf ? (
+          <p className="text-xs text-destructive">{errors.ownerCpf.message}</p>
+        ) : null}
+      </div>
+
+      <div className="flex flex-col gap-1.5">
         <Label htmlFor="name">Nome da loja</Label>
         <Input id="name" placeholder="Ex: Maria Bolsas" {...register("name")} />
         {errors.name ? <p className="text-xs text-destructive">{errors.name.message}</p> : null}
