@@ -211,7 +211,7 @@ export function MarketingHome() {
       className="flex flex-1 flex-col bg-[var(--craft-bg)] text-[var(--craft-ink)]"
     >
       <header className="px-6 pt-5 pb-1 lg:px-10">
-        <div className="mx-auto flex max-w-6xl justify-center lg:justify-start">
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative h-24 w-[380px] sm:h-28 sm:w-[440px]">
             <Image
               src="/marketing/logo-atelifacil.png"
@@ -221,6 +221,20 @@ export function MarketingHome() {
               className="object-contain object-left"
               sizes="440px"
             />
+          </div>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/login"
+              className="text-sm font-medium text-[var(--craft-muted)] underline-offset-4 outline-none transition-colors hover:text-[var(--craft-ink)] hover:underline focus-visible:text-[var(--craft-ink)] focus-visible:underline"
+            >
+              Entrar
+            </Link>
+            <Link
+              href="/cadastro"
+              className="inline-flex h-10 items-center justify-center rounded-full bg-[var(--craft-terracotta)] px-5 text-sm font-semibold text-[var(--craft-bg)] shadow-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-md focus-visible:ring-2 focus-visible:ring-[var(--craft-terracotta)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--craft-bg)]"
+            >
+              Cadastre-se
+            </Link>
           </div>
         </div>
       </header>
@@ -514,8 +528,19 @@ export function MarketingHome() {
         </div>
       </section>
 
-      <footer className="border-t border-[var(--craft-border)] px-6 py-8 text-center text-xs text-[var(--craft-muted)] lg:px-10">
-        AteliFácil — catálogo digital para artesãs
+      <footer className="flex flex-col items-center gap-2 border-t border-[var(--craft-border)] px-6 py-8 text-center text-xs text-[var(--craft-muted)] lg:px-10">
+        <span>AteliFácil — catálogo digital para artesãs</span>
+        <span>
+          Desenvolvido por FMinds — Suporte:{" "}
+          <Link
+            href="https://wa.me/5543991434124"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-4 outline-none transition-colors hover:text-[var(--craft-ink)] focus-visible:text-[var(--craft-ink)]"
+          >
+            (43) 99143-4124 (WhatsApp) — Fabio Marcelo
+          </Link>
+        </span>
       </footer>
     </main>
   );
