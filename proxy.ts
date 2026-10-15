@@ -2,6 +2,32 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createMiddlewareSupabaseClient } from "@/lib/supabase/middleware";
 import { resolveTenantFromHost } from "@/lib/store/resolve-tenant-from-host";
 
+// No apex/www da plataforma não existe "a loja ativa": /admin ali dá 404. Quem
+// já está logado é levado ao destino certo — painel da plataforma (se admin)
+// ou o /admin do subdomínio da própria loja; sem loja ainda, ao cadastro.
+async function resolveApexHome(
+  request: NextRequest,
+  supabase: ReturnType<typeof createMiddlewareSupabaseClient>["supabase"],
+  userId: string,
+): Promise<URL> {
+  const { data: isAdmin } = await supabase.rpc("is_platform_admin");
+  if (isAdmin) return new URL("/admin-plataforma", request.url);
+
+  const { data: store } = await supabase
+    .from("stores")
+    .select("slug")
+    .eq("owner_user_id", userId)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  const platformDomain = process.env.PLATFORM_DOMAIN;
+  if (store && platformDomain) {
+    return new URL(`https://${store.slug}.${platformDomain}/admin`);
+  }
+  return new URL("/cadastro", request.url);
+}
+
 export async function proxy(request: NextRequest) {
   const { supabase, response } = createMiddlewareSupabaseClient(request);
   const {
@@ -29,6 +55,14 @@ export async function proxy(request: NextRequest) {
       url.pathname = "/";
       return NextResponse.redirect(url);
     }
+  }
+
+  const isApexHost =
+    process.env.TENANT_RESOLUTION_MODE === "host" &&
+    resolveTenantFromHost(request.headers.get("host")).kind === "none";
+
+  if (user && isApexHost && (isLoginRoute || isAdminRoute)) {
+    return NextResponse.redirect(await resolveApexHome(request, supabase, user.id));
   }
 
   if (isAdminRoute && !user) {
