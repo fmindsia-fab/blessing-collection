@@ -129,9 +129,9 @@ export function MarketingHome() {
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute -top-16 left-[-6%] hidden aspect-video w-[26rem] overflow-hidden rounded-[var(--radius-image)] opacity-[0.07] lg:block"
+          className="pointer-events-none absolute -top-16 left-[-6%] hidden aspect-video w-[26rem] overflow-hidden rounded-[var(--radius-image)] shadow-md lg:block"
         >
-          <Image src={BACKDROP_PHOTOS.dashboard} alt="" fill className="object-cover object-top" />
+          <Image src={BACKDROP_PHOTOS.dashboard} alt="" fill className="object-contain" />
         </div>
         <YarnSkein className="pointer-events-none absolute top-16 left-[4%] hidden w-20 text-[var(--craft-terracotta)]/50 sm:block" />
 
@@ -163,7 +163,7 @@ export function MarketingHome() {
                 alt="Página de produto de uma bolsa artesanal no catálogo digital"
                 fill
                 priority
-                className="object-cover object-top"
+                className="object-contain"
                 sizes="(min-width: 1024px) 45vw, 100vw"
               />
             </div>
@@ -187,7 +187,7 @@ export function MarketingHome() {
                 src={photo.url}
                 alt={photo.alt}
                 fill
-                className="object-cover object-top"
+                className="object-contain"
                 sizes="(min-width: 640px) 23vw, 48vw"
               />
             </div>
@@ -224,9 +224,9 @@ export function MarketingHome() {
       <section className="relative overflow-hidden px-6 py-24 lg:px-10">
         <div
           aria-hidden
-          className="pointer-events-none absolute top-1/2 right-[-4%] hidden aspect-[4/5] w-80 -translate-y-1/2 overflow-hidden rounded-[var(--radius-image)] opacity-[0.06] xl:block"
+          className="pointer-events-none absolute top-1/2 right-[-4%] hidden aspect-[4/5] w-80 -translate-y-1/2 overflow-hidden rounded-[var(--radius-image)] shadow-md xl:block"
         >
-          <Image src={BACKDROP_PHOTOS.formProduto} alt="" fill className="object-cover object-top" />
+          <Image src={BACKDROP_PHOTOS.formProduto} alt="" fill className="object-contain" />
         </div>
         <div className="mx-auto flex max-w-5xl flex-col gap-14">
           <div className="flex flex-col items-center gap-3 text-center">
@@ -271,15 +271,15 @@ export function MarketingHome() {
         <YarnSkein className="pointer-events-none absolute bottom-[-2rem] left-[-2rem] hidden w-32 text-[var(--craft-mustard)]/30 lg:block" />
         <div
           aria-hidden
-          className="pointer-events-none absolute top-[-3rem] right-[-5%] hidden aspect-video w-96 overflow-hidden rounded-[var(--radius-image)] opacity-[0.07] lg:block"
+          className="pointer-events-none absolute top-[-3rem] right-[-5%] hidden aspect-video w-96 overflow-hidden rounded-[var(--radius-image)] shadow-md lg:block"
         >
-          <Image src={BACKDROP_PHOTOS.materiais} alt="" fill className="object-cover object-top" />
+          <Image src={BACKDROP_PHOTOS.materiais} alt="" fill className="object-contain" />
         </div>
         <div
           aria-hidden
-          className="pointer-events-none absolute bottom-[-2rem] right-[8%] hidden aspect-[4/5] w-64 overflow-hidden rounded-[var(--radius-image)] opacity-[0.06] xl:block"
+          className="pointer-events-none absolute bottom-[-2rem] right-[8%] hidden aspect-[4/5] w-64 overflow-hidden rounded-[var(--radius-image)] shadow-md xl:block"
         >
-          <Image src={BACKDROP_PHOTOS.uploadImagens} alt="" fill className="object-cover object-top" />
+          <Image src={BACKDROP_PHOTOS.uploadImagens} alt="" fill className="object-contain" />
         </div>
         <div className="relative mx-auto flex max-w-5xl flex-col gap-14">
           <div className="flex flex-col items-center gap-3 text-center">
@@ -320,15 +320,15 @@ export function MarketingHome() {
         <StitchWave className="pointer-events-none absolute bottom-10 right-[10%] hidden w-40 text-white/25 md:block" />
         <div
           aria-hidden
-          className="pointer-events-none absolute -top-10 left-[-4%] hidden aspect-video w-80 overflow-hidden rounded-[var(--radius-image)] opacity-10 lg:block"
+          className="pointer-events-none absolute -top-10 left-[-4%] hidden aspect-video w-80 overflow-hidden rounded-[var(--radius-image)] shadow-md lg:block"
         >
-          <Image src={BACKDROP_PHOTOS.configuracoes} alt="" fill className="object-cover object-top" />
+          <Image src={BACKDROP_PHOTOS.configuracoes} alt="" fill className="object-contain" />
         </div>
         <div
           aria-hidden
-          className="pointer-events-none absolute -bottom-12 right-[-3%] hidden aspect-[4/5] w-60 overflow-hidden rounded-[var(--radius-image)] opacity-10 lg:block"
+          className="pointer-events-none absolute -bottom-12 right-[-3%] hidden aspect-[4/5] w-60 overflow-hidden rounded-[var(--radius-image)] shadow-md lg:block"
         >
-          <Image src={BACKDROP_PHOTOS.formacaoPreco} alt="" fill className="object-cover object-top" />
+          <Image src={BACKDROP_PHOTOS.formacaoPreco} alt="" fill className="object-contain" />
         </div>
         <div className="relative mx-auto flex max-w-xl flex-col items-center gap-6 text-center">
           <h2 className="font-[family-name:var(--font-brand)] text-3xl tracking-tight sm:text-4xl">
