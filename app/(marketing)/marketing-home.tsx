@@ -3,11 +3,8 @@ import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 import { YarnSkein, StitchWave, CrochetDots, YarnTangle, YarnBall, CrochetHooks } from "./craft-motifs";
 
-// Foto de produto em alta resolução (1122×1402, proporção ~4/5 — bate com
-// o container do hero) da Blessing Collection, não um screenshot de página.
-// Usar o asset original da foto, e não um print da UI, evita o crop
-// agressivo e a perda de nitidez que um object-cover sobre uma imagem larga
-// de tela causaria.
+// Arte de divulgação da Clutch Safira (Blessing Collection), fornecida
+// pelo usuário — mantém os textos/selo embutidos na própria imagem.
 const HERO_PHOTO_URL = "/marketing/hero-produto.jpg";
 
 // "Por dentro do AteliFácil" — 3 cards com imagem real + título + texto,
@@ -194,14 +191,14 @@ export function MarketingHome() {
     >
       <header className="px-6 py-5 lg:px-10">
         <div className="mx-auto flex max-w-6xl justify-center lg:justify-start">
-          <div className="relative h-14 w-[220px] sm:h-16 sm:w-[260px]">
+          <div className="relative h-24 w-[380px] sm:h-28 sm:w-[440px]">
             <Image
               src="/marketing/logo-atelifacil.png"
               alt="AteliFácil"
               fill
               priority
               className="object-contain object-left"
-              sizes="260px"
+              sizes="440px"
             />
           </div>
         </div>
@@ -245,7 +242,7 @@ export function MarketingHome() {
             <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[var(--radius-image)] bg-[var(--craft-card)] shadow-xl ring-1 ring-[var(--craft-border)]">
               <Image
                 src={HERO_PHOTO_URL}
-                alt="Bolsa de crochê artesanal com alça e corrente dourada, peça real cadastrada na plataforma"
+                alt="Clutch Safira, peça de crochê artesanal com tassel removível, da Blessing Collection"
                 fill
                 priority
                 className="object-cover"
