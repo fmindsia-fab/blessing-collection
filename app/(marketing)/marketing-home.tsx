@@ -7,9 +7,12 @@ import { YarnSkein, StitchWave, CrochetDots, YarnTangle, YarnBall, CrochetHooks 
 // laptop/tablet ao fundo — fornecida pelo usuário.
 const HERO_PHOTO_URL = "/marketing/hero-produto.jpg";
 
-// "Por dentro do AteliFácil" — 3 cards com imagem real + título + texto,
+// "Por dentro do AteliFácil" — 6 cards com imagem real + título + texto,
 // dando contexto a cada print em vez de deixá-los soltos. Reaproveita a
-// foto do hero (card 1) e os 2 prints que já existiam na galeria.
+// foto do hero (card 1) e os prints que já existiam na galeria, mais 3
+// novos prints do painel (dashboard, precificação, cadastro de produto).
+// Valores em R$ foram borrados antes do envio nas telas que mostravam
+// números reais da loja.
 const SHOWCASE_CARDS = [
   {
     url: HERO_PHOTO_URL,
@@ -28,6 +31,24 @@ const SHOWCASE_CARDS = [
     alt: "Coleções do catálogo público: Blessing, Moda Praia, Casual, Festa",
     title: "Coleções que facilitam a escolha",
     text: "Organize seus produtos por categoria, estilo ou ocasião e deixe seu catálogo mais fácil de navegar.",
+  },
+  {
+    url: "/marketing/showcase-produto-form.jpg",
+    alt: "Formulário de cadastro de produto, com descrição, materiais, peso e dimensões",
+    title: "Cadastro completo, do seu jeito",
+    text: "Descrição, materiais, peso e medidas — tudo registrado para você não depender da memória.",
+  },
+  {
+    url: "/marketing/showcase-precificacao.jpg",
+    alt: "Calculadora de precificação do painel administrativo",
+    title: "Precificação com mais segurança",
+    text: "Veja custo de material, mão de obra e sugestão de venda — saiba exatamente quanto cobrar.",
+  },
+  {
+    url: "/marketing/showcase-dashboard.jpg",
+    alt: "Painel com indicadores da loja: produtos no catálogo, visualizações e cliques no WhatsApp",
+    title: "Saiba o que está funcionando",
+    text: "Acompanhe visualizações, cliques no WhatsApp e os produtos mais procurados do seu catálogo.",
   },
 ];
 
