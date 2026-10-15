@@ -8,7 +8,10 @@ import { BackLink } from "@/components/shared/back-link";
 import { formatCpfCnpj } from "@/lib/br/document";
 import { CRAFT_LABEL, YEARS_ACTIVE_LABEL } from "@/lib/store/craft-profile";
 import { formatWhatsappBR } from "@/lib/customers/phone-mask";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { getDeletionBlocker } from "@/lib/platform/deletion-guards";
 import { StoreStatusToggle } from "./store-status-toggle";
+import { DeleteAccountSection } from "./delete-account-section";
 
 function yesNo(value: boolean | null) {
   return value === null ? "—" : value ? "Sim" : "Não";
@@ -24,6 +27,19 @@ export default async function PlatformAdminStorePage({ params }: { params: Promi
   if (!store) notFound();
 
   const now = new Date();
+
+  // Travas da exclusão definitiva, calculadas aqui só para explicar o motivo
+  // na tela; quem de fato impede é a server action.
+  const session = await createServerSupabaseClient();
+  const [{ data: authData }, { data: ownerProfile }] = await Promise.all([
+    session.auth.getUser(),
+    session.from("profiles").select("is_platform_admin").eq("id", store.owner_user_id).maybeSingle(),
+  ]);
+  const deletionBlocker = getDeletionBlocker({
+    ownerIsCurrentUser: authData.user?.id === store.owner_user_id,
+    ownerIsPlatformAdmin: ownerProfile?.is_platform_admin ?? false,
+    subscription: store.subscription,
+  });
   const state = billingState(store.subscription, now);
   const trialEnds = store.subscription?.trial_ends_at ?? null;
   const renewal = store.subscription?.current_period_end ?? null;
@@ -96,6 +112,13 @@ export default async function PlatformAdminStorePage({ params }: { params: Promi
       </div>
 
       <StoreStatusToggle storeId={store.id} status={store.status} />
+
+      <DeleteAccountSection
+        storeId={store.id}
+        slug={store.slug}
+        storeName={store.name}
+        blocker={deletionBlocker}
+      />
     </div>
   );
 }

@@ -13,6 +13,7 @@ Next.js (App Router, TypeScript estrito) + Tailwind CSS + shadcn/ui + React Hook
 - **Nunca desativar RLS.** Toda tabela nova precisa de policies antes de ser usada.
 - **`service_role_key` nunca no frontend** nem em código client-side. Variáveis sensíveis só no servidor, sem prefixo `NEXT_PUBLIC_`.
 - **Sem exclusão definitiva.** "Excluir" no painel = `UPDATE status` (soft delete/arquivamento), nunca `DELETE`.
+  - **Única exceção:** o administrador da plataforma pode excluir uma loja + conta definitivamente em `/admin-plataforma/lojas/[id]` (`lib/platform/delete-account.ts`), com confirmação digitada do slug e travas em `lib/platform/deletion-guards.ts` (conta de admin, cortesia e assinatura Stripe ativa não podem ser excluídas).
 - **Sem dados pessoais em `analytics_events`**: nada de IP, user-agent, telefone, e-mail ou identificador de visitante.
 - **Registro de analytics nunca bloqueia a navegação** — sempre fire-and-forget, com fallback silencioso em caso de falha.
 - **WhatsApp só via link `wa.me`** com mensagem pré-formatada. Sem API oficial do WhatsApp.
