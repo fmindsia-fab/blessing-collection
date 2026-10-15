@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
-import { YarnSkein, StitchWave, CrochetDots, YarnTangle } from "./craft-motifs";
+import { YarnSkein, StitchWave, CrochetDots, YarnTangle, YarnBall, CrochetHooks } from "./craft-motifs";
 
 // Foto real de produto no catálogo público da Blessing — destaque do hero.
 const HERO_PHOTO_URL = "/marketing/hero-produto.jpg";
@@ -109,6 +109,7 @@ export function MarketingHome() {
           className="pointer-events-none absolute -top-24 right-[-8%] size-[28rem] rounded-full bg-[var(--craft-mustard)]/25 blur-3xl sm:size-[36rem]"
         />
         <YarnSkein className="pointer-events-none absolute top-16 left-[4%] hidden w-20 text-[var(--craft-terracotta)]/50 sm:block" />
+        <YarnBall className="pointer-events-none absolute bottom-6 left-[2%] hidden w-16 text-[var(--craft-mustard)]/60 lg:block" />
 
         <div className="relative mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1fr_0.95fr] lg:gap-16">
           <div className="reveal flex flex-col items-center gap-6 text-center lg:items-start lg:text-left">
@@ -152,7 +153,8 @@ export function MarketingHome() {
 
       {/* Galeria — só 2 prints grandes, bem enquadrados, mostrando o
           painel e o catálogo funcionando de verdade. */}
-      <section className="px-6 pb-20 lg:px-10">
+      <section className="relative overflow-hidden px-6 pb-20 lg:px-10">
+        <CrochetHooks className="pointer-events-none absolute -top-2 right-[6%] hidden w-16 text-[var(--craft-terracotta)]/35 md:block" />
         <div className="mx-auto grid max-w-5xl gap-6 sm:grid-cols-2">
           {GALLERY_PHOTOS.map((photo) => (
             <div
@@ -239,6 +241,7 @@ export function MarketingHome() {
       {/* Benefícios */}
       <section className="relative overflow-hidden border-t border-[var(--craft-border)] bg-[var(--craft-bg-warm)] px-6 py-24 lg:px-10">
         <YarnSkein className="pointer-events-none absolute bottom-[-2rem] left-[-2rem] hidden w-32 text-[var(--craft-mustard)]/30 lg:block" />
+        <YarnBall className="pointer-events-none absolute top-8 right-[4%] hidden w-14 text-[var(--craft-terracotta)]/45 lg:block" />
         <div className="relative mx-auto flex max-w-5xl flex-col gap-14">
           <div className="flex flex-col items-center gap-3 text-center">
             <span className="text-[0.625rem] font-medium uppercase tracking-[0.2em] text-[var(--craft-terracotta)]">

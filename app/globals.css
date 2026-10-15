@@ -205,6 +205,22 @@
   }
 }
 
+/* Fio do novelo de lã balançando devagar (app/(marketing), YarnBall em
+   craft-motifs.tsx) — decorativo, puramente visual. */
+@keyframes yarn-sway {
+  0%,
+  100% {
+    transform: rotate(-4deg);
+  }
+  50% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-yarn-sway {
+  animation: yarn-sway 4s ease-in-out infinite;
+}
+
 /* Card do Kanban ao pousar na nova coluna (app/(admin)/admin/pedidos). */
 @keyframes kanban-pop {
   0% {

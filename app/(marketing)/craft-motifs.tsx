@@ -48,6 +48,60 @@ export function CrochetDots({ className }: { className?: string }) {
   );
 }
 
+// Novelo de lã com fio solto saindo — o fio balança suavemente via a
+// classe utilitária `animate-yarn-sway` (ver globals.css).
+export function YarnBall({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 120 130" fill="none" className={className} aria-hidden>
+      <circle cx="60" cy="55" r="42" fill="currentColor" opacity="0.12" />
+      <circle cx="60" cy="55" r="42" stroke="currentColor" strokeWidth="2" />
+      <path
+        d="M22 40c24 14 52 14 76 0M20 55h80M22 70c24-14 52-14 76 0M35 24c10 20 10 42 0 62M85 24c-10 20-10 42 0 62"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        opacity="0.65"
+      />
+      <path
+        d="M84 82c4 10 2 20-6 28s-10 14-6 20"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        className="origin-[84px_82px] animate-yarn-sway"
+      />
+      <circle cx="72" cy="130" r="3" fill="currentColor" className="origin-[84px_82px] animate-yarn-sway" />
+    </svg>
+  );
+}
+
+// Par de agulhas de crochê cruzadas, com um laço de fio entre as pontas.
+export function CrochetHooks({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 120 120" fill="none" className={className} aria-hidden>
+      <g strokeLinecap="round">
+        <path d="M14 106 98 22" stroke="currentColor" strokeWidth="3.5" />
+        <path d="M98 22c3-3 7-3 10 0s3 7 0 10l-6 6-10-10 6-6Z" stroke="currentColor" strokeWidth="2.5" fill="none" />
+        <path d="M106 14 98 22" stroke="currentColor" strokeWidth="2.5" />
+        <path d="M106 98 22 14" stroke="currentColor" strokeWidth="3.5" opacity="0.55" />
+        <path
+          d="M22 14c-3-3-7-3-10 0s-3 7 0 10l6 6 10-10-6-6Z"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          fill="none"
+          opacity="0.55"
+        />
+      </g>
+      <path
+        d="M30 90c14 10 30 10 44-4"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        opacity="0.4"
+      />
+    </svg>
+  );
+}
+
 export function YarnTangle({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 140 140" fill="none" className={className} aria-hidden>
