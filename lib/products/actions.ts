@@ -6,6 +6,7 @@ import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { slugify } from "@/lib/utils";
+import { getNotOwnerError } from "@/lib/store/ownership";
 
 // slugify vem de lib/utils: o componente ProductSlug usa a mesma função para
 // prever a URL no client, e duas implementações divergiriam com o tempo.
@@ -63,6 +64,8 @@ export async function createProduct(_prevState: ProductFormState, formData: Form
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   const store = await getActiveStore();
+  const notOwnerError = await getNotOwnerError(store);
+  if (notOwnerError) return { error: notOwnerError };
   const supabase = await createServerSupabaseClient();
 
   const baseSlug = slugify(parsed.data.name);
@@ -137,6 +140,8 @@ export async function updateProduct(
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   const store = await getActiveStore();
+  const notOwnerError = await getNotOwnerError(store);
+  if (notOwnerError) return { error: notOwnerError };
   const supabase = await createServerSupabaseClient();
   const { error } = await supabase
     .from("products")

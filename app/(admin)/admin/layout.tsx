@@ -7,6 +7,7 @@ import { MobileNav } from "./mobile-nav";
 import { ShareButton } from "@/components/shared/share-button";
 import { getActiveStore, getSiteUrl } from "@/lib/store/get-active-store";
 import { SubscriptionBanner } from "./subscription-banner";
+import { OwnershipBanner } from "./ownership-banner";
 import { TrialDaysBadge } from "./trial-days-badge";
 
 const NAV_ITEMS = [
@@ -71,6 +72,7 @@ export default async function AdminAreaLayout({ children }: { children: React.Re
         </div>
       </header>
 
+      <OwnershipBanner store={store} />
       <SubscriptionBanner storeId={store.id} />
 
       <div className="flex flex-1 flex-col px-6 py-10 lg:px-10">{children}</div>

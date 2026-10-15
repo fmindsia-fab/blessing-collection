@@ -5,6 +5,7 @@ import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { slugify } from "@/lib/utils";
+import { getNotOwnerError } from "@/lib/store/ownership";
 
 // Criação rápida (só pelo nome) de categoria, coleção ou modelo a partir do
 // formulário de produto, para a pessoa não precisar sair do cadastro. As
@@ -37,6 +38,8 @@ export async function quickCreateCatalogItem(kind: QuickCreateKind, rawName: str
 
   // A loja vem do servidor (nunca do client) e toda query filtra por store_id.
   const store = await getActiveStore();
+  const notOwnerError = await getNotOwnerError(store);
+  if (notOwnerError) return { ok: false, error: notOwnerError };
   const supabase = await createServerSupabaseClient();
 
   const { data, error } = await supabase

@@ -5,6 +5,7 @@ import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { slugify } from "@/lib/utils";
+import { getNotOwnerError } from "@/lib/store/ownership";
 
 const modelSchema = z.object({
   name: z.string().min(1, "Informe o nome do modelo"),
@@ -23,6 +24,8 @@ export async function createModel(_prevState: ModelFormState, formData: FormData
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   const store = await getActiveStore();
+  const notOwnerError = await getNotOwnerError(store);
+  if (notOwnerError) return { error: notOwnerError };
   const supabase = await createServerSupabaseClient();
 
   const { error } = await supabase.from("models").insert({
