@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 import { YarnSkein, StitchWave, CrochetDots, YarnTangle, YarnBall, CrochetHooks } from "./craft-motifs";
-import { PlatformLogo } from "@/components/shared/platform-logo";
 
 // Foto real de produto no catálogo público da Blessing — destaque do hero.
 const HERO_PHOTO_URL = "/marketing/hero-produto.jpg";
@@ -180,58 +179,66 @@ export function MarketingHome() {
       style={PALETTE_VARS}
       className="flex flex-1 flex-col bg-[var(--craft-bg)] text-[var(--craft-ink)]"
     >
-      <header className="px-6 pt-8 lg:px-10">
-        <div className="mx-auto max-w-6xl">
-          <PlatformLogo />
+      <header className="px-6 py-4 lg:px-10">
+        <div className="mx-auto flex max-w-6xl justify-center lg:justify-start">
+          <div className="relative h-9 w-[140px] sm:h-10 sm:w-[160px]">
+            <Image
+              src="/marketing/logo-atelifacil.png"
+              alt="AteliFácil"
+              fill
+              priority
+              className="object-contain object-left"
+              sizes="160px"
+            />
+          </div>
         </div>
       </header>
 
       {/* Hero — texto à esquerda, imagem sangrando à direita (mesmo princípio
-          assimétrico já usado na home do catálogo público). */}
-      <section className="relative overflow-hidden px-6 pt-16 pb-20 sm:pt-20 lg:px-10">
+          assimétrico já usado na home do catálogo público). Primeira dobra:
+          espaçamento vertical enxuto de propósito para caber logo + headline
+          + CTA + boa parte do mockup sem rolar muito. */}
+      <section className="relative overflow-hidden px-6 pt-6 pb-14 sm:pt-8 lg:px-10">
         <div
           aria-hidden
           className="pointer-events-none absolute -top-24 right-[-8%] size-[28rem] rounded-full bg-[var(--craft-mustard)]/25 blur-3xl sm:size-[36rem]"
         />
         <YarnSkein className="pointer-events-none absolute top-16 left-[4%] hidden w-20 text-[var(--craft-terracotta)]/50 sm:block" />
-        <YarnBall className="pointer-events-none absolute bottom-6 left-[2%] hidden w-16 text-[var(--craft-mustard)]/60 lg:block" />
 
-        <div className="relative mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1fr_0.95fr] lg:gap-16">
-          <div className="reveal flex flex-col items-center gap-6 text-center lg:items-start lg:text-left">
+        <div className="relative mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1fr_0.95fr] lg:gap-16">
+          <div className="reveal flex flex-col items-center gap-5 text-center lg:items-start lg:text-left">
             <span className="inline-flex items-center gap-2 rounded-full border border-[var(--craft-border)] bg-[var(--craft-card)] px-4 py-1.5 text-[0.6875rem] font-medium uppercase tracking-[0.18em] text-[var(--craft-terracotta)] shadow-sm">
               <CrochetDots className="size-3.5" />
-              Catálogo digital para artesãs
+              Seu ateliê, mais profissional
             </span>
-            <h1 className="font-[family-name:var(--font-brand)] text-[2.5rem] leading-[1.05] tracking-tight sm:text-6xl">
+            <h1 className="font-[family-name:var(--font-brand)] text-[2.25rem] leading-[1.05] tracking-tight sm:text-5xl lg:text-[3.25rem]">
               Sua marca, um catálogo
               <br />
               <span className="italic text-[var(--craft-terracotta)]">à sua altura</span>
             </h1>
-            <p className="max-w-xl text-pretty text-base leading-relaxed text-[var(--craft-muted)] sm:text-lg">
+            <p className="max-w-md text-pretty text-base leading-relaxed text-[var(--craft-muted)] sm:text-lg">
               Crie seu catálogo, organize suas encomendas e receba pedidos direto no WhatsApp —
               sem comissão por venda.
             </p>
-            <div className="mt-2 flex flex-col items-center gap-3 sm:flex-row">
+            <div className="mt-1 flex flex-col items-center gap-2 sm:items-start">
               <PrimaryCta />
-              <span className="text-xs text-[var(--craft-muted)]">Comece agora, sem cartão de crédito</span>
+              <span className="text-xs text-[var(--craft-muted)]">
+                Sem cartão de crédito • Configure em poucos minutos
+              </span>
             </div>
           </div>
 
-          <div className="relative">
-            <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[var(--radius-image)] bg-[var(--craft-card)] shadow-lg">
+          <div className="relative mx-auto w-full max-w-sm lg:mx-0 lg:max-w-none">
+            <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[var(--radius-image)] bg-[var(--craft-card)] shadow-xl ring-1 ring-[var(--craft-border)]">
               <Image
                 src={HERO_PHOTO_URL}
-                alt="Página de produto de uma bolsa artesanal no catálogo digital"
+                alt="Exemplo de uma loja criada na plataforma: página de produto com fotos, preço e botão de encomenda"
                 fill
                 priority
-                className="object-contain"
-                sizes="(min-width: 1024px) 45vw, 100vw"
+                className="object-cover object-top"
+                sizes="(min-width: 1024px) 45vw, 90vw"
               />
             </div>
-            <div
-              aria-hidden
-              className="absolute -bottom-5 -left-5 hidden size-24 rounded-full border-2 border-[var(--craft-mustard)]/40 sm:block"
-            />
           </div>
         </div>
       </section>

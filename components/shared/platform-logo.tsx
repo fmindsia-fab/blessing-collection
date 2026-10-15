@@ -3,6 +3,8 @@
 // Monograma simplificado (um "A" com um laço em forma de coração) pensado
 // para funcionar pequeno — favicon, header, ícone de app — diferente da
 // referência visual mais ornamental usada só como inspiração.
+// Usado hoje só no header neutro de app/admin-plataforma/layout.tsx; a
+// landing usa o arquivo de logo real (public/marketing/logo-atelifacil.png).
 
 export function PlatformMark({ className }: { className?: string }) {
   return (
@@ -31,29 +33,5 @@ export function PlatformMark({ className }: { className?: string }) {
         fill="var(--mark-accent, currentColor)"
       />
     </svg>
-  );
-}
-
-export function PlatformLogo({
-  className,
-  tagline = false,
-}: {
-  className?: string;
-  tagline?: boolean;
-}) {
-  return (
-    <span className={`inline-flex flex-col ${className ?? ""}`}>
-      <span className="inline-flex items-center gap-2">
-        <PlatformMark className="size-6 shrink-0 text-[#6b4a3a] [--mark-accent:#c96f4a]" />
-        <span className="text-lg font-semibold tracking-tight text-[#6b4a3a]">
-          Ateli<span className="text-[#c96f4a]">Fácil</span>
-        </span>
-      </span>
-      {tagline ? (
-        <span className="pl-8 text-[0.6875rem] uppercase tracking-[0.12em] text-[#9c7b63]">
-          Seu talento merece ser visto. E valorizado.
-        </span>
-      ) : null}
-    </span>
   );
 }
