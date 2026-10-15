@@ -3,8 +3,8 @@ import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 import { YarnSkein, StitchWave, CrochetDots, YarnTangle, YarnBall, CrochetHooks } from "./craft-motifs";
 
-// Arte de divulgação da Clutch Safira (Blessing Collection), fornecida
-// pelo usuário — mantém os textos/selo embutidos na própria imagem.
+// Foto de uma artesã trabalhando, com o catálogo de bolsas visível no
+// laptop/tablet ao fundo — fornecida pelo usuário.
 const HERO_PHOTO_URL = "/marketing/hero-produto.jpg";
 
 // "Por dentro do AteliFácil" — 3 cards com imagem real + título + texto,
@@ -13,7 +13,7 @@ const HERO_PHOTO_URL = "/marketing/hero-produto.jpg";
 const SHOWCASE_CARDS = [
   {
     url: HERO_PHOTO_URL,
-    alt: "Página de produto com fotos, identidade visual e detalhes da peça",
+    alt: "Artesã produzindo uma bolsa de crochê, com o catálogo de produtos visível no notebook",
     title: "Sua vitrine, com a sua identidade",
     text: "Apresente suas peças com fotos, preços, variações e todos os detalhes que sua cliente precisa.",
   },
@@ -189,7 +189,7 @@ export function MarketingHome() {
       style={PALETTE_VARS}
       className="flex flex-1 flex-col bg-[var(--craft-bg)] text-[var(--craft-ink)]"
     >
-      <header className="px-6 py-5 lg:px-10">
+      <header className="px-6 pt-5 pb-1 lg:px-10">
         <div className="mx-auto flex max-w-6xl justify-center lg:justify-start">
           <div className="relative h-24 w-[380px] sm:h-28 sm:w-[440px]">
             <Image
@@ -208,12 +208,11 @@ export function MarketingHome() {
           assimétrico já usado na home do catálogo público). Primeira dobra:
           espaçamento vertical enxuto de propósito para caber logo + headline
           + CTA + boa parte do mockup sem rolar muito. */}
-      <section className="relative overflow-hidden px-6 pt-6 pb-14 sm:pt-8 lg:px-10">
+      <section className="relative overflow-hidden px-6 pt-2 pb-14 sm:pt-3 lg:px-10">
         <div
           aria-hidden
           className="pointer-events-none absolute -top-24 right-[-8%] size-[28rem] rounded-full bg-[var(--craft-mustard)]/25 blur-3xl sm:size-[36rem]"
         />
-        <YarnSkein className="pointer-events-none absolute top-16 left-[4%] hidden w-20 text-[var(--craft-terracotta)]/50 sm:block" />
 
         <div className="relative mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1fr_0.95fr] lg:gap-16">
           <div className="reveal flex flex-col items-center gap-5 text-center lg:items-start lg:text-left">
@@ -242,7 +241,7 @@ export function MarketingHome() {
             <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[var(--radius-image)] bg-[var(--craft-card)] shadow-xl ring-1 ring-[var(--craft-border)]">
               <Image
                 src={HERO_PHOTO_URL}
-                alt="Clutch Safira, peça de crochê artesanal com tassel removível, da Blessing Collection"
+                alt="Artesã produzindo uma bolsa de crochê, com o catálogo de produtos visível no notebook"
                 fill
                 priority
                 className="object-cover"
