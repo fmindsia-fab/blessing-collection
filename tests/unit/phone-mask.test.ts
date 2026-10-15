@@ -30,3 +30,27 @@ describe("formatPhoneBR", () => {
     expect(formatPhoneBR("")).toBe("");
   });
 });
+
+import { formatWhatsappBR, normalizeWhatsappBR } from "@/lib/customers/phone-mask";
+import { formatCpfCnpj } from "@/lib/br/document";
+
+describe("WhatsApp da loja", () => {
+  it("mostra DDD + número mesmo quando salvo com DDI 55", () => {
+    expect(formatWhatsappBR("5543996980026")).toBe("(43) 99698-0026");
+    expect(formatWhatsappBR("43996980026")).toBe("(43) 99698-0026");
+  });
+
+  it("normaliza para 55 + DDD + número, sem duplicar o DDI", () => {
+    expect(normalizeWhatsappBR("(43) 99698-0026")).toBe("5543996980026");
+    expect(normalizeWhatsappBR("5543996980026")).toBe("5543996980026");
+    expect(normalizeWhatsappBR("123")).toBeNull();
+  });
+});
+
+describe("formatCpfCnpj", () => {
+  it("usa máscara de CPF até 11 dígitos e de CNPJ a partir do 12º", () => {
+    expect(formatCpfCnpj("52998224725")).toBe("529.982.247-25");
+    expect(formatCpfCnpj("11222333000181")).toBe("11.222.333/0001-81");
+    expect(formatCpfCnpj("5299")).toBe("529.9");
+  });
+});

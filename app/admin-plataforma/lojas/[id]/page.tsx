@@ -5,10 +5,13 @@ import { BILLING_STATE_LABEL, BILLING_STATE_TONE } from "@/lib/platform/billing-
 import { PageHeading } from "@/components/admin/page-heading";
 import { StatusPill } from "@/components/admin/status-pill";
 import { BackLink } from "@/components/shared/back-link";
+import { formatCpfCnpj } from "@/lib/br/document";
+import { CRAFT_LABEL, YEARS_ACTIVE_LABEL } from "@/lib/store/craft-profile";
+import { formatWhatsappBR } from "@/lib/customers/phone-mask";
 import { StoreStatusToggle } from "./store-status-toggle";
 
-function formatCpf(digits: string): string {
-  return digits.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
+function yesNo(value: boolean | null) {
+  return value === null ? "—" : value ? "Sim" : "Não";
 }
 
 function formatDate(iso: string) {
@@ -45,9 +48,12 @@ export default async function PlatformAdminStorePage({ params }: { params: Promi
       <div className="grid gap-4 md:grid-cols-2">
         <InfoCard title="Responsável">
           <InfoRow label="Nome" value={store.owner.name ?? "—"} />
-          <InfoRow label="CPF" value={store.owner.cpf ? formatCpf(store.owner.cpf) : "—"} />
+          <InfoRow
+            label={store.owner.document?.length === 14 ? "CNPJ" : "CPF"}
+            value={store.owner.document ? formatCpfCnpj(store.owner.document) : "—"}
+          />
           <InfoRow label="E-mail" value={store.owner.email ?? "—"} breakAll />
-          <InfoRow label="WhatsApp" value={store.whatsapp_number} />
+          <InfoRow label="WhatsApp" value={formatWhatsappBR(store.whatsapp_number)} />
         </InfoCard>
 
         <InfoCard title="Assinatura">
@@ -62,6 +68,30 @@ export default async function PlatformAdminStorePage({ params }: { params: Promi
             <InfoRow label="Teste terminou em" value={formatDate(trialEnds)} />
           ) : null}
           {renewal ? <InfoRow label="Próxima renovação" value={formatDate(renewal)} /> : null}
+        </InfoCard>
+
+        <InfoCard title="Ateliê">
+          <InfoRow
+            label="Cidade / UF"
+            value={store.city ? `${store.city}${store.state ? ` / ${store.state}` : ""}` : "—"}
+          />
+          <InfoRow
+            label="Artesanato"
+            value={
+              store.craft_types.length > 0
+                ? store.craft_types
+                    .map((type) =>
+                      type === "other" && store.craft_other ? store.craft_other : (CRAFT_LABEL[type] ?? type),
+                    )
+                    .join(", ")
+                : "—"
+            }
+          />
+          <InfoRow label="Instagram" value={store.instagram_url ?? "—"} breakAll />
+          <InfoRow label="Sob medida" value={yesNo(store.accepts_custom_orders)} />
+          <InfoRow label="Envia p/ Brasil" value={yesNo(store.ships_nationwide)} />
+          <InfoRow label="Tempo de atuação" value={store.years_active ? (YEARS_ACTIVE_LABEL[store.years_active] ?? "—") : "—"} />
+          <InfoRow label="Marketplace" value={store.marketplace_opt_in ? "Autorizou divulgação" : "Não autorizou"} />
         </InfoCard>
       </div>
 

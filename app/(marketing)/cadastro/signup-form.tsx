@@ -8,12 +8,18 @@ import { z } from "zod";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { createStore, checkSlugAvailability, type CreateStoreFormState } from "@/lib/onboarding/actions";
 import { signupSchema, createStoreSchema, slugify } from "@/lib/onboarding/schema";
+import { formatCpfCnpj } from "@/lib/br/document";
+import { formatWhatsappBR } from "@/lib/customers/phone-mask";
+import { CraftProfileFields } from "@/components/shared/craft-profile-fields";
+import { MarketplaceProfileFields } from "@/components/shared/marketplace-profile-fields";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 type SignupFormValues = z.infer<typeof signupSchema>;
-type StoreFormValues = z.infer<typeof createStoreSchema>;
+type StoreFormInput = z.input<typeof createStoreSchema>;
+type StoreFormOutput = z.output<typeof createStoreSchema>;
 
 const INITIAL_STATE: CreateStoreFormState = {};
 
@@ -89,7 +95,9 @@ function StoreForm({ platformDomain }: { platformDomain: string }) {
     watch,
     setValue,
     formState: { errors },
-  } = useForm<StoreFormValues>({ resolver: zodResolver(createStoreSchema) });
+  } = useForm<StoreFormInput, unknown, StoreFormOutput>({
+    resolver: zodResolver(createStoreSchema),
+  });
 
   const name = watch("name");
   const slug = watch("slug");
@@ -130,15 +138,19 @@ function StoreForm({ platformDomain }: { platformDomain: string }) {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="ownerCpf">Seu CPF</Label>
+        <Label htmlFor="ownerDocument">Seu CPF ou CNPJ</Label>
         <Input
-          id="ownerCpf"
+          id="ownerDocument"
           inputMode="numeric"
-          placeholder="000.000.000-00"
-          {...register("ownerCpf")}
+          placeholder="000.000.000-00 ou 00.000.000/0000-00"
+          {...register("ownerDocument", {
+            onChange: (e) => {
+              e.target.value = formatCpfCnpj(e.target.value);
+            },
+          })}
         />
-        {errors.ownerCpf ? (
-          <p className="text-xs text-destructive">{errors.ownerCpf.message}</p>
+        {errors.ownerDocument ? (
+          <p className="text-xs text-destructive">{errors.ownerDocument.message}</p>
         ) : null}
       </div>
 
@@ -176,12 +188,38 @@ function StoreForm({ platformDomain }: { platformDomain: string }) {
           id="whatsappNumber"
           type="tel"
           placeholder="(11) 99999-9999"
-          {...register("whatsappNumber")}
+          autoComplete="tel-national"
+          {...register("whatsappNumber", {
+            onChange: (e) => {
+              e.target.value = formatWhatsappBR(e.target.value);
+            },
+          })}
         />
         {errors.whatsappNumber ? (
           <p className="text-xs text-destructive">{errors.whatsappNumber.message}</p>
         ) : null}
       </div>
+
+      <CraftProfileFields required />
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="instagramUrl">Instagram do ateliê (opcional)</Label>
+        <Input id="instagramUrl" name="instagramUrl" placeholder="@meuatelie" autoCapitalize="none" />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="description">Conte sobre o seu ateliê (opcional)</Label>
+        <Textarea
+          id="description"
+          name="description"
+          rows={3}
+          maxLength={160}
+          placeholder="Ex: Bolsas de crochê feitas à mão, com carinho, em Londrina."
+        />
+        <span className="text-xs text-muted-foreground">Até 160 caracteres.</span>
+      </div>
+
+      <MarketplaceProfileFields />
 
       {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
 

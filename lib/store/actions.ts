@@ -6,16 +6,41 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { parseBrandColors } from "@/lib/store/branding";
 import { isCuratedFont } from "@/lib/store/fonts";
+import { normalizeWhatsappBR } from "@/lib/customers/phone-mask";
+import {
+  craftProfileSettingsShape,
+  marketplaceExtrasColumns,
+  marketplaceExtrasShape,
+  requireCompleteOrEmpty,
+  requireOtherDescription,
+  toCraftProfileColumns,
+} from "@/lib/store/craft-profile";
 
-const storeSettingsSchema = z.object({
-  whatsappNumber: z.string().min(8, "Informe um número de WhatsApp válido"),
-  instagramUrl: z.string().url("Informe uma URL válida").optional().or(z.literal("")),
-  description: z.string().optional(),
-  // A lista curada cresce sem migration (o check do banco foi removido na
-  // 0010), então a validação de valor conhecido é feita aqui.
-  fontFamily: z.string().refine(isCuratedFont, "Selecione uma das fontes disponíveis"),
-  pixKey: z.string().trim().max(140).optional(),
-});
+const storeSettingsSchema = z
+  .object({
+    name: z.string().trim().min(2, "Informe o nome da loja").max(80, "Use no máximo 80 caracteres"),
+    // Salvo no formato do wa.me: 55 + DDD + número.
+    whatsappNumber: z.string().transform((v, ctx) => {
+      const normalized = normalizeWhatsappBR(v);
+      if (!normalized) {
+        ctx.addIssue({ code: "custom", message: "Informe um WhatsApp válido com DDD" });
+        return z.NEVER;
+      }
+      return normalized;
+    }),
+    instagramUrl: z.string().url("Informe uma URL válida").optional().or(z.literal("")),
+    description: z.string().optional(),
+    // A lista curada cresce sem migration (o check do banco foi removido na
+    // 0010), então a validação de valor conhecido é feita aqui.
+    fontFamily: z.string().refine(isCuratedFont, "Selecione uma das fontes disponíveis"),
+    pixKey: z.string().trim().max(140).optional(),
+    ...craftProfileSettingsShape,
+    ...marketplaceExtrasShape,
+  })
+  .superRefine((value, ctx) => {
+    requireCompleteOrEmpty(value, ctx);
+    requireOtherDescription(value, ctx);
+  });
 
 export type StoreSettingsFormState = {
   error?: string;
@@ -29,11 +54,20 @@ export async function updateStoreSettings(
   formData: FormData,
 ): Promise<StoreSettingsFormState> {
   const parsed = storeSettingsSchema.safeParse({
+    name: formData.get("name"),
     whatsappNumber: formData.get("whatsappNumber"),
     instagramUrl: formData.get("instagramUrl"),
     description: formData.get("description"),
     fontFamily: formData.get("fontFamily"),
     pixKey: formData.get("pixKey"),
+    city: String(formData.get("city") ?? ""),
+    state: String(formData.get("state") ?? ""),
+    craftTypes: formData.getAll("craftTypes"),
+    craftOther: formData.get("craftOther") ?? undefined,
+    acceptsCustomOrders: String(formData.get("acceptsCustomOrders") ?? ""),
+    shipsNationwide: String(formData.get("shipsNationwide") ?? ""),
+    yearsActive: String(formData.get("yearsActive") ?? ""),
+    marketplaceOptIn: formData.get("marketplaceOptIn") === "on",
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
@@ -47,7 +81,9 @@ export async function updateStoreSettings(
   const { error } = await supabase
     .from("stores")
     .update({
-      whatsapp_number: parsed.data.whatsappNumber.replace(/\D/g, ""),
+      // O slug (endereço) NÃO muda ao renomear: é a URL pública da loja.
+      name: parsed.data.name,
+      whatsapp_number: parsed.data.whatsappNumber,
       instagram_url: parsed.data.instagramUrl || null,
       description: parsed.data.description || null,
       brand_colors: palette.colors,
@@ -57,6 +93,11 @@ export async function updateStoreSettings(
       color_accent: palette.colors[2] ?? palette.colors[0],
       font_family: parsed.data.fontFamily,
       pix_key: parsed.data.pixKey || null,
+      ...toCraftProfileColumns(parsed.data),
+      ...marketplaceExtrasColumns(parsed.data, {
+        marketplace_opt_in: store.marketplace_opt_in,
+        marketplace_opt_in_at: store.marketplace_opt_in_at,
+      }),
     })
     .eq("id", store.id);
 

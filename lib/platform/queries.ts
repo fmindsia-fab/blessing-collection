@@ -22,7 +22,7 @@ export async function getStoreForPlatformAdmin(storeId: string) {
   const { data } = await supabase
     .from("stores")
     .select(
-      "id, slug, name, status, owner_user_id, whatsapp_number, created_at, store_subscriptions(status, billing_type, stripe_customer_id, stripe_subscription_id, current_period_end, trial_ends_at)",
+      "id, slug, name, status, owner_user_id, whatsapp_number, city, state, craft_types, craft_other, instagram_url, description, accepts_custom_orders, ships_nationwide, years_active, marketplace_opt_in, created_at, store_subscriptions(status, billing_type, stripe_customer_id, stripe_subscription_id, current_period_end, trial_ends_at)",
     )
     .eq("id", storeId)
     .maybeSingle();
@@ -32,7 +32,7 @@ export async function getStoreForPlatformAdmin(storeId: string) {
   // Dados do dono: nome/CPF vêm de profiles (policy profile_select_platform_admin);
   // o e-mail está em auth.users, só acessível pela RPC restrita a platform admin.
   const [{ data: owner }, { data: ownerEmail }] = await Promise.all([
-    supabase.from("profiles").select("full_name, cpf").eq("id", data.owner_user_id).maybeSingle(),
+    supabase.from("profiles").select("full_name, document").eq("id", data.owner_user_id).maybeSingle(),
     supabase.rpc("platform_admin_store_owner_email", { p_store_id: storeId }),
   ]);
 
@@ -41,7 +41,7 @@ export async function getStoreForPlatformAdmin(storeId: string) {
     ...store,
     owner: {
       name: owner?.full_name ?? null,
-      cpf: owner?.cpf ?? null,
+      document: owner?.document ?? null,
       email: (ownerEmail as string | null) ?? null,
     },
     subscription: Array.isArray(store_subscriptions) ? (store_subscriptions[0] ?? null) : store_subscriptions,

@@ -5,7 +5,7 @@ const { state } = vi.hoisted(() => ({
     user: { id: "user-1" } as { id: string } | null,
     insertError: null as { code: string } | null,
     insertedSlug: null as string | null,
-    profile: null as { id: string; full_name: string; cpf: string } | null,
+    profile: null as { id: string; full_name: string; document: string } | null,
   },
 }));
 
@@ -16,7 +16,7 @@ vi.mock("@/lib/supabase/server", () => ({
     },
     rpc: async () => ({ data: true, error: null }),
     from: (table: string) => ({
-      upsert: async (payload: { id: string; full_name: string; cpf: string }) => {
+      upsert: async (payload: { id: string; full_name: string; document: string }) => {
         if (table === "profiles") state.profile = payload;
         return { error: null };
       },
@@ -35,13 +35,22 @@ vi.mock("@/lib/supabase/server", () => ({
   }),
 }));
 
-function formDataFrom(fields: Record<string, string>) {
+function formDataFrom(fields: Record<string, string | string[]>) {
   const fd = new FormData();
-  for (const [k, v] of Object.entries(fields)) fd.set(k, v);
+  for (const [k, v] of Object.entries(fields)) {
+    if (Array.isArray(v)) v.forEach((item) => fd.append(k, item));
+    else fd.set(k, v);
+  }
   return fd;
 }
 
-const OWNER = { ownerName: "Maria da Silva", ownerCpf: "529.982.247-25" };
+const OWNER = {
+  ownerName: "Maria da Silva",
+  ownerDocument: "529.982.247-25",
+  city: "Londrina",
+  state: "PR",
+  craftTypes: ["crochet", "jewelry"],
+};
 
 describe("createStore", () => {
   beforeEach(() => {
@@ -61,7 +70,7 @@ describe("createStore", () => {
     expect(result.success).toBe(true);
     expect(result.storeSlug).toBe("mariabolsas");
     expect(state.insertedSlug).toBe("mariabolsas");
-    expect(state.profile).toEqual({ id: "user-1", full_name: "Maria da Silva", cpf: "52998224725" });
+    expect(state.profile).toEqual({ id: "user-1", full_name: "Maria da Silva", document: "52998224725" });
   });
 
   it("recusa sem sessão autenticada", async () => {

@@ -1,6 +1,7 @@
 "use server";
 
 import { createStoreSchema } from "@/lib/onboarding/schema";
+import { marketplaceExtrasColumns, toCraftProfileColumns } from "@/lib/store/craft-profile";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export type CreateStoreFormState = {
@@ -29,10 +30,20 @@ export async function createStore(
 
   const parsed = createStoreSchema.safeParse({
     ownerName: formData.get("ownerName"),
-    ownerCpf: formData.get("ownerCpf"),
+    ownerDocument: formData.get("ownerDocument"),
     name: formData.get("name"),
     slug: formData.get("slug"),
     whatsappNumber: formData.get("whatsappNumber"),
+    city: formData.get("city"),
+    state: formData.get("state"),
+    craftTypes: formData.getAll("craftTypes"),
+    craftOther: formData.get("craftOther") ?? undefined,
+    description: String(formData.get("description") ?? ""),
+    instagramUrl: String(formData.get("instagramUrl") ?? ""),
+    acceptsCustomOrders: String(formData.get("acceptsCustomOrders") ?? ""),
+    shipsNationwide: String(formData.get("shipsNationwide") ?? ""),
+    yearsActive: String(formData.get("yearsActive") ?? ""),
+    marketplaceOptIn: formData.get("marketplaceOptIn") === "on",
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
@@ -41,7 +52,7 @@ export async function createStore(
   const { error: profileError } = await supabase.from("profiles").upsert({
     id: user.id,
     full_name: parsed.data.ownerName,
-    cpf: parsed.data.ownerCpf,
+    document: parsed.data.ownerDocument,
   });
   if (profileError) {
     return { error: "Não foi possível salvar seus dados. Tente novamente." };
@@ -54,6 +65,10 @@ export async function createStore(
       slug: parsed.data.slug,
       name: parsed.data.name,
       whatsapp_number: parsed.data.whatsappNumber,
+      ...toCraftProfileColumns(parsed.data),
+      ...marketplaceExtrasColumns(parsed.data),
+      description: parsed.data.description || null,
+      instagram_url: parsed.data.instagramUrl,
     })
     .select("slug")
     .single();

@@ -35,8 +35,8 @@ export interface Database {
         Row: {
           id: string;
           full_name: string | null;
-          /** CPF só dígitos (migration 0031) — visível só ao dono e ao platform admin. */
-          cpf: string | null;
+          /** CPF (11) ou CNPJ (14), só dígitos (migrations 0031/0033) — visível só ao dono e ao platform admin. */
+          document: string | null;
           /** Admin da plataforma (migration 0030) — flag manual, não self-service. */
           is_platform_admin: boolean;
           created_at: string;
@@ -45,7 +45,7 @@ export interface Database {
         Insert: {
           id: string;
           full_name?: string | null;
-          cpf?: string | null;
+          document?: string | null;
           is_platform_admin?: boolean;
           created_at?: string;
           updated_at?: string;
@@ -53,7 +53,7 @@ export interface Database {
         Update: {
           id?: string;
           full_name?: string | null;
-          cpf?: string | null;
+          document?: string | null;
           is_platform_admin?: boolean;
           created_at?: string;
           updated_at?: string;
@@ -89,6 +89,17 @@ export interface Database {
           default_margin_percent: number;
           /** Chave PIX (migration 0026) — usada na cobrança que a proprietária monta pro cliente. */
           pix_key: string | null;
+          /** Perfil do ateliê para o marketplace (migration 0034). */
+          city: string | null;
+          state: string | null;
+          craft_types: string[];
+          craft_other: string | null;
+          /** Divulgação (migration 0035): opt_in explícito, LGPD. */
+          marketplace_opt_in: boolean;
+          marketplace_opt_in_at: string | null;
+          accepts_custom_orders: boolean | null;
+          ships_nationwide: boolean | null;
+          years_active: string | null;
           status: StoreStatus;
           created_at: string;
           updated_at: string;
@@ -117,6 +128,15 @@ export interface Database {
           default_pricing_method?: PricingMethodValue;
           default_margin_percent?: number;
           pix_key?: string | null;
+          city?: string | null;
+          state?: string | null;
+          craft_types?: string[];
+          craft_other?: string | null;
+          marketplace_opt_in?: boolean;
+          marketplace_opt_in_at?: string | null;
+          accepts_custom_orders?: boolean | null;
+          ships_nationwide?: boolean | null;
+          years_active?: string | null;
           status?: StoreStatus;
           created_at?: string;
           updated_at?: string;
