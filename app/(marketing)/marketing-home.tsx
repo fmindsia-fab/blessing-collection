@@ -6,8 +6,8 @@ import { YarnSkein, StitchWave, CrochetDots, YarnTangle } from "./craft-motifs";
 // Foto real de produto no catálogo público da Blessing — destaque do hero.
 const HERO_PHOTO_URL = "/marketing/hero-produto.jpg";
 
-// Prints reais do painel administrativo e do catálogo público da
-// Blessing — mostram o produto funcionando de verdade, não só peças.
+// 2 prints reais, grandes, mostrando o painel e o catálogo funcionando de
+// verdade — poucos e bem enquadrados em vez de muitos pequenos.
 // Valores em R$ foram borrados antes do envio (não são dados fictícios,
 // são números reais da loja, sem necessidade de aparecer na landing).
 const GALLERY_PHOTOS = [
@@ -16,29 +16,10 @@ const GALLERY_PHOTOS = [
     alt: "Painel de pedidos organizados por etapa: orçamento, confirmado, em produção, entregue",
   },
   {
-    url: "/marketing/galeria-precificacao.jpg",
-    alt: "Calculadora de precificação do painel administrativo",
-  },
-  {
     url: "/marketing/galeria-colecoes.jpg",
     alt: "Coleções do catálogo público: Blessing, Moda Praia, Casual, Festa",
   },
-  {
-    url: "/marketing/galeria-categorias.jpg",
-    alt: "Categorias do catálogo público: Bolsas, Acessórios, Organizadores, Kits e Presentes",
-  },
 ];
-
-// Prints extras do painel, usados como decoração esmaecida no fundo de
-// algumas seções — preenchem espaços vazios sem competir com o conteúdo.
-const BACKDROP_PHOTOS = {
-  configuracoes: "/marketing/bg-configuracoes.jpg",
-  materiais: "/marketing/bg-materiais.jpg",
-  formacaoPreco: "/marketing/bg-formacao-preco.jpg",
-  uploadImagens: "/marketing/bg-upload-imagens.jpg",
-  formProduto: "/marketing/bg-form-produto.jpg",
-  dashboard: "/marketing/bg-dashboard.jpg",
-};
 
 const STEPS = [
   {
@@ -127,12 +108,6 @@ export function MarketingHome() {
           aria-hidden
           className="pointer-events-none absolute -top-24 right-[-8%] size-[28rem] rounded-full bg-[var(--craft-mustard)]/25 blur-3xl sm:size-[36rem]"
         />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-16 left-[-6%] hidden aspect-video w-[26rem] overflow-hidden rounded-[var(--radius-image)] shadow-md lg:block"
-        >
-          <Image src={BACKDROP_PHOTOS.dashboard} alt="" fill className="object-contain" />
-        </div>
         <YarnSkein className="pointer-events-none absolute top-16 left-[4%] hidden w-20 text-[var(--craft-terracotta)]/50 sm:block" />
 
         <div className="relative mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1fr_0.95fr] lg:gap-16">
@@ -175,20 +150,21 @@ export function MarketingHome() {
         </div>
       </section>
 
-      {/* Galeria — mosaico dedicado só para variedade de peças artesanais. */}
+      {/* Galeria — só 2 prints grandes, bem enquadrados, mostrando o
+          painel e o catálogo funcionando de verdade. */}
       <section className="px-6 pb-20 lg:px-10">
-        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
-          {GALLERY_PHOTOS.map((photo, index) => (
+        <div className="mx-auto grid max-w-5xl gap-6 sm:grid-cols-2">
+          {GALLERY_PHOTOS.map((photo) => (
             <div
               key={photo.url}
-              className={`relative aspect-square w-full overflow-hidden rounded-[var(--radius-image)] bg-[var(--craft-card)] shadow-sm ${index % 2 === 1 ? "sm:mt-6" : ""}`}
+              className="relative aspect-[4/3] w-full overflow-hidden rounded-[var(--radius-image)] border border-[var(--craft-border)] bg-[var(--craft-card)] shadow-md"
             >
               <Image
                 src={photo.url}
                 alt={photo.alt}
                 fill
                 className="object-contain"
-                sizes="(min-width: 640px) 23vw, 48vw"
+                sizes="(min-width: 640px) 45vw, 100vw"
               />
             </div>
           ))}
@@ -222,12 +198,6 @@ export function MarketingHome() {
 
       {/* Como funciona — ilustrado, uma imagem por passo. */}
       <section className="relative overflow-hidden px-6 py-24 lg:px-10">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute top-1/2 right-[-4%] hidden aspect-[4/5] w-80 -translate-y-1/2 overflow-hidden rounded-[var(--radius-image)] shadow-md xl:block"
-        >
-          <Image src={BACKDROP_PHOTOS.formProduto} alt="" fill className="object-contain" />
-        </div>
         <div className="mx-auto flex max-w-5xl flex-col gap-14">
           <div className="flex flex-col items-center gap-3 text-center">
             <span className="text-[0.625rem] font-medium uppercase tracking-[0.2em] text-[var(--craft-terracotta)]">
@@ -269,18 +239,6 @@ export function MarketingHome() {
       {/* Benefícios */}
       <section className="relative overflow-hidden border-t border-[var(--craft-border)] bg-[var(--craft-bg-warm)] px-6 py-24 lg:px-10">
         <YarnSkein className="pointer-events-none absolute bottom-[-2rem] left-[-2rem] hidden w-32 text-[var(--craft-mustard)]/30 lg:block" />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute top-[-3rem] right-[-5%] hidden aspect-video w-96 overflow-hidden rounded-[var(--radius-image)] shadow-md lg:block"
-        >
-          <Image src={BACKDROP_PHOTOS.materiais} alt="" fill className="object-contain" />
-        </div>
-        <div
-          aria-hidden
-          className="pointer-events-none absolute bottom-[-2rem] right-[8%] hidden aspect-[4/5] w-64 overflow-hidden rounded-[var(--radius-image)] shadow-md xl:block"
-        >
-          <Image src={BACKDROP_PHOTOS.uploadImagens} alt="" fill className="object-contain" />
-        </div>
         <div className="relative mx-auto flex max-w-5xl flex-col gap-14">
           <div className="flex flex-col items-center gap-3 text-center">
             <span className="text-[0.625rem] font-medium uppercase tracking-[0.2em] text-[var(--craft-terracotta)]">
@@ -318,18 +276,6 @@ export function MarketingHome() {
         />
         <StitchWave className="pointer-events-none absolute top-10 left-[10%] hidden w-40 text-white/25 md:block" />
         <StitchWave className="pointer-events-none absolute bottom-10 right-[10%] hidden w-40 text-white/25 md:block" />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-10 left-[-4%] hidden aspect-video w-80 overflow-hidden rounded-[var(--radius-image)] shadow-md lg:block"
-        >
-          <Image src={BACKDROP_PHOTOS.configuracoes} alt="" fill className="object-contain" />
-        </div>
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -bottom-12 right-[-3%] hidden aspect-[4/5] w-60 overflow-hidden rounded-[var(--radius-image)] shadow-md lg:block"
-        >
-          <Image src={BACKDROP_PHOTOS.formacaoPreco} alt="" fill className="object-contain" />
-        </div>
         <div className="relative mx-auto flex max-w-xl flex-col items-center gap-6 text-center">
           <h2 className="font-[family-name:var(--font-brand)] text-3xl tracking-tight sm:text-4xl">
             Pronta para começar?
