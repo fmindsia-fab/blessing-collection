@@ -42,6 +42,20 @@ export async function proxy(request: NextRequest) {
   const isAdminRoute = !isPlatformAdminRoute && pathname.startsWith("/admin");
   const isLoginRoute = pathname === "/login";
 
+  // O painel da plataforma só existe no apex (ex. atelifacil.com.br). A sessão
+  // é por host, então abrir /admin-plataforma num subdomínio de loja nunca
+  // acharia a sessão do administrador — leva para o apex em vez de prender
+  // a pessoa no /login do subdomínio.
+  if (isPlatformAdminRoute && process.env.TENANT_RESOLUTION_MODE === "host") {
+    const platformDomain = process.env.PLATFORM_DOMAIN;
+    const tenant = resolveTenantFromHost(request.headers.get("host"));
+    if (platformDomain && tenant.kind !== "none") {
+      return NextResponse.redirect(
+        new URL(`${pathname}${request.nextUrl.search}`, `https://${platformDomain}`),
+      );
+    }
+  }
+
   if (isPlatformAdminRoute) {
     if (!user) {
       const url = request.nextUrl.clone();
