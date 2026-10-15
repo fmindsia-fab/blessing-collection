@@ -7,6 +7,7 @@ import { MobileNav } from "./mobile-nav";
 import { ShareButton } from "@/components/shared/share-button";
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { SubscriptionBanner } from "./subscription-banner";
+import { TrialDaysBadge } from "./trial-days-badge";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard" },
@@ -49,6 +50,7 @@ export default async function AdminAreaLayout({ children }: { children: React.Re
           </div>
 
           <div className="flex items-center gap-2">
+            <TrialDaysBadge storeId={store.id} />
             <ShareButton
               url={siteUrl}
               title={storeName}
