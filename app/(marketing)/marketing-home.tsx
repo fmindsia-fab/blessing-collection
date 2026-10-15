@@ -3,11 +3,8 @@ import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 import { YarnSkein, StitchWave, CrochetDots, YarnTangle } from "./craft-motifs";
 
-// Fotos reais de peças da Blessing Collection (primeira loja da
-// plataforma) — usadas no hero, na galeria e na prova social enquanto
-// outras artesãs ainda não enviaram fotos próprias.
-const VALENTINA_PHOTO_URL =
-  "https://bipadxpcbmgoatlnnyfw.supabase.co/storage/v1/object/public/product-images/17566e34-c629-429a-999a-3cd28fea7366/61ea7b5b-8f76-4f0b-9d6a-22532f5b720b/ed49601d-557f-4b36-be8d-8fdc0ef92ae6.jpg";
+// Foto real de produto no catálogo público da Blessing — destaque do hero.
+const HERO_PHOTO_URL = "/marketing/hero-produto.jpg";
 
 // Prints reais do painel administrativo e do catálogo público da
 // Blessing — mostram o produto funcionando de verdade, não só peças.
@@ -15,22 +12,33 @@ const VALENTINA_PHOTO_URL =
 // são números reais da loja, sem necessidade de aparecer na landing).
 const GALLERY_PHOTOS = [
   {
-    url: "/marketing/painel-catalogo-publico.jpg",
-    alt: "Página de produto no catálogo público, com fotos e galeria da peça",
+    url: "/marketing/galeria-pedidos.jpg",
+    alt: "Painel de pedidos organizados por etapa: orçamento, confirmado, em produção, entregue",
   },
   {
-    url: "/marketing/painel-menu.jpg",
-    alt: "Menu do painel administrativo com todas as seções: pedidos, clientes, produtos, analytics",
-  },
-  {
-    url: "/marketing/painel-produto-detalhe.jpg",
-    alt: "Detalhes de um produto no catálogo, com materiais e medidas",
-  },
-  {
-    url: "/marketing/painel-precificacao.jpg",
+    url: "/marketing/galeria-precificacao.jpg",
     alt: "Calculadora de precificação do painel administrativo",
   },
+  {
+    url: "/marketing/galeria-colecoes.jpg",
+    alt: "Coleções do catálogo público: Blessing, Moda Praia, Casual, Festa",
+  },
+  {
+    url: "/marketing/galeria-categorias.jpg",
+    alt: "Categorias do catálogo público: Bolsas, Acessórios, Organizadores, Kits e Presentes",
+  },
 ];
+
+// Prints extras do painel, usados como decoração esmaecida no fundo de
+// algumas seções — preenchem espaços vazios sem competir com o conteúdo.
+const BACKDROP_PHOTOS = {
+  configuracoes: "/marketing/bg-configuracoes.jpg",
+  materiais: "/marketing/bg-materiais.jpg",
+  formacaoPreco: "/marketing/bg-formacao-preco.jpg",
+  uploadImagens: "/marketing/bg-upload-imagens.jpg",
+  formProduto: "/marketing/bg-form-produto.jpg",
+  dashboard: "/marketing/bg-dashboard.jpg",
+};
 
 const STEPS = [
   {
@@ -119,6 +127,12 @@ export function MarketingHome() {
           aria-hidden
           className="pointer-events-none absolute -top-24 right-[-8%] size-[28rem] rounded-full bg-[var(--craft-mustard)]/25 blur-3xl sm:size-[36rem]"
         />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-16 left-[-6%] hidden aspect-video w-[26rem] overflow-hidden rounded-[var(--radius-image)] opacity-[0.07] lg:block"
+        >
+          <Image src={BACKDROP_PHOTOS.dashboard} alt="" fill className="object-cover object-top" />
+        </div>
         <YarnSkein className="pointer-events-none absolute top-16 left-[4%] hidden w-20 text-[var(--craft-terracotta)]/50 sm:block" />
 
         <div className="relative mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1fr_0.95fr] lg:gap-16">
@@ -145,11 +159,11 @@ export function MarketingHome() {
           <div className="relative">
             <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[var(--radius-image)] bg-[var(--craft-card)] shadow-lg">
               <Image
-                src={VALENTINA_PHOTO_URL}
-                alt="Bolsa de crochê artesanal feita por uma loja na plataforma"
+                src={HERO_PHOTO_URL}
+                alt="Página de produto de uma bolsa artesanal no catálogo digital"
                 fill
                 priority
-                className="object-cover"
+                className="object-cover object-top"
                 sizes="(min-width: 1024px) 45vw, 100vw"
               />
             </div>
@@ -207,7 +221,13 @@ export function MarketingHome() {
       </section>
 
       {/* Como funciona — ilustrado, uma imagem por passo. */}
-      <section className="px-6 py-24 lg:px-10">
+      <section className="relative overflow-hidden px-6 py-24 lg:px-10">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute top-1/2 right-[-4%] hidden aspect-[4/5] w-80 -translate-y-1/2 overflow-hidden rounded-[var(--radius-image)] opacity-[0.06] xl:block"
+        >
+          <Image src={BACKDROP_PHOTOS.formProduto} alt="" fill className="object-cover object-top" />
+        </div>
         <div className="mx-auto flex max-w-5xl flex-col gap-14">
           <div className="flex flex-col items-center gap-3 text-center">
             <span className="text-[0.625rem] font-medium uppercase tracking-[0.2em] text-[var(--craft-terracotta)]">
@@ -249,6 +269,18 @@ export function MarketingHome() {
       {/* Benefícios */}
       <section className="relative overflow-hidden border-t border-[var(--craft-border)] bg-[var(--craft-bg-warm)] px-6 py-24 lg:px-10">
         <YarnSkein className="pointer-events-none absolute bottom-[-2rem] left-[-2rem] hidden w-32 text-[var(--craft-mustard)]/30 lg:block" />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute top-[-3rem] right-[-5%] hidden aspect-video w-96 overflow-hidden rounded-[var(--radius-image)] opacity-[0.07] lg:block"
+        >
+          <Image src={BACKDROP_PHOTOS.materiais} alt="" fill className="object-cover object-top" />
+        </div>
+        <div
+          aria-hidden
+          className="pointer-events-none absolute bottom-[-2rem] right-[8%] hidden aspect-[4/5] w-64 overflow-hidden rounded-[var(--radius-image)] opacity-[0.06] xl:block"
+        >
+          <Image src={BACKDROP_PHOTOS.uploadImagens} alt="" fill className="object-cover object-top" />
+        </div>
         <div className="relative mx-auto flex max-w-5xl flex-col gap-14">
           <div className="flex flex-col items-center gap-3 text-center">
             <span className="text-[0.625rem] font-medium uppercase tracking-[0.2em] text-[var(--craft-terracotta)]">
@@ -286,6 +318,18 @@ export function MarketingHome() {
         />
         <StitchWave className="pointer-events-none absolute top-10 left-[10%] hidden w-40 text-white/25 md:block" />
         <StitchWave className="pointer-events-none absolute bottom-10 right-[10%] hidden w-40 text-white/25 md:block" />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-10 left-[-4%] hidden aspect-video w-80 overflow-hidden rounded-[var(--radius-image)] opacity-10 lg:block"
+        >
+          <Image src={BACKDROP_PHOTOS.configuracoes} alt="" fill className="object-cover object-top" />
+        </div>
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -bottom-12 right-[-3%] hidden aspect-[4/5] w-60 overflow-hidden rounded-[var(--radius-image)] opacity-10 lg:block"
+        >
+          <Image src={BACKDROP_PHOTOS.formacaoPreco} alt="" fill className="object-cover object-top" />
+        </div>
         <div className="relative mx-auto flex max-w-xl flex-col items-center gap-6 text-center">
           <h2 className="font-[family-name:var(--font-brand)] text-3xl tracking-tight sm:text-4xl">
             Pronta para começar?
