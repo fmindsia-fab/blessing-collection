@@ -25,7 +25,7 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata(): Promise<Metadata> {
   if (await isPlatformRequest()) {
     return {
-      title: "Ateliê Fácil | Catálogo digital para artesãs e ateliês",
+      title: "AteliFácil | Catálogo digital para artesãs e ateliês",
       description:
         "Crie seu catálogo, organize encomendas e receba pedidos pelo WhatsApp — sem comissão por venda. Grátis para começar.",
     };

@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 import { YarnSkein, StitchWave, CrochetDots, YarnTangle, YarnBall, CrochetHooks } from "./craft-motifs";
+import { PlatformLogo } from "@/components/shared/platform-logo";
 
 // Foto real de produto no catálogo público da Blessing — destaque do hero.
 const HERO_PHOTO_URL = "/marketing/hero-produto.jpg";
@@ -102,7 +103,7 @@ const FAQ_ITEMS = [
     answer: "Sim. Você cria sua loja e começa a vender sem precisar de cartão de crédito.",
   },
   {
-    question: "O Ateliê Fácil cobra comissão por venda?",
+    question: "O AteliFácil cobra comissão por venda?",
     answer: "Não. A negociação e o pagamento acontecem direto entre você e a cliente, pelo seu WhatsApp — o que você vende é seu.",
   },
   {
@@ -131,17 +132,21 @@ const FAQ_ITEMS = [
   },
 ];
 
-// Paleta própria da landing — terracota/mostarda/creme, remetendo a fios e
-// fibras naturais. Escopada neste componente via CSS vars locais: não toca
-// em --gold nem nas variáveis globais que o catálogo público e o admin
-// usam (ver lib/store/admin-theme.ts e app/globals.css).
+// Paleta oficial da marca AteliFácil — terracota, marrom, bege, creme e
+// rosa suave (ver referência de logo/identidade visual). Escopada neste
+// componente via CSS vars locais: não toca em --gold nem nas variáveis
+// globais que o catálogo público e o admin usam (ver lib/store/admin-theme.ts
+// e app/globals.css). --craft-mustard foi substituído por --craft-rose
+// (rosa suave) para bater com a paleta oficial; o nome da variável
+// ("mustard") não reflete mais a cor, mas trocar o nome exigiria atualizar
+// todas as ocorrências no JSX abaixo sem ganho real.
 const PALETTE_VARS = {
   "--craft-bg": "oklch(0.975 0.015 75)",
   "--craft-bg-warm": "oklch(0.93 0.035 60)",
   "--craft-ink": "oklch(0.27 0.03 40)",
   "--craft-muted": "oklch(0.48 0.025 45)",
   "--craft-terracotta": "oklch(0.58 0.14 40)",
-  "--craft-mustard": "oklch(0.72 0.13 75)",
+  "--craft-mustard": "oklch(0.8 0.05 15)",
   "--craft-card": "oklch(0.995 0.008 70)",
   "--craft-border": "oklch(0.86 0.025 55)",
 } as React.CSSProperties;
@@ -175,6 +180,12 @@ export function MarketingHome() {
       style={PALETTE_VARS}
       className="flex flex-1 flex-col bg-[var(--craft-bg)] text-[var(--craft-ink)]"
     >
+      <header className="px-6 pt-8 lg:px-10">
+        <div className="mx-auto max-w-6xl">
+          <PlatformLogo />
+        </div>
+      </header>
+
       {/* Hero — texto à esquerda, imagem sangrando à direita (mesmo princípio
           assimétrico já usado na home do catálogo público). */}
       <section className="relative overflow-hidden px-6 pt-16 pb-20 sm:pt-20 lg:px-10">
@@ -342,7 +353,7 @@ export function MarketingHome() {
 
             <div className="flex flex-col gap-4 rounded-[var(--radius-image)] border border-[var(--craft-terracotta)]/30 bg-[var(--craft-bg-warm)] p-7 shadow-sm">
               <h3 className="text-xs font-medium uppercase tracking-[0.18em] text-[var(--craft-terracotta)]">
-                Com o Ateliê Fácil
+                Com o AteliFácil
               </h3>
               <ul className="flex flex-col gap-3">
                 {BEFORE_AFTER.after.map((item) => (
@@ -364,7 +375,7 @@ export function MarketingHome() {
         <div className="relative mx-auto flex max-w-5xl flex-col gap-14">
           <div className="flex flex-col items-center gap-3 text-center">
             <span className="text-[0.625rem] font-medium uppercase tracking-[0.2em] text-[var(--craft-terracotta)]">
-              Por que o Ateliê Fácil
+              Por que o AteliFácil
             </span>
             <h2 className="font-[family-name:var(--font-brand)] text-3xl tracking-tight sm:text-4xl">
               Tudo que seu ateliê precisa para vender melhor
@@ -439,7 +450,7 @@ export function MarketingHome() {
       </section>
 
       <footer className="border-t border-[var(--craft-border)] px-6 py-8 text-center text-xs text-[var(--craft-muted)] lg:px-10">
-        Ateliê Fácil — catálogo digital para artesãs
+        AteliFácil — catálogo digital para artesãs
       </footer>
     </main>
   );
