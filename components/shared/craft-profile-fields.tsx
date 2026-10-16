@@ -26,7 +26,8 @@ export function CraftProfileFields({
   required?: boolean;
 }) {
   const [selected, setSelected] = useState<string[]>(defaultCraftTypes);
-  const [state, setState] = useState(defaultState);
+  const [rawState, setRawState] = useState(defaultState);
+  const state = (BR_STATES as readonly string[]).includes(rawState) ? rawState : "";
   const [city, setCity] = useState(defaultCity);
   const [citiesByState, setCitiesByState] = useState<Record<string, string[]>>(() =>
     defaultState && citiesCache.has(defaultState) ? { [defaultState]: citiesCache.get(defaultState)! } : {},
@@ -61,7 +62,7 @@ export function CraftProfileFields({
   // Cidade de outro estado não faz sentido: limpa ao trocar a UF.
   function handleStateChange(next: string) {
     if (next !== state) setCity("");
-    setState(next);
+    setRawState(next);
   }
 
   function toggle(value: string) {
@@ -79,7 +80,7 @@ export function CraftProfileFields({
             value={state}
             onChange={(e) => handleStateChange(e.target.value)}
             required={required}
-            autoComplete="address-level1"
+            autoComplete="off"
             className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
           >
             <option value="">UF</option>
