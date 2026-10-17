@@ -168,4 +168,32 @@ describe("webhook do Stripe", () => {
     expect(res.status).toBe(200);
     expect(state.upsertedSubscription).toBeNull();
   });
+
+  it("usa o estado ATUAL do Stripe, não o do evento (evento atrasado/fora de ordem)", async () => {
+    // O evento "updated" chega dizendo active, mas hoje a assinatura já está cancelada.
+    state.event = {
+      type: "customer.subscription.updated",
+      data: { object: makeSubscription({ status: "active" }) },
+    };
+    state.subscriptionToReturn = makeSubscription({ status: "canceled" });
+
+    const { POST } = await import("@/app/api/webhooks/stripe/route");
+    await POST(makeRequest("{}"));
+
+    expect(state.retrievedSubscriptionId).toBe("sub_123");
+    expect(state.upsertedSubscription).toMatchObject({ status: "canceled" });
+  });
+
+  it("registra o cancelamento agendado para o fim do período", async () => {
+    state.event = {
+      type: "customer.subscription.updated",
+      data: { object: makeSubscription({ status: "active", cancel_at_period_end: true }) },
+    };
+    state.subscriptionToReturn = makeSubscription({ status: "active", cancel_at_period_end: true });
+
+    const { POST } = await import("@/app/api/webhooks/stripe/route");
+    await POST(makeRequest("{}"));
+
+    expect(state.upsertedSubscription).toMatchObject({ status: "active", cancel_at_period_end: true });
+  });
 });

@@ -13,16 +13,25 @@ import type { BillingType, SubscriptionStatus } from "@/types/database.types";
 // mesma regra, usado onde a linha da assinatura já foi lida (painéis) e nos
 // testes. Se mudar uma, mude a outra.
 
+// Dias de carência após o fim do período pago, enquanto o pagamento está falhando
+// (past_due). Espelha o `interval '7 days'` de store_has_access() (migration 0040).
+export const PAST_DUE_GRACE_DAYS = 7;
+
 export type SubscriptionAccessInput = {
   status: SubscriptionStatus | string;
   billing_type?: BillingType | string | null;
   trial_ends_at: string | null;
+  current_period_end?: string | null;
 } | null;
 
 export function hasSubscriptionAccess(subscription: SubscriptionAccessInput, now: Date): boolean {
   if (!subscription) return false;
   if (subscription.status === "active") return true;
   if (subscription.billing_type === "complimentary") return true;
+  if (subscription.status === "past_due" && subscription.current_period_end) {
+    const graceEndsAt = new Date(subscription.current_period_end).getTime() + PAST_DUE_GRACE_DAYS * 86_400_000;
+    return graceEndsAt > now.getTime();
+  }
   return (
     subscription.status === "trialing" &&
     subscription.trial_ends_at !== null &&

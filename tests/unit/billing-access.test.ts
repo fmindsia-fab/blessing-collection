@@ -30,3 +30,21 @@ describe("billingState (painel da plataforma)", () => {
     expect(billingState({ ...base, status: "expired" }, NOW)).toBe("trial_expired");
   });
 });
+
+describe("hasSubscriptionAccess — carência de pagamento (past_due)", () => {
+  const pastDue = (periodEndDaysAgo: number) => ({
+    status: "past_due",
+    trial_ends_at: null,
+    current_period_end: inDays(-periodEndDaysAgo),
+  });
+
+  it("mantém o acesso por 7 dias depois do fim do período pago", () => {
+    expect(hasSubscriptionAccess(pastDue(1), NOW)).toBe(true);
+    expect(hasSubscriptionAccess(pastDue(6), NOW)).toBe(true);
+  });
+
+  it("derruba o acesso depois da carência ou sem data de período", () => {
+    expect(hasSubscriptionAccess(pastDue(8), NOW)).toBe(false);
+    expect(hasSubscriptionAccess({ status: "past_due", trial_ends_at: null }, NOW)).toBe(false);
+  });
+});

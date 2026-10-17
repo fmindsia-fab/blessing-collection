@@ -67,7 +67,10 @@ export async function POST(request: NextRequest) {
       case "customer.subscription.updated":
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
-        await syncSubscription(supabase, subscription);
+        // Os eventos podem chegar fora de ordem (um "updated" antigo depois de um
+        // "deleted"). Gravar o payload do evento reintroduziria um estado velho;
+        // por isso sempre sincronizamos o estado ATUAL no Stripe.
+        await syncSubscription(supabase, await currentSubscription(subscription));
         break;
       }
 
@@ -119,6 +122,18 @@ function toStoreSubscriptionStatus(stripeStatus: Stripe.Subscription.Status): Su
   }
 }
 
+// Estado atual da assinatura no Stripe; se a consulta falhar, usa o payload do
+// evento (melhor um estado possivelmente velho que perder o evento — o Stripe
+// ainda reenvia se respondermos 500, e o próximo evento corrige).
+async function currentSubscription(fallback: Stripe.Subscription): Promise<Stripe.Subscription> {
+  try {
+    return (await stripe.subscriptions.retrieve(fallback.id)) ?? fallback;
+  } catch (err) {
+    console.error("[stripe-webhook] não foi possível reconsultar a assinatura", fallback.id, err);
+    return fallback;
+  }
+}
+
 async function syncSubscription(
   supabase: ReturnType<typeof createWebhookSupabaseClient>,
   subscription: Stripe.Subscription,
@@ -147,6 +162,7 @@ async function syncSubscription(
       stripe_subscription_id: subscription.id,
       status,
       billing_type: "stripe",
+      cancel_at_period_end: subscription.cancel_at_period_end ?? false,
       price_id: priceId,
       current_period_end: currentPeriodEnd ? new Date(currentPeriodEnd * 1000).toISOString() : null,
       ...(trialEnd ? { trial_ends_at: new Date(trialEnd * 1000).toISOString() } : {}),

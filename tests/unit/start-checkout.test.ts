@@ -1,0 +1,112 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const { state } = vi.hoisted(() => ({
+  state: {
+    subscription: null as Record<string, unknown> | null,
+    sessionParams: null as Record<string, unknown> | null,
+    notOwner: null as string | null,
+    redirected: null as string | null,
+  },
+}));
+
+vi.mock("server-only", () => ({}));
+vi.mock("next/navigation", () => ({
+  redirect: (url: string) => {
+    state.redirected = url;
+    throw new Error("NEXT_REDIRECT");
+  },
+}));
+vi.mock("@/lib/store/get-active-store", () => ({
+  getActiveStore: async () => ({ id: "loja-1", name: "Maria Bolsas" }),
+  getSiteUrl: async () => "https://maria.atelifacil.com.br",
+}));
+vi.mock("@/lib/store/ownership", () => ({
+  getNotOwnerError: async () => state.notOwner,
+}));
+vi.mock("@/lib/supabase/server", () => ({
+  createServerSupabaseClient: async () => ({
+    auth: { getUser: async () => ({ data: { user: { id: "u1", email: "maria@loja.com" } } }) },
+    from: () => {
+      const chain: Record<string, unknown> = {
+        select: () => chain,
+        eq: () => chain,
+        maybeSingle: async () => ({ data: state.subscription, error: null }),
+      };
+      return chain;
+    },
+  }),
+}));
+vi.mock("@/lib/stripe/client", () => ({
+  stripe: {
+    checkout: {
+      sessions: {
+        create: vi.fn(async (params: Record<string, unknown>) => {
+          state.sessionParams = params;
+          return { url: "https://checkout.stripe.com/c/pay/cs_test_1" };
+        }),
+      },
+    },
+    customers: { create: vi.fn(async () => { throw new Error("não deve criar Customer antes do Checkout"); }) },
+  },
+}));
+
+import { startCheckout } from "@/lib/stripe/actions";
+
+async function run() {
+  try {
+    await startCheckout();
+  } catch {
+    // redirect() do Next lança em caso de sucesso
+  }
+}
+
+describe("startCheckout", () => {
+  beforeEach(() => {
+    state.subscription = { stripe_customer_id: null, stripe_subscription_id: null, status: "expired", trial_ends_at: null };
+    state.sessionParams = null;
+    state.notOwner = null;
+    state.redirected = null;
+    process.env.STRIPE_PRICE_ID = "price_test_123";
+  });
+
+  it("primeira assinatura: não pré-cria Customer, usa o e-mail e liga o checkout à loja", async () => {
+    await run();
+
+    expect(state.sessionParams).toMatchObject({
+      mode: "subscription",
+      customer_email: "maria@loja.com",
+      client_reference_id: "loja-1",
+      locale: "pt-BR",
+      line_items: [{ price: "price_test_123", quantity: 1 }],
+      subscription_data: { metadata: { store_id: "loja-1" } },
+    });
+    expect(state.sessionParams).not.toHaveProperty("customer");
+    expect(state.sessionParams).not.toHaveProperty("payment_method_types");
+    expect(state.redirected).toBe("https://checkout.stripe.com/c/pay/cs_test_1");
+  });
+
+  it("quem já foi cliente reaproveita o Customer do Stripe", async () => {
+    state.subscription = { stripe_customer_id: "cus_9", stripe_subscription_id: "sub_old", status: "canceled", trial_ends_at: null };
+    await run();
+
+    expect(state.sessionParams).toMatchObject({ customer: "cus_9" });
+    expect(state.sessionParams).not.toHaveProperty("customer_email");
+  });
+
+  it("assinando dentro do teste grátis, preserva os dias restantes (trial_end) ", async () => {
+    const ends = new Date(Date.now() + 10 * 86_400_000).toISOString();
+    state.subscription = { stripe_customer_id: null, stripe_subscription_id: null, status: "trialing", trial_ends_at: ends };
+    await run();
+
+    const data = state.sessionParams?.subscription_data as { trial_end?: number };
+    expect(data.trial_end).toBe(Math.floor(new Date(ends).getTime() / 1000));
+  });
+
+  it("conta que não é a dona não abre cobrança e volta com o aviso", async () => {
+    state.notOwner = "outra conta";
+    await run();
+
+    expect(state.sessionParams).toBeNull();
+    expect(state.redirected).toBe("/admin/configuracoes?checkout=outra-conta");
+  });
+});
