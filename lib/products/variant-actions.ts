@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getActiveStore } from "@/lib/store/get-active-store";
+import { getNotOwnerError } from "@/lib/store/ownership";
 
 const variantSchema = z.object({
   name: z.string().min(1, "Informe o nome da variação"),
@@ -82,6 +83,8 @@ export async function createVariant(
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   const store = await getActiveStore();
+  const notOwnerError = await getNotOwnerError(store);
+  if (notOwnerError) return { error: notOwnerError };
   const supabase = await createServerSupabaseClient();
   if (!(await assertProductBelongsToStore(supabase, productId))) {
     return { error: "Produto não encontrado." };
@@ -134,6 +137,8 @@ export async function updateVariant(
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   const store = await getActiveStore();
+  const notOwnerError = await getNotOwnerError(store);
+  if (notOwnerError) return { error: notOwnerError };
   const supabase = await createServerSupabaseClient();
   if (!(await assertProductBelongsToStore(supabase, productId))) {
     return { error: "Produto não encontrado." };

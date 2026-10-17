@@ -62,6 +62,8 @@ export async function updateCategory(
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   const store = await getActiveStore();
+  const notOwnerError = await getNotOwnerError(store);
+  if (notOwnerError) return { error: notOwnerError };
   const supabase = await createServerSupabaseClient();
   const { error } = await supabase
     .from("categories")

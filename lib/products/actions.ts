@@ -180,6 +180,8 @@ export async function updateProduct(
  */
 export async function refreshProductSlug(productId: string): Promise<ProductFormState> {
   const store = await getActiveStore();
+  const notOwnerError = await getNotOwnerError(store);
+  if (notOwnerError) return { error: notOwnerError };
   const supabase = await createServerSupabaseClient();
 
   const { data: product } = await supabase

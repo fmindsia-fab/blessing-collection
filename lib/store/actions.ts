@@ -7,6 +7,7 @@ import { getActiveStore } from "@/lib/store/get-active-store";
 import { parseBrandColors } from "@/lib/store/branding";
 import { isCuratedFont } from "@/lib/store/fonts";
 import { normalizeWhatsappBR } from "@/lib/customers/phone-mask";
+import { getNotOwnerError } from "@/lib/store/ownership";
 import {
   craftProfileSettingsShape,
   marketplaceExtrasColumns,
@@ -77,6 +78,8 @@ export async function updateStoreSettings(
   if ("error" in palette) return { error: palette.error };
 
   const store = await getActiveStore();
+  const notOwnerError = await getNotOwnerError(store);
+  if (notOwnerError) return { error: notOwnerError };
   const supabase = await createServerSupabaseClient();
   const { error } = await supabase
     .from("stores")
@@ -141,6 +144,8 @@ export async function uploadBrandFont(
   if (!displayName) return { error: "Dê um nome para identificar a fonte." };
 
   const store = await getActiveStore();
+  const notOwnerError = await getNotOwnerError(store);
+  if (notOwnerError) return { error: notOwnerError };
   const supabase = await createServerSupabaseClient();
   const bucket = supabase.storage.from(FONT_BUCKET);
 
@@ -174,6 +179,8 @@ export async function uploadBrandFont(
 // Volta para a lista curada sem apagar o arquivo do Storage.
 export async function removeBrandFont(): Promise<StoreSettingsFormState> {
   const store = await getActiveStore();
+  const notOwnerError = await getNotOwnerError(store);
+  if (notOwnerError) return { error: notOwnerError };
   const supabase = await createServerSupabaseClient();
 
   const { error } = await supabase
@@ -209,6 +216,8 @@ export async function uploadStoreLogo(
   }
 
   const store = await getActiveStore();
+  const notOwnerError = await getNotOwnerError(store);
+  if (notOwnerError) return { error: notOwnerError };
   const supabase = await createServerSupabaseClient();
   const bucket = supabase.storage.from(LOGO_BUCKET);
 

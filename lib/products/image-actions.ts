@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getActiveStore } from "@/lib/store/get-active-store";
+import { getNotOwnerError } from "@/lib/store/ownership";
 
 // 10MB — ampliado do limite original de 5MB do PRD 13.1 a pedido do usuário,
 // para acomodar fotos de câmera sem recompressão prévia.
@@ -56,6 +57,8 @@ export async function uploadProductImage(
   }
 
   const store = await getActiveStore();
+  const notOwnerError = await getNotOwnerError(store);
+  if (notOwnerError) return { error: notOwnerError };
   const supabase = await createServerSupabaseClient();
 
   if (!(await assertProductBelongsToStore(supabase, productId))) {

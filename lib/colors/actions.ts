@@ -5,6 +5,7 @@ import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { slugify } from "@/lib/utils";
+import { getNotOwnerError } from "@/lib/store/ownership";
 
 // Mesmo formato do check da migration 0013: #rgb ou #rrggbb.
 const HEX = /^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/;
@@ -53,6 +54,8 @@ export async function createColor(
   if (!slug) return { error: "O nome precisa ter ao menos uma letra ou número." };
 
   const store = await getActiveStore();
+  const notOwnerError = await getNotOwnerError(store);
+  if (notOwnerError) return { error: notOwnerError };
   const supabase = await createServerSupabaseClient();
 
   const { error } = await supabase.from("colors").insert({
@@ -85,6 +88,8 @@ export async function updateColor(
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   const store = await getActiveStore();
+  const notOwnerError = await getNotOwnerError(store);
+  if (notOwnerError) return { error: notOwnerError };
   const supabase = await createServerSupabaseClient();
 
   // O slug não muda ao renomear: ele está nos links de filtro que a

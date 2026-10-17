@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getActiveStore } from "@/lib/store/get-active-store";
+import { getNotOwnerError } from "@/lib/store/ownership";
 
 export type PricingFormState = {
   error?: string;
@@ -59,6 +60,8 @@ export async function updatePricingSettings(
   const taxPercent = data.taxRegime === "simples" || data.taxRegime === "other" ? data.taxPercent : 0;
 
   const store = await getActiveStore();
+  const notOwnerError = await getNotOwnerError(store);
+  if (notOwnerError) return { error: notOwnerError };
   const supabase = await createServerSupabaseClient();
 
   // Upsert: a loja pode ainda não ter linha em store_private (migration 0037).
@@ -107,6 +110,8 @@ export async function createPaymentMethod(
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   const store = await getActiveStore();
+  const notOwnerError = await getNotOwnerError(store);
+  if (notOwnerError) return { error: notOwnerError };
   const supabase = await createServerSupabaseClient();
 
   const { count } = await supabase
@@ -227,6 +232,8 @@ export async function addProductMaterial(
   let catalogSnapshot: { name: string; unit: string; unit_cost: number } | null = null;
   if (isCatalogMaterial) {
     const store = await getActiveStore();
+  const notOwnerError = await getNotOwnerError(store);
+  if (notOwnerError) return { error: notOwnerError };
     const { data: material } = await supabase
       .from("materials")
       .select("name, unit, unit_cost")
@@ -363,6 +370,8 @@ export async function createMaterial(
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   const store = await getActiveStore();
+  const notOwnerError = await getNotOwnerError(store);
+  if (notOwnerError) return { error: notOwnerError };
   const supabase = await createServerSupabaseClient();
 
   const { count } = await supabase

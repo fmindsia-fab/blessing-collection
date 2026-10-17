@@ -7,6 +7,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { calculateOrderTotal } from "@/lib/orders/calculate";
 import type { OrderStatus } from "@/types/database.types";
+import { getNotOwnerError } from "@/lib/store/ownership";
 
 export type OrderFormState = {
   error?: string;
@@ -112,6 +113,8 @@ export async function createOrder(
   }
 
   const store = await getActiveStore();
+  const notOwnerError = await getNotOwnerError(store);
+  if (notOwnerError) return { error: notOwnerError };
   const supabase = await createServerSupabaseClient();
 
   if (!(await assertCustomerBelongsToStore(supabase, store.id, data.customerId))) {
@@ -187,6 +190,8 @@ export async function updateOrder(
   }
 
   const store = await getActiveStore();
+  const notOwnerError = await getNotOwnerError(store);
+  if (notOwnerError) return { error: notOwnerError };
   const supabase = await createServerSupabaseClient();
 
   const { data: existing } = await supabase
