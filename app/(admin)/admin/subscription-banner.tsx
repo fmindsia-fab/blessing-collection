@@ -46,6 +46,26 @@ export async function SubscriptionBanner({ storeId }: { storeId: string }) {
 
   if (hasAccess) return null;
 
+  // Passou da carência, mas a assinatura do Stripe ainda existe: o caminho é
+  // regularizar o pagamento no portal. "Assinar agora" criaria uma 2ª assinatura.
+  if (subscription?.status === "past_due" && subscription.stripe_customer_id) {
+    return (
+      <div
+        role="status"
+        className="flex flex-col gap-3 border-b border-border bg-[var(--gold)]/15 px-6 py-3 sm:flex-row sm:items-center sm:justify-between lg:px-10"
+      >
+        <p className="text-sm">
+          Seu catálogo está fora do ar por falta de pagamento. Atualize a forma de pagamento para reativá-lo.
+        </p>
+        <form action={openBillingPortal}>
+          <Button type="submit" size="sm">
+            Atualizar forma de pagamento
+          </Button>
+        </form>
+      </div>
+    );
+  }
+
   // trialing aqui significa trial vencido que o job de normalização ainda
   // não marcou como expired.
   const trialEnded =

@@ -46,6 +46,11 @@ vi.mock("@/lib/stripe/client", () => ({
         }),
       },
     },
+    billingPortal: {
+      sessions: {
+        create: vi.fn(async () => ({ url: "https://billing.stripe.com/p/session/test_1" })),
+      },
+    },
     customers: { create: vi.fn(async () => { throw new Error("não deve criar Customer antes do Checkout"); }) },
   },
 }));
@@ -108,5 +113,36 @@ describe("startCheckout", () => {
 
     expect(state.sessionParams).toBeNull();
     expect(state.redirected).toBe("/admin/configuracoes?checkout=outra-conta");
+  });
+
+  it("quem já tem assinatura viva no Stripe (ex.: pagamento em atraso) vai para o portal, nunca para um 2º checkout", async () => {
+    for (const status of ["active", "past_due", "trialing"]) {
+      state.sessionParams = null;
+      state.redirected = null;
+      state.subscription = {
+        stripe_customer_id: "cus_9",
+        stripe_subscription_id: "sub_vivo",
+        status,
+        trial_ends_at: null,
+      };
+
+      await run();
+
+      expect(state.sessionParams, `status ${status}`).toBeNull();
+      expect(state.redirected, `status ${status}`).toBe("https://billing.stripe.com/p/session/test_1");
+    }
+  });
+
+  it("assinatura já encerrada no Stripe (cancelada) pode assinar de novo", async () => {
+    state.subscription = {
+      stripe_customer_id: "cus_9",
+      stripe_subscription_id: "sub_morta",
+      status: "canceled",
+      trial_ends_at: null,
+    };
+
+    await run();
+
+    expect(state.sessionParams).toMatchObject({ mode: "subscription", customer: "cus_9" });
   });
 });

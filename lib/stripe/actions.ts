@@ -36,6 +36,17 @@ export async function startCheckout() {
     .eq("store_id", store.id)
     .maybeSingle();
 
+  // Já existe uma assinatura VIVA no Stripe (ativa, em teste ou com pagamento em
+  // atraso): criar outra cobraria em dobro. O caminho certo é o portal (atualizar
+  // cartão, desfazer cancelamento). Cobre botão antigo em aba aberta e duplo clique.
+  if (
+    subscription?.stripe_subscription_id &&
+    subscription.stripe_customer_id &&
+    ["active", "past_due", "trialing"].includes(subscription.status)
+  ) {
+    await openBillingPortal();
+  }
+
   // Dias que sobram do teste grátis próprio são preservados: cobra só no fim.
   const trialEnd = computeCheckoutTrialEnd(subscription ?? null, new Date());
 
