@@ -11,6 +11,7 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useCaptcha } from "@/components/shared/turnstile";
 
 const loginSchema = z.object({
   email: z.string().email("Informe um e-mail válido"),
@@ -23,6 +24,7 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const captcha = useCaptcha();
 
   const {
     register,
@@ -33,7 +35,12 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
   async function onSubmit(values: LoginFormValues) {
     setServerError(null);
     const supabase = createBrowserSupabaseClient();
-    const { error } = await supabase.auth.signInWithPassword(values);
+    const { error } = await supabase.auth.signInWithPassword({
+      ...values,
+      options: { captchaToken: captcha.token },
+    });
+    // Cada token vale uma verificação só: pede outro depois de cada tentativa.
+    captcha.reset();
 
     if (error) {
       setServerError("E-mail ou senha inválidos.");
@@ -84,7 +91,9 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
 
       {serverError ? <p className="text-sm text-destructive">{serverError}</p> : null}
 
-      <Button type="submit" disabled={isSubmitting} className="mt-2">
+      {captcha.widget}
+
+      <Button type="submit" disabled={isSubmitting || captcha.required} className="mt-2">
         {isSubmitting ? "Entrando..." : "Entrar"}
       </Button>
     </form>

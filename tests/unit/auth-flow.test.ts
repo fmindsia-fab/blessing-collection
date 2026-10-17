@@ -6,7 +6,7 @@ const { state } = vi.hoisted(() => ({
     verifyOtpError: null as { message: string } | null,
     verifyOtpCalls: [] as { type: string; token_hash: string }[],
     resetError: null as { status?: number; message: string } | null,
-    resetCalls: [] as { email: string; redirectTo: string | undefined }[],
+    resetCalls: [] as { email: string; redirectTo: string | undefined; captchaToken: string | undefined }[],
   },
 }));
 
@@ -17,8 +17,15 @@ vi.mock("@/lib/supabase/server", () => ({
         state.verifyOtpCalls.push(params);
         return { error: state.verifyOtpError };
       },
-      resetPasswordForEmail: async (email: string, options?: { redirectTo?: string }) => {
-        state.resetCalls.push({ email, redirectTo: options?.redirectTo });
+      resetPasswordForEmail: async (
+        email: string,
+        options?: { redirectTo?: string; captchaToken?: string },
+      ) => {
+        state.resetCalls.push({
+          email,
+          redirectTo: options?.redirectTo,
+          captchaToken: options?.captchaToken,
+        });
         return { error: state.resetError };
       },
     },
@@ -123,5 +130,34 @@ describe("requestPasswordReset", () => {
       error: expect.stringMatching(/e-mail válido/i),
     });
     expect(state.resetCalls).toHaveLength(0);
+  });
+});
+
+describe("requestPasswordReset — CAPTCHA", () => {
+  it("repassa o token do CAPTCHA ao Supabase", async () => {
+    const fd = formWith("maria@email.com");
+    fd.set("captchaToken", "TOKEN-XYZ");
+
+    await requestPasswordReset({}, fd);
+
+    expect(state.resetCalls[0].captchaToken).toBe("TOKEN-XYZ");
+  });
+
+  it("sem CAPTCHA configurado (campo vazio), não envia token nenhum", async () => {
+    const fd = formWith("maria@email.com");
+    fd.set("captchaToken", "");
+
+    await requestPasswordReset({}, fd);
+
+    expect(state.resetCalls[0].captchaToken).toBeUndefined();
+  });
+
+  it("CAPTCHA recusado não vira o falso 'verifique seu e-mail'", async () => {
+    state.resetError = { status: 400, message: "captcha verification process failed" };
+
+    const result = await requestPasswordReset({}, formWith("maria@email.com"));
+
+    expect(result).toMatchObject({ error: expect.stringMatching(/CAPTCHA/) });
+    expect(result.success).toBeUndefined();
   });
 });

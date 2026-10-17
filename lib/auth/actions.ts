@@ -27,9 +27,20 @@ export async function requestPasswordReset(
   // O link do e-mail volta para o host de onde o pedido saiu (apex ou
   // subdomínio da loja), porque a sessão de login é por host.
   const siteUrl = await getSiteUrl();
+  // Com CAPTCHA ligado no Supabase Auth o token é obrigatório; sem ele (CAPTCHA
+  // desligado) o campo vem vazio e é ignorado.
+  const captchaToken = String(formData.get("captchaToken") ?? "") || undefined;
+
   const { error } = await supabase.auth.resetPasswordForEmail(parsed.data, {
     redirectTo: `${siteUrl}/auth/confirm?next=${encodeURIComponent("/redefinir-senha")}`,
+    captchaToken,
   });
+
+  // CAPTCHA recusado não pode virar o "verifique seu e-mail" genérico: nada foi
+  // enviado, e a pessoa ficaria esperando um e-mail que não vem.
+  if (error?.message?.toLowerCase().includes("captcha")) {
+    return { error: "Não foi possível verificar o CAPTCHA. Recarregue a página e tente de novo." };
+  }
 
   if (error?.status === 429) {
     return { error: "Muitas tentativas. Aguarde um minuto e tente de novo." };

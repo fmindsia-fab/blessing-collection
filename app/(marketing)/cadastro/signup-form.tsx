@@ -17,6 +17,7 @@ import { ConfirmEmailNotice } from "./confirm-email-notice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useCaptcha } from "@/components/shared/turnstile";
 
 type SignupFormValues = z.infer<typeof signupSchema>;
 type StoreFormInput = z.input<typeof createStoreSchema>;
@@ -31,6 +32,7 @@ export function SignupForm({ platformDomain }: { platformDomain: string }) {
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
 
   const accountForm = useForm<SignupFormValues>({ resolver: zodResolver(signupSchema) });
+  const captcha = useCaptcha();
 
   // O link do e-mail volta para este mesmo host (/auth/confirm), que valida o
   // token e segue para a criação da loja.
@@ -42,8 +44,10 @@ export function SignupForm({ platformDomain }: { platformDomain: string }) {
     const supabase = createBrowserSupabaseClient();
     const { data, error } = await supabase.auth.signUp({
       ...values,
-      options: { emailRedirectTo: emailRedirectTo() },
+      options: { emailRedirectTo: emailRedirectTo(), captchaToken: captcha.token },
     });
+    // Token de uso único: renova o CAPTCHA para a próxima tentativa.
+    captcha.reset();
 
     if (error) {
       setAccountError(
@@ -109,7 +113,13 @@ export function SignupForm({ platformDomain }: { platformDomain: string }) {
 
         {accountError ? <p className="text-sm text-destructive">{accountError}</p> : null}
 
-        <Button type="submit" disabled={accountForm.formState.isSubmitting} className="mt-2">
+        {captcha.widget}
+
+        <Button
+          type="submit"
+          disabled={accountForm.formState.isSubmitting || captcha.required}
+          className="mt-2"
+        >
           {accountForm.formState.isSubmitting ? "Criando conta..." : "Continuar"}
         </Button>
       </form>

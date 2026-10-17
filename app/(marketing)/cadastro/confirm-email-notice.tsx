@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { useCaptcha } from "@/components/shared/turnstile";
 
 const RESEND_COOLDOWN_SECONDS = 60;
 
@@ -22,6 +23,7 @@ export function ConfirmEmailNotice({
   const [now, setNow] = useState(() => Date.now());
   const [feedback, setFeedback] = useState<{ ok: boolean; text: string } | null>(null);
   const [sending, setSending] = useState(false);
+  const captcha = useCaptcha();
 
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
@@ -37,9 +39,10 @@ export function ConfirmEmailNotice({
     const { error } = await supabase.auth.resend({
       type: "signup",
       email,
-      options: { emailRedirectTo },
+      options: { emailRedirectTo, captchaToken: captcha.token },
     });
     setSending(false);
+    captcha.reset();
 
     if (error) {
       setFeedback({
@@ -68,7 +71,13 @@ export function ConfirmEmailNotice({
       </div>
 
       <div className="flex flex-col items-center gap-2">
-        <Button type="button" variant="outline" onClick={resend} disabled={sending || remaining > 0}>
+        {captcha.widget}
+        <Button
+          type="button"
+          variant="outline"
+          onClick={resend}
+          disabled={sending || remaining > 0 || captcha.required}
+        >
           {sending ? "Reenviando..." : remaining > 0 ? `Reenviar e-mail (${remaining}s)` : "Reenviar e-mail"}
         </Button>
         {feedback ? (

@@ -5,11 +5,13 @@ import { requestPasswordReset, type PasswordResetRequestState } from "@/lib/auth
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useCaptcha } from "@/components/shared/turnstile";
 
 const INITIAL_STATE: PasswordResetRequestState = {};
 
 export function ForgotPasswordForm() {
   const [state, formAction, isPending] = useActionState(requestPasswordReset, INITIAL_STATE);
+  const captcha = useCaptcha();
 
   if (state.success) {
     return (
@@ -24,11 +26,21 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <form action={formAction} className="flex flex-col gap-4">
+    <form
+      action={(formData) => {
+        formAction(formData);
+        // O token já foi lido do formulário acima; pede outro para a próxima tentativa.
+        captcha.reset();
+      }}
+      className="flex flex-col gap-4"
+    >
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="email">E-mail</Label>
         <Input id="email" name="email" type="email" autoComplete="email" required />
       </div>
+
+      <input type="hidden" name="captchaToken" value={captcha.token ?? ""} />
+      {captcha.widget}
 
       {state.error ? (
         <p role="alert" className="text-sm text-destructive">
@@ -36,7 +48,7 @@ export function ForgotPasswordForm() {
         </p>
       ) : null}
 
-      <Button type="submit" disabled={isPending} className="mt-2">
+      <Button type="submit" disabled={isPending || captcha.required} className="mt-2">
         {isPending ? "Enviando..." : "Enviar link"}
       </Button>
     </form>
