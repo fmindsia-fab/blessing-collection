@@ -79,16 +79,6 @@ export interface Database {
           /** Fonte própria (.woff2 no Storage). Precede font_family quando presente. */
           custom_font_url: string | null;
           custom_font_name: string | null;
-          /** Precificação (migration 0014) — valores mensais, nunca por hora. */
-          monthly_pay: number;
-          monthly_fixed_cost: number;
-          productive_hours_per_month: number;
-          tax_regime: TaxRegime;
-          tax_percent: number;
-          default_pricing_method: PricingMethodValue;
-          default_margin_percent: number;
-          /** Chave PIX (migration 0026) — usada na cobrança que a proprietária monta pro cliente. */
-          pix_key: string | null;
           /** Perfil do ateliê para o marketplace (migration 0034). */
           city: string | null;
           state: string | null;
@@ -120,14 +110,6 @@ export interface Database {
           font_family?: FontFamily;
           custom_font_url?: string | null;
           custom_font_name?: string | null;
-          monthly_pay?: number;
-          monthly_fixed_cost?: number;
-          productive_hours_per_month?: number;
-          tax_regime?: TaxRegime;
-          tax_percent?: number;
-          default_pricing_method?: PricingMethodValue;
-          default_margin_percent?: number;
-          pix_key?: string | null;
           city?: string | null;
           state?: string | null;
           craft_types?: string[];
