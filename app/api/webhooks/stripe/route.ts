@@ -144,6 +144,19 @@ async function syncSubscription(
     return;
   }
 
+  // Cortesia (cliente sem cobrança, ex.: a Blessing) NUNCA é sobrescrita por um
+  // evento do Stripe: uma assinatura de teste esquecida, ou criada por engano com o
+  // store_id dessa loja, faria a loja perder a cortesia (e, ao cancelar, o acesso).
+  const { data: existing } = await supabase
+    .from("store_subscriptions")
+    .select("billing_type")
+    .eq("store_id", storeId)
+    .maybeSingle();
+  if (existing?.billing_type === "complimentary") {
+    console.error("[stripe-webhook] ignorando evento para loja em cortesia", subscription.id, storeId);
+    return;
+  }
+
   const customerId =
     typeof subscription.customer === "string" ? subscription.customer : subscription.customer.id;
   const priceId = subscription.items.data[0]?.price.id ?? null;

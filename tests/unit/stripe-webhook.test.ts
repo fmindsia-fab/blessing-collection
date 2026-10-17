@@ -7,6 +7,7 @@ const { state } = vi.hoisted(() => ({
     upsertedSubscription: null as Record<string, unknown> | null,
     storesTouched: false,
     upsertError: null as { code: string; message: string } | null,
+    existingBillingType: null as string | null,
     retrievedSubscriptionId: null as string | null,
     subscriptionToReturn: null as Record<string, unknown> | null,
   },
@@ -34,6 +35,14 @@ vi.mock("@/app/api/webhooks/stripe/service-role-client", () => ({
     from: (table: string) => {
       if (table === "store_subscriptions") {
         return {
+          select: () => ({
+            eq: () => ({
+              maybeSingle: async () => ({
+                data: state.existingBillingType ? { billing_type: state.existingBillingType } : null,
+                error: null,
+              }),
+            }),
+          }),
           upsert: (payload: Record<string, unknown>) => {
             state.upsertedSubscription = payload;
             return Promise.resolve({ error: state.upsertError });
@@ -76,6 +85,7 @@ describe("webhook do Stripe", () => {
     state.upsertedSubscription = null;
     state.storesTouched = false;
     state.upsertError = null;
+    state.existingBillingType = null;
     state.retrievedSubscriptionId = null;
     state.subscriptionToReturn = null;
   });
@@ -251,5 +261,18 @@ describe("webhook do Stripe", () => {
     await POST(makeRequest("{}"));
 
     expect(state.upsertedSubscription).toMatchObject({ cancel_at_period_end: false, cancel_at: null });
+  });
+
+  it("loja em cortesia nunca é sobrescrita por um evento do Stripe", async () => {
+    state.existingBillingType = "complimentary";
+    const subscription = makeSubscription({ status: "active" });
+    state.event = { type: "customer.subscription.updated", data: { object: subscription } };
+    state.subscriptionToReturn = subscription;
+
+    const { POST } = await import("@/app/api/webhooks/stripe/route");
+    const res = await POST(makeRequest("{}"));
+
+    expect(res.status).toBe(200);
+    expect(state.upsertedSubscription).toBeNull();
   });
 });
