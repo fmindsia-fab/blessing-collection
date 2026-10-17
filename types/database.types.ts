@@ -187,6 +187,8 @@ export interface Database {
           billing_type: BillingType;
           /** Cancelamento agendado no portal do Stripe (migration 0040). */
           cancel_at_period_end: boolean;
+          /** Data do cancelamento agendado (migration 0041). */
+          cancel_at: string | null;
           price_id: string | null;
           trial_started_at: string | null;
           trial_ends_at: string | null;
@@ -202,6 +204,7 @@ export interface Database {
           status?: SubscriptionStatus;
           billing_type?: BillingType;
           cancel_at_period_end?: boolean;
+          cancel_at?: string | null;
           price_id?: string | null;
           trial_started_at?: string | null;
           trial_ends_at?: string | null;

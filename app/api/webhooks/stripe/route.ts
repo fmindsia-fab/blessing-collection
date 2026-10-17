@@ -162,7 +162,10 @@ async function syncSubscription(
       stripe_subscription_id: subscription.id,
       status,
       billing_type: "stripe",
-      cancel_at_period_end: subscription.cancel_at_period_end ?? false,
+      // O portal agenda o cancelamento em `cancel_at` (data) e pode deixar
+      // `cancel_at_period_end` false nas versões atuais da API: vale qualquer um.
+      cancel_at_period_end: Boolean(subscription.cancel_at_period_end || subscription.cancel_at),
+      cancel_at: subscription.cancel_at ? new Date(subscription.cancel_at * 1000).toISOString() : null,
       price_id: priceId,
       current_period_end: currentPeriodEnd ? new Date(currentPeriodEnd * 1000).toISOString() : null,
       ...(trialEnd ? { trial_ends_at: new Date(trialEnd * 1000).toISOString() } : {}),

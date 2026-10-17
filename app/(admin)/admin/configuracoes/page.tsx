@@ -40,7 +40,7 @@ export default async function AdminSettingsPage({
   const { data: subscription } = await supabase
     .from("store_subscriptions")
     .select(
-      "status, billing_type, stripe_customer_id, stripe_subscription_id, trial_ends_at, current_period_end, cancel_at_period_end",
+      "status, billing_type, stripe_customer_id, stripe_subscription_id, trial_ends_at, current_period_end, cancel_at_period_end, cancel_at",
     )
     .eq("store_id", store.id)
     .maybeSingle();
@@ -96,6 +96,7 @@ export default async function AdminSettingsPage({
         trialEndsAt={subscription?.trial_ends_at ?? null}
         currentPeriodEnd={subscription?.current_period_end ?? null}
         cancelAtPeriodEnd={subscription?.cancel_at_period_end ?? false}
+        cancelAt={subscription?.cancel_at ?? null}
         planPriceLabel={planPriceLabel}
       />
     </div>

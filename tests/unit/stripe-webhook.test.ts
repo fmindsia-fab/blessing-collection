@@ -226,4 +226,30 @@ describe("webhook do Stripe", () => {
 
     expect(res.status).toBe(500);
   });
+
+  it("cancelamento pelo portal chega em cancel_at (com cancel_at_period_end=false): conta como agendado", async () => {
+    const cancelAt = 1794834981; // 16/11/2026
+    const subscription = makeSubscription({ status: "trialing", cancel_at_period_end: false, cancel_at: cancelAt });
+    state.event = { type: "customer.subscription.updated", data: { object: subscription } };
+    state.subscriptionToReturn = subscription;
+
+    const { POST } = await import("@/app/api/webhooks/stripe/route");
+    await POST(makeRequest("{}"));
+
+    expect(state.upsertedSubscription).toMatchObject({
+      cancel_at_period_end: true,
+      cancel_at: new Date(cancelAt * 1000).toISOString(),
+    });
+  });
+
+  it("sem cancelamento, os dois campos ficam limpos", async () => {
+    const subscription = makeSubscription({ status: "active", cancel_at_period_end: false, cancel_at: null });
+    state.event = { type: "customer.subscription.updated", data: { object: subscription } };
+    state.subscriptionToReturn = subscription;
+
+    const { POST } = await import("@/app/api/webhooks/stripe/route");
+    await POST(makeRequest("{}"));
+
+    expect(state.upsertedSubscription).toMatchObject({ cancel_at_period_end: false, cancel_at: null });
+  });
 });

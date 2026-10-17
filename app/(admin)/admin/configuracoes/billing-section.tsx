@@ -22,6 +22,7 @@ export type BillingSectionProps = {
   trialEndsAt: string | null;
   currentPeriodEnd: string | null;
   cancelAtPeriodEnd: boolean;
+  cancelAt: string | null;
   planPriceLabel: string | null;
 };
 
@@ -33,6 +34,7 @@ export function BillingSection({
   trialEndsAt,
   currentPeriodEnd,
   cancelAtPeriodEnd,
+  cancelAt,
   planPriceLabel,
 }: BillingSectionProps) {
   // Cortesia (ex.: cliente sem cobrança): nada a pagar nem a gerenciar.
@@ -50,19 +52,29 @@ export function BillingSection({
   const managedByStripe = hasStripeSubscription && (status === "active" || status === "past_due" || status === "trialing");
 
   const details: string[] = [];
-  if (status === "trialing" && trialEndsAt) {
+  // Cancelamento agendado vale para assinatura ativa OU ainda no teste do Stripe:
+  // nos dois casos não haverá nova cobrança, e a data de fim vem do Stripe.
+  const cancelScheduled = managedByStripe && cancelAtPeriodEnd && (status === "active" || status === "trialing");
+  const accessUntil = cancelAt ?? (status === "trialing" ? trialEndsAt : currentPeriodEnd);
+
+  if (cancelScheduled && accessUntil) {
     details.push(
-      managedByStripe
-        ? `Assinatura confirmada. A primeira cobrança será em ${formatDate(trialEndsAt)}.`
-        : `Teste grátis até ${formatDate(trialEndsAt)}.`,
+      status === "trialing"
+        ? `Cancelamento agendado: você pode usar até ${formatDate(accessUntil)} e não será cobrado.`
+        : `Cancelamento agendado: o acesso vai até ${formatDate(accessUntil)}.`,
     );
-  }
-  if (status === "active" && currentPeriodEnd) {
-    details.push(
-      cancelAtPeriodEnd
-        ? `Cancelamento agendado: o acesso vai até ${formatDate(currentPeriodEnd)}.`
-        : `Próxima renovação em ${formatDate(currentPeriodEnd)}.`,
-    );
+    details.push("Para continuar, abra \"Gerenciar assinatura\" e desfaça o cancelamento.");
+  } else {
+    if (status === "trialing" && trialEndsAt) {
+      details.push(
+        managedByStripe
+          ? `Assinatura confirmada. A primeira cobrança será em ${formatDate(trialEndsAt)}.`
+          : `Teste grátis até ${formatDate(trialEndsAt)}.`,
+      );
+    }
+    if (status === "active" && currentPeriodEnd) {
+      details.push(`Próxima renovação em ${formatDate(currentPeriodEnd)}.`);
+    }
   }
   if (status === "past_due") {
     details.push("Não conseguimos cobrar a sua assinatura. Atualize a forma de pagamento para manter o catálogo no ar.");
