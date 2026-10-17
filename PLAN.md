@@ -720,7 +720,7 @@ aplicadas e que o bucket `product-images` é público de propósito (é: as imag
 ## 9. Riscos a vigiar
 
 1. RLS mal configurada expondo `analytics_events` a não-owner — mitigado pela policy de SELECT restrita a owner, testada explicitamente no M3.
-2. `service_role_key` vazando para o client — não é necessária neste MVP (anon key + RLS cobre tudo); se surgir necessidade futura, isolar em rota server-only sem prefixo `NEXT_PUBLIC_`.
+2. `service_role_key` vazando para o client — hoje é usada em dois pontos isolados e server-only (webhook do Stripe e ações do admin da plataforma: `lib/platform/service-role-client.ts`); nunca com prefixo `NEXT_PUBLIC_`.
 3. N+1 em analytics — mitigado por RPCs agregadas; validar com `EXPLAIN ANALYZE` no M7.
 4. Upload de imagem validado só no client — sempre revalidar tipo/tamanho no Server Action/Route Handler antes de gravar no Storage.
 5. Todo botão "excluir" do painel deve ser auditado no code review para confirmar que faz `UPDATE status`, nunca `DELETE`.
@@ -734,6 +734,37 @@ aplicadas e que o bucket `product-images` é público de propósito (é: as imag
 - **M3:** testar manualmente no SQL Editor do Supabase com `set role anon;` vs `set role authenticated;` (simulando `auth.uid()`) para confirmar cada policy antes de sair do milestone.
 - **M4-M6:** rodar a aplicação localmente (`npm run dev`), navegar o fluxo completo como visitante (catálogo → produto → WhatsApp) e como owner (login → CRUD → analytics), conferindo no painel do Supabase que os eventos e alterações batem com o esperado.
 - **M7:** `npx playwright test` para o fluxo E2E principal; `next build` sem erros; checklist manual da seção 16 do PRD antes do deploy final na Vercel.
+
+---
+
+## 11. Evolução SaaS, autenticação e fechamento de segurança (outubro/2026)
+
+Concluído após o M11 (multi-loja por subdomínio, painel da plataforma, trial e assinatura Stripe):
+
+- **Autenticação:** "esqueci minha senha", confirmação de e-mail no cadastro, SMTP próprio (Resend) e modelos de e-mail em `supabase/email-templates/`. Callback único em `app/auth/confirm` (tipos permitidos e `next` seguro).
+- **Login entre domínios:** a sessão é POR HOST (decisão de segurança: cookie `.dominio` ampliaria o estrago de uma falha de script em uma loja). O dono passa do domínio principal para o painel da loja por um **repasse de uso único** (`lib/auth/handoff.ts`, `/auth/handoff`).
+- **Cadastro:** nome e CPF/CNPJ do responsável, cidade/UF (IBGE), tipo de artesanato, perfil de marketplace com consentimento explícito (LGPD).
+- **Billing:** trial de 30 dias por trigger, `store_has_access()` em tempo real, status da loja separado do status da assinatura.
+- **Plataforma:** painel com métricas, exclusão definitiva de loja/conta e de logins órfãos (exceções documentadas no `CLAUDE.md`).
+
+### Auditoria de segurança (skill `supabase-security-audit`, 2026-10-17)
+
+| Achado | Resolução |
+|---|---|
+| Auto-promoção a admin da plataforma via `profiles` | Gatilho `0036` (testado: erro 42501) |
+| Dono reativar loja suspensa / trocar slug e dono | Gatilho `0036` |
+| Pix, salário, custos e margem legíveis por qualquer visitante | Tabela privada `store_private` (`0037`) + remoção das colunas (`0038`); verificado ao vivo |
+| Buckets sem limite de tamanho/tipo | Limites na `0036`, confirmados |
+| Cabeçalhos de segurança, URL da fonte (CSS), formato do slug, `.env.example` | Corrigidos |
+| Várias lojas por usuário (abuso do trial) | `unique(owner_user_id)` (`0039`) |
+| Ações de escrita sem aviso de "outra conta" | Guard em todas as ações com retorno de erro |
+| Atualizações por `id` sem `store_id` | Verificado: 13 de 15 já checam a loja do produto antes; 2 pontos de pedidos ajustados |
+
+**Riscos aceitos (conscientes):**
+- `stores.owner_user_id` é legível publicamente: é só um UUID interno que não dá acesso a nada; esconder exigiria revogar a leitura da coluna e reescrever ~24 usos.
+- Revelação de e-mails já cadastrados no cadastro (escolha de usabilidade).
+
+**Pendências que dependem de painéis (não de código):** CAPTCHA (Turnstile) e limite de tentativas no cadastro (Supabase Auth / WAF do Vercel); proteção contra senhas vazadas e validade de sessão (Auth do Supabase).
 
 ---
 

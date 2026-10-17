@@ -165,7 +165,7 @@ export async function createOrder(
     console.error("createOrder (itens) falhou:", itemsError.message);
     // Sem itens, o pedido fica órfão — melhor desfazer do que deixar um
     // registro inconsistente no painel.
-    await supabase.from("orders").delete().eq("id", order.id);
+    await supabase.from("orders").delete().eq("id", order.id).eq("store_id", store.id);
     return { error: "Não foi possível salvar os itens do pedido." };
   }
 
