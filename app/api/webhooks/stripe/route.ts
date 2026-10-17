@@ -155,7 +155,7 @@ async function syncSubscription(
   // aqui — status da loja (administrativo) e da assinatura (comercial) são
   // conceitos separados; o acesso do catálogo vem de store_has_access().
   const trialEnd = subscription.trial_end;
-  await supabase.from("store_subscriptions").upsert(
+  const { error } = await supabase.from("store_subscriptions").upsert(
     {
       store_id: storeId,
       stripe_customer_id: customerId,
@@ -169,4 +169,17 @@ async function syncSubscription(
     },
     { onConflict: "store_id" },
   );
+
+  if (!error) return;
+
+  // 23503 = a loja desta assinatura não existe mais (ex.: conta de teste excluída pelo
+  // admin com assinatura ainda viva no Stripe). Não há o que gravar, e responder 500
+  // faria o Stripe reenviar para sempre — e depois desativar o endpoint inteiro.
+  if (error.code === "23503") {
+    console.error("[stripe-webhook] loja inexistente para a assinatura", subscription.id, storeId);
+    return;
+  }
+
+  // Qualquer outra falha (banco fora do ar, etc.) vira 500 para o Stripe reenviar.
+  throw new Error(`falha ao gravar a assinatura: ${error.code} ${error.message}`);
 }

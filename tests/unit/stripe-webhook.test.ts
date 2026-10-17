@@ -6,6 +6,7 @@ const { state } = vi.hoisted(() => ({
     verifyShouldThrow: false,
     upsertedSubscription: null as Record<string, unknown> | null,
     storesTouched: false,
+    upsertError: null as { code: string; message: string } | null,
     retrievedSubscriptionId: null as string | null,
     subscriptionToReturn: null as Record<string, unknown> | null,
   },
@@ -35,7 +36,7 @@ vi.mock("@/app/api/webhooks/stripe/service-role-client", () => ({
         return {
           upsert: (payload: Record<string, unknown>) => {
             state.upsertedSubscription = payload;
-            return Promise.resolve({ error: null });
+            return Promise.resolve({ error: state.upsertError });
           },
         };
       }
@@ -74,6 +75,7 @@ describe("webhook do Stripe", () => {
     state.verifyShouldThrow = false;
     state.upsertedSubscription = null;
     state.storesTouched = false;
+    state.upsertError = null;
     state.retrievedSubscriptionId = null;
     state.subscriptionToReturn = null;
   });
@@ -195,5 +197,33 @@ describe("webhook do Stripe", () => {
     await POST(makeRequest("{}"));
 
     expect(state.upsertedSubscription).toMatchObject({ status: "active", cancel_at_period_end: true });
+  });
+
+  it("assinatura de uma loja que não existe mais (FK 23503) é ignorada, sem 500 e sem reenvio infinito", async () => {
+    state.upsertError = { code: "23503", message: "violates foreign key constraint" };
+    state.event = {
+      type: "customer.subscription.updated",
+      data: { object: makeSubscription({ status: "active" }) },
+    };
+    state.subscriptionToReturn = makeSubscription({ status: "active" });
+
+    const { POST } = await import("@/app/api/webhooks/stripe/route");
+    const res = await POST(makeRequest("{}"));
+
+    expect(res.status).toBe(200);
+  });
+
+  it("falha real ao gravar vira 500, para o Stripe reenviar o evento", async () => {
+    state.upsertError = { code: "08006", message: "connection failure" };
+    state.event = {
+      type: "customer.subscription.updated",
+      data: { object: makeSubscription({ status: "active" }) },
+    };
+    state.subscriptionToReturn = makeSubscription({ status: "active" });
+
+    const { POST } = await import("@/app/api/webhooks/stripe/route");
+    const res = await POST(makeRequest("{}"));
+
+    expect(res.status).toBe(500);
   });
 });
