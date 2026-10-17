@@ -3,9 +3,10 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 const { state } = vi.hoisted(() => ({
   state: {
     user: { id: "user-1" } as { id: string } | null,
-    insertError: null as { code: string } | null,
+    insertError: null as { code: string; message?: string } | null,
     insertedSlug: null as string | null,
     profile: null as { id: string; full_name: string; document: string } | null,
+    existingStore: null as { id: string } | null,
   },
 }));
 
@@ -27,6 +28,11 @@ vi.mock("@/lib/supabase/server", () => ({
         if (table === "profiles") state.profile = payload;
         return { error: null };
       },
+      select: () => ({
+        eq: () => ({
+          limit: () => ({ maybeSingle: async () => ({ data: state.existingStore, error: null }) }),
+        }),
+      }),
       insert: (payload: { slug: string }) => {
         state.insertedSlug = payload.slug;
         return {
@@ -65,6 +71,7 @@ describe("createStore", () => {
     state.insertError = null;
     state.insertedSlug = null;
     state.profile = null;
+    state.existingStore = null;
   });
 
   it("cria a loja com owner_user_id vindo da sessão, não do formulário", async () => {
@@ -116,5 +123,33 @@ describe("createStore", () => {
 
     expect(result.success).toBeUndefined();
     expect(result.error).toMatch(/já está em uso/i);
+  });
+
+  it("recusa criar uma segunda loja para o mesmo usuário, sem tocar no perfil", async () => {
+    state.existingStore = { id: "loja-existente" };
+    const { createStore } = await import("@/lib/onboarding/actions");
+    const result = await createStore(
+      {},
+      formDataFrom({ ...OWNER, name: "Outra Loja", slug: "outraloja", whatsappNumber: "11999999999" }),
+    );
+
+    expect(result.success).toBeUndefined();
+    expect(result.error).toMatch(/já tem uma loja/i);
+    expect(state.insertedSlug).toBeNull();
+    expect(state.profile).toBeNull();
+  });
+
+  it("corrida: a trava do banco por dono também vira a mensagem de loja já existente", async () => {
+    state.insertError = {
+      code: "23505",
+      message: 'duplicate key value violates unique constraint "stores_owner_user_id_unique"',
+    };
+    const { createStore } = await import("@/lib/onboarding/actions");
+    const result = await createStore(
+      {},
+      formDataFrom({ ...OWNER, name: "Maria Bolsas", slug: "mariabolsas", whatsappNumber: "11999999999" }),
+    );
+
+    expect(result.error).toMatch(/já tem uma loja/i);
   });
 });

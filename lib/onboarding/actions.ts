@@ -50,6 +50,19 @@ export async function createStore(
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
+  // Um usuário por loja: checa ANTES de gravar qualquer coisa (o perfil abaixo
+  // não deve ser alterado por quem não vai criar loja). O banco também garante
+  // (stores_owner_user_id_unique, migration 0039); aqui é só a mensagem amigável.
+  const { data: existingStore } = await supabase
+    .from("stores")
+    .select("id")
+    .eq("owner_user_id", user.id)
+    .limit(1)
+    .maybeSingle();
+  if (existingStore) {
+    return { error: "Você já tem uma loja cadastrada. Entre no painel dela." };
+  }
+
   // profiles.id = auth.uid() (RLS profile_insert_own / profile_update_own).
   // Upsert porque o perfil pode ou não existir ainda para este usuário.
   const { error: profileError } = await supabase.from("profiles").upsert({
@@ -81,6 +94,10 @@ export async function createStore(
     // disponibilidade no client roda antes do submit, mas duas pessoas
     // podem tentar o mesmo slug ao mesmo tempo; o banco é a fonte da verdade.
     if (error.code === "23505") {
+      // Corrida entre duas criações do mesmo usuário (a trava é a do dono).
+      if (error.message?.includes("owner_user_id")) {
+        return { error: "Você já tem uma loja cadastrada. Entre no painel dela." };
+      }
       return { error: "Esse nome já está em uso. Escolha outro." };
     }
     return { error: "Não foi possível criar a loja. Tente novamente." };
