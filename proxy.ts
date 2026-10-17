@@ -21,9 +21,10 @@ async function resolveApexHome(
     .limit(1)
     .maybeSingle();
 
-  const platformDomain = process.env.PLATFORM_DOMAIN;
-  if (store && platformDomain) {
-    return new URL(`https://${store.slug}.${platformDomain}/admin`);
+  // Dono de loja: /auth/handoff gera o login de uso único e leva ao painel da
+  // loja já autenticado (a sessão é por host, ver lib/auth/handoff.ts).
+  if (store && process.env.PLATFORM_DOMAIN) {
+    return new URL("/auth/handoff", request.url);
   }
   return new URL("/cadastro", request.url);
 }

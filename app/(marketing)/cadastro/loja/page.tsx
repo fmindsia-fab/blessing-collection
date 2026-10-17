@@ -17,13 +17,13 @@ export default async function CreateStorePage() {
   // Um usuário por loja: quem já criou a sua vai direto para o painel dela.
   const { data: existing } = await supabase
     .from("stores")
-    .select("slug")
+    .select("id")
     .eq("owner_user_id", user.id)
     .order("created_at", { ascending: true })
     .limit(1)
     .maybeSingle();
 
-  if (existing && platformDomain) redirect(`https://${existing.slug}.${platformDomain}/admin`);
+  if (existing && platformDomain) redirect("/auth/handoff");
 
   return (
     <main className="flex flex-1 items-center justify-center px-6 py-16">

@@ -9,8 +9,9 @@ import { safeNextPath } from "@/lib/auth/safe-next";
 // DESTE host, e então seguimos para `next`.
 //
 // Só aceitamos os tipos que o produto usa — qualquer outro (convite, troca de
-// e-mail, magic link) não faz parte do MVP e é recusado.
-const ALLOWED_TYPES = new Set<EmailOtpType>(["email", "signup", "recovery"]);
+// e-mail) não faz parte do MVP e é recusado. "magiclink" só nasce do repasse de
+// login entre domínios (lib/auth/handoff.ts); o produto não envia magic links por e-mail.
+const ALLOWED_TYPES = new Set<EmailOtpType>(["email", "signup", "recovery", "magiclink"]);
 
 const ERROR_DESTINATION: Partial<Record<EmailOtpType, string>> = {
   recovery: "/esqueci-senha?erro=link-invalido",

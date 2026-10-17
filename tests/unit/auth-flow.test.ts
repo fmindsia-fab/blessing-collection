@@ -88,7 +88,7 @@ describe("GET /auth/confirm", () => {
   });
 
   it("recusa tipos que o produto não usa, sem chamar o Supabase", async () => {
-    const res = await GET(confirmRequest("token_hash=abc&type=magiclink"));
+    const res = await GET(confirmRequest("token_hash=abc&type=invite"));
 
     expect(state.verifyOtpCalls).toHaveLength(0);
     expect(res.headers.get("location")).toBe("https://atelifacil.com.br/login?erro=link-invalido");

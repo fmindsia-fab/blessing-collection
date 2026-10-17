@@ -3,11 +3,14 @@
 import { createStoreSchema } from "@/lib/onboarding/schema";
 import { marketplaceExtrasColumns, toCraftProfileColumns } from "@/lib/store/craft-profile";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { buildStoreHandoff } from "@/lib/auth/handoff";
 
 export type CreateStoreFormState = {
   error?: string;
   success?: boolean;
   storeSlug?: string;
+  // Destino pós-criação: painel da loja já autenticado (repasse), ou o simples.
+  redirectUrl?: string;
 };
 
 // A loja criada aqui pertence sempre ao usuário autenticado na sessão atual
@@ -83,7 +86,10 @@ export async function createStore(
     return { error: "Não foi possível criar a loja. Tente novamente." };
   }
 
-  return { success: true, storeSlug: data.slug };
+  const handoff = await buildStoreHandoff();
+  const redirectUrl = handoff.kind === "ok" ? handoff.url : handoff.kind === "unavailable" ? handoff.fallbackUrl : null;
+
+  return { success: true, storeSlug: data.slug, redirectUrl: redirectUrl ?? undefined };
 }
 
 // Checagem amigável de disponibilidade antes do submit (UX instantânea);

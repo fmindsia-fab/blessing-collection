@@ -9,6 +9,13 @@ const { state } = vi.hoisted(() => ({
   },
 }));
 
+vi.mock("@/lib/auth/handoff", () => ({
+  buildStoreHandoff: async () => ({
+    kind: "ok",
+    url: "https://mariabolsas.atelifacil.com.br/auth/confirm?token_hash=t&type=magiclink&next=%2Fadmin",
+  }),
+}));
+
 vi.mock("@/lib/supabase/server", () => ({
   createServerSupabaseClient: async () => ({
     auth: {
@@ -69,6 +76,8 @@ describe("createStore", () => {
 
     expect(result.success).toBe(true);
     expect(result.storeSlug).toBe("mariabolsas");
+    // O destino já leva o login de uso único para o subdomínio da loja.
+    expect(result.redirectUrl).toContain("https://mariabolsas.atelifacil.com.br/auth/confirm");
     expect(state.insertedSlug).toBe("mariabolsas");
     expect(state.profile).toEqual({ id: "user-1", full_name: "Maria da Silva", document: "52998224725" });
   });

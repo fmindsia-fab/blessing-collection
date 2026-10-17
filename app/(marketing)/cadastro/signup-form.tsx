@@ -163,9 +163,10 @@ export function StoreForm({ platformDomain }: { platformDomain: string }) {
 
   useEffect(() => {
     if (state.success && state.storeSlug) {
-      router.push(`https://${state.storeSlug}.${platformDomain}/admin`);
+      // Preferência: link com login já feito (repasse); senão o painel simples.
+      router.push(state.redirectUrl ?? `https://${state.storeSlug}.${platformDomain}/admin`);
     }
-  }, [state.success, state.storeSlug, platformDomain, router]);
+  }, [state.success, state.storeSlug, state.redirectUrl, platformDomain, router]);
 
   const documentError = documentFeedback(documentValue, documentBlurred);
   const whatsappDigits = whatsappValue.replace(/\D/g, "");
