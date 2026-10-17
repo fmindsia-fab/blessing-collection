@@ -5,7 +5,11 @@ import { BILLING_STATE_LABEL, BILLING_STATE_TONE } from "@/lib/platform/billing-
 import { PageHeading } from "@/components/admin/page-heading";
 import { StatusPill } from "@/components/admin/status-pill";
 import { cn } from "@/lib/utils";
+import { isPlatformAdmin } from "@/lib/platform/get-platform-admin";
+import { createPlatformServiceClient } from "@/lib/platform/service-role-client";
+import { loadOrphanUsers } from "@/lib/platform/orphan-users-server";
 import { StatCard } from "./stat-card";
+import { OrphanUsersSection } from "./orphan-users-section";
 
 type Filter = "todas" | "teste" | "pagas" | "expiradas" | "suspensas";
 
@@ -45,6 +49,12 @@ export default async function PlatformAdminHomePage({
   const filter: Filter = FILTERS.some((f) => f.key === filtro) ? (filtro as Filter) : "todas";
 
   const stores = await listStoresForPlatformAdmin();
+
+  // Logins sem loja (service_role): só carrega depois de confirmar que quem
+  // pede é administrador, independentemente do layout.
+  const orphans = (await isPlatformAdmin())
+    ? await loadOrphanUsers(createPlatformServiceClient(), new Date())
+    : [];
   const now = new Date();
   const metrics = computePlatformMetrics(stores, now);
 
@@ -153,6 +163,16 @@ export default async function PlatformAdminHomePage({
           </ul>
         )}
       </section>
+
+      <OrphanUsersSection
+        orphans={orphans.map((o) => ({
+          id: o.id,
+          email: o.email,
+          createdAt: o.created_at,
+          confirmed: o.confirmed,
+          isRecent: o.isRecent,
+        }))}
+      />
     </div>
   );
 }
