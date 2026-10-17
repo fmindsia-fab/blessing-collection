@@ -1,6 +1,21 @@
 import type { NextConfig } from "next";
 
+// Cabeçalhos de segurança para todas as rotas. frame-ancestors/X-Frame-Options
+// impedem que o painel (/admin, /admin-plataforma) seja embutido em outro site
+// (clickjacking). Uma CSP completa ficou de fora de propósito: o app injeta
+// <style>/scripts inline (tema, fonte da marca) e exigiria nonces.
+const securityHeaders = [
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
+];
+
 const nextConfig: NextConfig = {
+  async headers() {
+    return [{ source: "/:path*", headers: securityHeaders }];
+  },
   images: {
     remotePatterns: [
       {

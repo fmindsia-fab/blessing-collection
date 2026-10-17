@@ -29,8 +29,12 @@ export function isSafeBrandFontUrl(url: string | null | undefined): url is strin
     return (
       parsed.protocol === "https:" &&
       parsed.host === expected.host &&
+      parsed.search === "" &&
+      parsed.hash === "" &&
       parsed.pathname.includes("/brand-fonts/") &&
-      parsed.pathname.endsWith(".woff2")
+      parsed.pathname.endsWith(".woff2") &&
+      // A URL vai para dentro de url('...') num <style>: nada que feche o texto ou a função.
+      !/['"()\\;\s]/.test(decodeURI(parsed.pathname))
     );
   } catch {
     return false;

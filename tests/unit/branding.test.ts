@@ -86,6 +86,17 @@ describe("isSafeBrandFontUrl", () => {
     ).toBe(false);
   });
 
+  // Query/hash e aspas/parênteses permitiriam fechar o url('...') do @font-face
+  // e injetar descritores CSS (encodeURI não escapa ' ( ) ;).
+  it("rejeita query string, hash e caracteres que fecham o url('...')", () => {
+    const base = `${SUPABASE}/storage/v1/object/public/brand-fonts/store-1`;
+    expect(isSafeBrandFontUrl(`${base}/x.woff2?a=1`)).toBe(false);
+    expect(isSafeBrandFontUrl(`${base}/x.woff2#frag`)).toBe(false);
+    expect(isSafeBrandFontUrl(`${base}/x'y.woff2`)).toBe(false);
+    expect(isSafeBrandFontUrl(`${base}/x)y.woff2`)).toBe(false);
+    expect(isSafeBrandFontUrl(`${base}/x;y.woff2`)).toBe(false);
+  });
+
   it("rejeita nulo, vazio e string malformada", () => {
     expect(isSafeBrandFontUrl(null)).toBe(false);
     expect(isSafeBrandFontUrl("")).toBe(false);
