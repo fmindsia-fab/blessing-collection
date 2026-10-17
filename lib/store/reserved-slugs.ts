@@ -10,4 +10,8 @@ export const RESERVED_SLUGS = new Set([
   "mail",
   "suporte",
   "blog",
+  // Registros DNS do Resend (envio de e-mails): send / rsend / resend._domainkey.
+  "send",
+  "rsend",
+  "resend",
 ]);

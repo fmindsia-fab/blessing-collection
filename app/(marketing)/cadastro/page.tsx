@@ -1,6 +1,11 @@
 import { SignupForm } from "./signup-form";
 
-export default function CadastroPage() {
+export default async function CadastroPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ erro?: string }>;
+}) {
+  const { erro } = await searchParams;
   const platformDomain = process.env.PLATFORM_DOMAIN ?? "";
 
   return (
@@ -12,6 +17,19 @@ export default function CadastroPage() {
             Catálogo digital para suas peças, em poucos minutos.
           </p>
         </div>
+
+        {erro === "link-invalido" ? (
+          <p role="alert" className="text-center text-sm text-destructive">
+            O link de confirmação expirou ou já foi usado. Se você já confirmou o e-mail, entre pelo login;
+            senão, cadastre-se de novo para receber outro link.
+          </p>
+        ) : null}
+        {erro === "sessao" ? (
+          <p role="alert" className="text-center text-sm text-destructive">
+            Sua sessão expirou. Comece o cadastro novamente.
+          </p>
+        ) : null}
+
         <SignupForm platformDomain={platformDomain} />
       </div>
     </main>

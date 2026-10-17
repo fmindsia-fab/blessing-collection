@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -73,6 +74,12 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
           </button>
         </div>
         {errors.password ? <p className="text-xs text-destructive">{errors.password.message}</p> : null}
+        <Link
+          href="/esqueci-senha"
+          className="w-fit self-end text-xs text-muted-foreground underline underline-offset-4"
+        >
+          Esqueci minha senha
+        </Link>
       </div>
 
       {serverError ? <p className="text-sm text-destructive">{serverError}</p> : null}

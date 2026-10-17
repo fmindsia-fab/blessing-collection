@@ -13,6 +13,7 @@ import { formatWhatsappBR, normalizeWhatsappBR } from "@/lib/customers/phone-mas
 import { CraftProfileFields } from "@/components/shared/craft-profile-fields";
 import { MarketplaceProfileFields } from "@/components/shared/marketplace-profile-fields";
 import { Textarea } from "@/components/ui/textarea";
+import { ConfirmEmailNotice } from "./confirm-email-notice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,13 +27,23 @@ const INITIAL_STATE: CreateStoreFormState = {};
 export function SignupForm({ platformDomain }: { platformDomain: string }) {
   const [step, setStep] = useState<"account" | "store">("account");
   const [accountError, setAccountError] = useState<string | null>(null);
+  // Preenchido quando o projeto exige confirmação de e-mail (sem sessão).
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
 
   const accountForm = useForm<SignupFormValues>({ resolver: zodResolver(signupSchema) });
+
+  // O link do e-mail volta para este mesmo host (/auth/confirm), que valida o
+  // token e segue para a criação da loja.
+  const emailRedirectTo = () =>
+    `${window.location.origin}/auth/confirm?next=${encodeURIComponent("/cadastro/loja")}`;
 
   async function onAccountSubmit(values: SignupFormValues) {
     setAccountError(null);
     const supabase = createBrowserSupabaseClient();
-    const { error } = await supabase.auth.signUp(values);
+    const { data, error } = await supabase.auth.signUp({
+      ...values,
+      options: { emailRedirectTo: emailRedirectTo() },
+    });
 
     if (error) {
       setAccountError(
@@ -43,10 +54,33 @@ export function SignupForm({ platformDomain }: { platformDomain: string }) {
       return;
     }
 
-    // signUp já autentica a sessão quando a confirmação de e-mail está
-    // desligada no projeto; se estiver ligada, o insert de stores (passo
-    // seguinte) falha por falta de sessão e o erro orienta a confirmar antes.
+    // Com confirmação de e-mail ligada, o Supabase não devolve erro para um
+    // e-mail já cadastrado (evita revelar quem tem conta): vem um usuário sem
+    // identidades.
+    if (data.user && data.user.identities?.length === 0) {
+      setAccountError("Este e-mail já tem uma conta. Faça login.");
+      return;
+    }
+
+    // Sem sessão = confirmação de e-mail exigida: o insert da loja só pode
+    // acontecer depois do clique no link. Com sessão (confirmação desligada),
+    // segue direto para a loja.
+    if (!data.session) {
+      setPendingEmail(values.email);
+      return;
+    }
+
     setStep("store");
+  }
+
+  if (pendingEmail) {
+    return (
+      <ConfirmEmailNotice
+        email={pendingEmail}
+        emailRedirectTo={emailRedirectTo()}
+        onChangeEmail={() => setPendingEmail(null)}
+      />
+    );
   }
 
   if (step === "account") {
@@ -85,7 +119,7 @@ export function SignupForm({ platformDomain }: { platformDomain: string }) {
   return <StoreForm platformDomain={platformDomain} />;
 }
 
-function StoreForm({ platformDomain }: { platformDomain: string }) {
+export function StoreForm({ platformDomain }: { platformDomain: string }) {
   const router = useRouter();
   const [state, formAction, isPending] = useActionState(createStore, INITIAL_STATE);
   const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
