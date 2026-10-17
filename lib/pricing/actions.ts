@@ -61,9 +61,10 @@ export async function updatePricingSettings(
   const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
 
-  const { error } = await supabase
-    .from("stores")
-    .update({
+  // Upsert: a loja pode ainda não ter linha em store_private (migration 0037).
+  const { error } = await supabase.from("store_private").upsert(
+    {
+      store_id: store.id,
       monthly_pay: data.monthlyPay,
       monthly_fixed_cost: data.monthlyFixedCost,
       productive_hours_per_month: data.productiveHours,
@@ -71,8 +72,9 @@ export async function updatePricingSettings(
       tax_percent: taxPercent,
       default_pricing_method: data.defaultMethod,
       default_margin_percent: data.defaultRate,
-    })
-    .eq("id", store.id);
+    },
+    { onConflict: "store_id" },
+  );
 
   if (error) return { error: "Não foi possível salvar as configurações." };
 

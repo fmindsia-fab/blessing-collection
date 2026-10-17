@@ -1,5 +1,5 @@
 import { getActiveStore } from "@/lib/store/get-active-store";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { getStorePrivate } from "@/lib/store/private";
 import { listAllPaymentMethodsForAdmin } from "@/lib/pricing/queries";
 import { PageHeading } from "@/components/admin/page-heading";
 import { LaborForm } from "./labor-form";
@@ -7,16 +7,10 @@ import { PaymentMethods } from "./payment-methods";
 
 export default async function PricingSettingsPage() {
   const store = await getActiveStore();
-  const supabase = await createServerSupabaseClient();
 
-  const [{ data: settings }, methods] = await Promise.all([
-    supabase
-      .from("stores")
-      .select(
-        "monthly_pay, monthly_fixed_cost, productive_hours_per_month, tax_regime, tax_percent, default_pricing_method, default_margin_percent",
-      )
-      .eq("id", store.id)
-      .single(),
+  const [settings, methods] = await Promise.all([
+    // Dado privado (store_private); loja sem linha ainda usa os padrões.
+    getStorePrivate(store.id),
     listAllPaymentMethodsForAdmin(store.id),
   ]);
 
@@ -29,7 +23,7 @@ export default async function PricingSettingsPage() {
       />
 
       <section className="rounded-[var(--radius-image)] border border-border bg-card p-6 shadow-sm">
-        {settings ? <LaborForm settings={settings} /> : null}
+        <LaborForm settings={settings} />
       </section>
 
       <section className="flex flex-col gap-5 rounded-[var(--radius-image)] border border-border bg-card p-6 shadow-sm">

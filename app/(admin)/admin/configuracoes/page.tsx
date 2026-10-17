@@ -1,4 +1,5 @@
 import { getActiveStore, getSiteUrl } from "@/lib/store/get-active-store";
+import { getStorePrivate } from "@/lib/store/private";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { StoreSettingsForm } from "./store-settings-form";
 import { StoreLogoForm } from "./store-logo-form";
@@ -9,6 +10,7 @@ import { BillingSection } from "./billing-section";
 
 export default async function AdminSettingsPage() {
   const store = await getActiveStore();
+  const storePrivate = await getStorePrivate(store.id);
   const siteUrl = await getSiteUrl();
 
   const supabase = await createServerSupabaseClient();
@@ -25,7 +27,7 @@ export default async function AdminSettingsPage() {
         title="Configurações"
         description="WhatsApp, redes sociais e identidade visual."
       />
-      <StoreSettingsForm store={store} />
+      <StoreSettingsForm store={{ ...store, pix_key: storePrivate.pix_key }} />
 
       <BrandFontUpload
         customFontName={store.custom_font_name}

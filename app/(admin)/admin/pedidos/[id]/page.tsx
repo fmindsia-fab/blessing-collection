@@ -8,10 +8,12 @@ import { BackLink } from "@/components/shared/back-link";
 import { ActionLink } from "@/components/ui/action";
 import { OrderStatusControl } from "./order-status-control";
 import { InvoiceButton } from "./invoice-button";
+import { getStorePrivate } from "@/lib/store/private";
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const store = await getActiveStore();
+  const storePrivate = await getStorePrivate(store.id);
   const result = await getOrder(store.id, id);
   if (!result) notFound();
 
@@ -46,7 +48,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 unitPrice: item.unit_price,
               }))}
               totalAmount={order.total_amount}
-              pixKey={store.pix_key ?? null}
+              pixKey={storePrivate.pix_key}
             />
             <ActionLink href={`/admin/pedidos/${id}/agradecimento`} variant="outline" className="h-10 px-5">
               Cartão de agradecimento

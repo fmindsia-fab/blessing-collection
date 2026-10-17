@@ -6,6 +6,7 @@ import { INVOICE_COUPON_PERCENT } from "@/lib/orders/build-invoice-message";
 import { BackLink } from "@/components/shared/back-link";
 import { ShareButton } from "@/components/shared/share-button";
 import { ThankYouCard } from "./thank-you-card";
+import { getStorePrivate } from "@/lib/store/private";
 
 // Fontes fixas do cartão, independentes da fonte da marca configurada pela
 // loja: o cartão é uma peça editorial própria (pergaminho/dourado/cursiva),
@@ -20,6 +21,7 @@ const dancingScript = Dancing_Script({ subsets: ["latin"], weight: ["600", "700"
 export default async function OrderThankYouPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const store = await getActiveStore();
+  const storePrivate = await getStorePrivate(store.id);
   const result = await getOrder(store.id, id);
   if (!result) notFound();
 
@@ -57,7 +59,7 @@ export default async function OrderThankYouPage({ params }: { params: Promise<{ 
         }))}
         couponCode={order.customer?.name ?? "Cliente"}
         couponPercent={INVOICE_COUPON_PERCENT}
-        pixKey={store.pix_key ?? null}
+        pixKey={storePrivate.pix_key}
         instagramHandle={instagramHandle}
       />
 

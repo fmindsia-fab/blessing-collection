@@ -163,6 +163,37 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["store_domains"]["Insert"]>;
         Relationships: [];
       };
+      /** Pix e precificação PRIVADOS da loja (migration 0037): RLS só para a dona. */
+      store_private: {
+        Row: {
+          store_id: string;
+          pix_key: string | null;
+          monthly_pay: number;
+          monthly_fixed_cost: number;
+          productive_hours_per_month: number;
+          tax_regime: TaxRegime;
+          tax_percent: number;
+          default_pricing_method: PricingMethodValue;
+          default_margin_percent: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          store_id: string;
+          pix_key?: string | null;
+          monthly_pay?: number;
+          monthly_fixed_cost?: number;
+          productive_hours_per_month?: number;
+          tax_regime?: TaxRegime;
+          tax_percent?: number;
+          default_pricing_method?: PricingMethodValue;
+          default_margin_percent?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["store_private"]["Insert"]>;
+        Relationships: [];
+      };
       /** Billing por loja (migration 0029), 1:1 com stores. */
       store_subscriptions: {
         Row: {

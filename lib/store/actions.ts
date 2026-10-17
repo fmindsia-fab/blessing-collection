@@ -92,7 +92,6 @@ export async function updateStoreSettings(
       color_secondary: palette.colors[1] ?? palette.colors[0],
       color_accent: palette.colors[2] ?? palette.colors[0],
       font_family: parsed.data.fontFamily,
-      pix_key: parsed.data.pixKey || null,
       ...toCraftProfileColumns(parsed.data),
       ...marketplaceExtrasColumns(parsed.data, {
         marketplace_opt_in: store.marketplace_opt_in,
@@ -102,6 +101,13 @@ export async function updateStoreSettings(
     .eq("id", store.id);
 
   if (error) return { error: "Não foi possível salvar as configurações." };
+
+  // Pix é privado: vive em store_private (migration 0037), não em `stores`.
+  const { error: pixError } = await supabase
+    .from("store_private")
+    .upsert({ store_id: store.id, pix_key: parsed.data.pixKey || null }, { onConflict: "store_id" });
+
+  if (pixError) return { error: "Configurações salvas, mas não foi possível salvar a chave Pix." };
 
   revalidatePath("/admin/configuracoes");
   revalidatePath("/", "layout");

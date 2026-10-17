@@ -26,13 +26,14 @@ export type StorePricingSettings = {
 export async function getStorePricingSettings(storeId: string): Promise<StorePricingSettings> {
   const supabase = await createServerSupabaseClient();
 
+  // Precificação é dado privado (store_private, migration 0037) — nunca em `stores`.
   const { data } = await supabase
-    .from("stores")
+    .from("store_private")
     .select(
       "monthly_pay, monthly_fixed_cost, productive_hours_per_month, tax_regime, tax_percent, default_pricing_method, default_margin_percent",
     )
-    .eq("id", storeId)
-    .single();
+    .eq("store_id", storeId)
+    .maybeSingle();
 
   const monthlyPayCents = toCents(data?.monthly_pay ?? 0);
   const monthlyFixedCostCents = toCents(data?.monthly_fixed_cost ?? 0);
