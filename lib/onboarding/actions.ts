@@ -100,6 +100,9 @@ export async function createStore(
       }
       return { error: "Esse nome já está em uso. Escolha outro." };
     }
+    // Erro real só no log do servidor (nunca para o usuário): sem isto, uma falha
+    // de RLS/constraint em produção seria indistinguível de qualquer outra.
+    console.error("[createStore]", error.code, error.message, error.details);
     return { error: "Não foi possível criar a loja. Tente novamente." };
   }
 

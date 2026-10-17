@@ -759,6 +759,7 @@ Concluído após o M11 (multi-loja por subdomínio, painel da plataforma, trial 
 | Várias lojas por usuário (abuso do trial) | `unique(owner_user_id)` (`0039`) |
 | Ações de escrita sem aviso de "outra conta" | Guard em todas as ações com retorno de erro |
 | Atualizações por `id` sem `store_id` | Verificado: 13 de 15 já checam a loja do produto antes; 2 pontos de pedidos ajustados |
+| Next.js 16.2.12 com RCE crítico (otimização de imagem AVIF, `next/og`), SSRF e cache poisoning; 21 vulnerabilidades em dependências (2 críticas) | Atualizado para Next 16.4.2; `shadcn` (CLI) movido para devDependencies; `npm audit --omit=dev` = 0 |
 
 **Riscos aceitos (conscientes):**
 - `stores.owner_user_id` é legível publicamente: é só um UUID interno que não dá acesso a nada; esconder exigiria revogar a leitura da coluna e reescrever ~24 usos.
