@@ -7,6 +7,7 @@ import { PageHeading } from "@/components/admin/page-heading";
 import { BackLink } from "@/components/shared/back-link";
 import { ActionLink } from "@/components/ui/action";
 import { OrderStatusControl } from "./order-status-control";
+import { CancelOrderButton } from "./cancel-order-button";
 import { InvoiceButton } from "./invoice-button";
 import { getStorePrivate } from "@/lib/store/private";
 
@@ -61,6 +62,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       />
 
       <OrderStatusControl orderId={id} status={order.status} />
+
+      <CancelOrderButton orderId={id} cancelled={order.status === "cancelled"} />
 
       <section className="flex flex-col gap-3">
         <span className="admin-kicker">Itens</span>
