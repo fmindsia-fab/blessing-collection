@@ -105,15 +105,26 @@ export async function deleteStoreAndAccount(
     }
   }
 
-  // 2) Loja: as FKs com ON DELETE CASCADE levam produtos, pedidos, clientes,
-  // categorias, assinatura, analytics etc.
+  // 2) Pedidos ANTES da loja. orders.customer_id referencia customers com
+  // ON DELETE RESTRICT (migration 0025, protege clientes com pedidos no uso normal):
+  // ao apagar a loja, o cascade tenta remover os clientes enquanto os pedidos ainda
+  // existem e o banco recusa — uma loja com pedido ficava impossível de excluir.
+  // Apagar os pedidos primeiro (os itens vão junto, por cascade) libera o resto.
+  const { error: ordersError } = await client.from("orders").delete().eq("store_id", store.id);
+  if (ordersError) {
+    console.error("[deleteStoreAndAccount] orders", ordersError);
+    return { error: "Não foi possível excluir os pedidos da loja. Os arquivos já foram removidos; tente novamente." };
+  }
+
+  // 3) Loja: as FKs com ON DELETE CASCADE levam produtos, clientes, categorias,
+  // assinatura, analytics etc.
   const { error: storeError } = await client.from("stores").delete().eq("id", store.id);
   if (storeError) {
     console.error("[deleteStoreAndAccount] stores", storeError);
     return { error: "Não foi possível excluir a loja. Os arquivos já foram removidos; tente novamente." };
   }
 
-  // 3) Usuário do Auth (e, em cascata, o profile) — só se não tiver outra loja.
+  // 4) Usuário do Auth (e, em cascata, o profile) — só se não tiver outra loja.
   const { count: otherStores } = await client
     .from("stores")
     .select("id", { count: "exact", head: true })
