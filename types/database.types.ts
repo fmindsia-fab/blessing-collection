@@ -176,6 +176,31 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["store_private"]["Insert"]>;
         Relationships: [];
       };
+      /** Aceite eletrônico dos Termos e da Política (migration 0042): só o servidor grava. */
+      legal_acceptances: {
+        Row: {
+          id: string;
+          user_id: string;
+          terms_version: string;
+          privacy_version: string;
+          accepted_at: string;
+          ip_address: string | null;
+          user_agent: string | null;
+          source: "signup" | "store_creation";
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          terms_version: string;
+          privacy_version: string;
+          accepted_at?: string;
+          ip_address?: string | null;
+          user_agent?: string | null;
+          source?: "signup" | "store_creation";
+        };
+        Update: never;
+        Relationships: [];
+      };
       /** Billing por loja (migration 0029), 1:1 com stores. */
       store_subscriptions: {
         Row: {

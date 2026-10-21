@@ -7,6 +7,17 @@ const { state } = vi.hoisted(() => ({
     insertedSlug: null as string | null,
     profile: null as { id: string; full_name: string; document: string } | null,
     existingStore: null as { id: string } | null,
+    accepted: true,
+    recordOk: true,
+    recordedFor: [] as string[],
+  },
+}));
+
+vi.mock("@/lib/legal/acceptance", () => ({
+  hasAcceptedCurrentLegal: async () => state.accepted,
+  recordLegalAcceptance: async (userId: string, source: string) => {
+    state.recordedFor.push(`${userId}:${source}`);
+    return { ok: state.recordOk };
   },
 }));
 
@@ -72,6 +83,9 @@ describe("createStore", () => {
     state.insertedSlug = null;
     state.profile = null;
     state.existingStore = null;
+    state.accepted = true;
+    state.recordOk = true;
+    state.recordedFor = [];
   });
 
   it("cria a loja com owner_user_id vindo da sessão, não do formulário", async () => {
@@ -151,5 +165,72 @@ describe("createStore", () => {
     );
 
     expect(result.error).toMatch(/já tem uma loja/i);
+  });
+
+  it("sem aceite registrado e sem marcar a caixa, não cria a loja e pede o aceite", async () => {
+    state.accepted = false;
+    const { createStore } = await import("@/lib/onboarding/actions");
+    const result = await createStore(
+      {},
+      formDataFrom({ ...OWNER, name: "Maria Bolsas", slug: "mariabolsas", whatsappNumber: "11999999999" }),
+    );
+
+    expect(result.success).toBeUndefined();
+    expect(result.needsTermsAcceptance).toBe(true);
+    expect(result.error).toMatch(/Termos de Uso/);
+    expect(state.insertedSlug).toBeNull();
+    expect(state.profile).toBeNull();
+    expect(state.recordedFor).toEqual([]);
+  });
+
+  it("sem aceite registrado, mas com a caixa marcada: registra o aceite e cria a loja", async () => {
+    state.accepted = false;
+    const { createStore } = await import("@/lib/onboarding/actions");
+    const result = await createStore(
+      {},
+      formDataFrom({
+        ...OWNER,
+        name: "Maria Bolsas",
+        slug: "mariabolsas",
+        whatsappNumber: "11999999999",
+        acceptTerms: "on",
+      }),
+    );
+
+    expect(result.success).toBe(true);
+    expect(state.recordedFor).toEqual(["user-1:store_creation"]);
+    expect(state.insertedSlug).toBe("mariabolsas");
+  });
+
+  it("se o registro do aceite falhar, a loja NÃO é criada", async () => {
+    state.accepted = false;
+    state.recordOk = false;
+    const { createStore } = await import("@/lib/onboarding/actions");
+    const result = await createStore(
+      {},
+      formDataFrom({
+        ...OWNER,
+        name: "Maria Bolsas",
+        slug: "mariabolsas",
+        whatsappNumber: "11999999999",
+        acceptTerms: "on",
+      }),
+    );
+
+    expect(result.success).toBeUndefined();
+    expect(result.error).toMatch(/aceite/i);
+    expect(state.insertedSlug).toBeNull();
+  });
+
+  it("quem já aceitou na criação da conta não vê nem repete o aceite", async () => {
+    const { createStore } = await import("@/lib/onboarding/actions");
+    const result = await createStore(
+      {},
+      formDataFrom({ ...OWNER, name: "Maria Bolsas", slug: "mariabolsas", whatsappNumber: "11999999999" }),
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.needsTermsAcceptance).toBeUndefined();
+    expect(state.recordedFor).toEqual([]);
   });
 });

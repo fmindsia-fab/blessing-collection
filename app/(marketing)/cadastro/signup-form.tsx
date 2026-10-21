@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import { registerAccount } from "@/lib/auth/actions";
 import { createStore, checkSlugAvailability, type CreateStoreFormState } from "@/lib/onboarding/actions";
 import { signupSchema, createStoreSchema, slugify } from "@/lib/onboarding/schema";
 import { documentFeedback, formatCpfCnpj, isCompleteValidDocument } from "@/lib/br/document";
@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCaptcha } from "@/components/shared/turnstile";
+import { AcceptTermsField } from "@/components/legal/accept-terms-field";
 
 type SignupFormValues = z.infer<typeof signupSchema>;
 type StoreFormInput = z.input<typeof createStoreSchema>;
@@ -33,6 +34,8 @@ export function SignupForm({ platformDomain }: { platformDomain: string }) {
 
   const accountForm = useForm<SignupFormValues>({ resolver: zodResolver(signupSchema) });
   const captcha = useCaptcha();
+  // Aceite dos Termos: nasce DESMARCADO e é obrigatório para criar a conta.
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   // O link do e-mail volta para este mesmo host (/auth/confirm), que valida o
   // token e segue para a criação da loja.
@@ -41,35 +44,30 @@ export function SignupForm({ platformDomain }: { platformDomain: string }) {
 
   async function onAccountSubmit(values: SignupFormValues) {
     setAccountError(null);
-    const supabase = createBrowserSupabaseClient();
-    const { data, error } = await supabase.auth.signUp({
-      ...values,
-      options: { emailRedirectTo: emailRedirectTo(), captchaToken: captcha.token },
+    // A conta é criada no SERVIDOR, que também registra o aceite dos Termos com as
+    // evidências da requisição (IP e navegador).
+    const result = await registerAccount({
+      email: values.email,
+      password: values.password,
+      acceptTerms: acceptedTerms,
+      captchaToken: captcha.token,
     });
     // Token de uso único: renova o CAPTCHA para a próxima tentativa.
     captcha.reset();
 
-    if (error) {
-      setAccountError(
-        error.message.includes("already registered")
-          ? "Este e-mail já tem uma conta. Faça login."
-          : "Não foi possível criar sua conta. Tente novamente.",
-      );
+    if (result.status === "email-exists") {
+      setAccountError("Este e-mail já tem uma conta. Faça login.");
       return;
     }
-
-    // Com confirmação de e-mail ligada, o Supabase não devolve erro para um
-    // e-mail já cadastrado (evita revelar quem tem conta): vem um usuário sem
-    // identidades.
-    if (data.user && data.user.identities?.length === 0) {
-      setAccountError("Este e-mail já tem uma conta. Faça login.");
+    if (result.status === "error") {
+      setAccountError(result.message);
       return;
     }
 
     // Sem sessão = confirmação de e-mail exigida: o insert da loja só pode
     // acontecer depois do clique no link. Com sessão (confirmação desligada),
     // segue direto para a loja.
-    if (!data.session) {
+    if (!result.hasSession) {
       setPendingEmail(values.email);
       return;
     }
@@ -113,11 +111,13 @@ export function SignupForm({ platformDomain }: { platformDomain: string }) {
 
         {accountError ? <p className="text-sm text-destructive">{accountError}</p> : null}
 
+        <AcceptTermsField checked={acceptedTerms} onCheckedChange={setAcceptedTerms} />
+
         {captcha.widget}
 
         <Button
           type="submit"
-          disabled={accountForm.formState.isSubmitting || captcha.required}
+          disabled={accountForm.formState.isSubmitting || captcha.required || !acceptedTerms}
           className="mt-2"
         >
           {accountForm.formState.isSubmitting ? "Criando conta..." : "Continuar"}
@@ -269,6 +269,8 @@ export function StoreForm({ platformDomain }: { platformDomain: string }) {
           </p>
         ) : null}
       </div>
+
+      {state.needsTermsAcceptance ? <AcceptTermsField name="acceptTerms" /> : null}
 
       <CraftProfileFields required />
 

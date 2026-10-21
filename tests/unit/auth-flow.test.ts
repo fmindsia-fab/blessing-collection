@@ -36,6 +36,10 @@ vi.mock("@/lib/store/get-active-store", () => ({
   getSiteUrl: async () => "https://loja.atelifacil.com.br",
 }));
 
+vi.mock("@/lib/legal/acceptance", () => ({
+  recordLegalAcceptance: async () => ({ ok: true }),
+}));
+
 import { safeNextPath } from "@/lib/auth/safe-next";
 import { GET } from "@/app/auth/confirm/route";
 import { requestPasswordReset } from "@/lib/auth/actions";

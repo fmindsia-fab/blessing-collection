@@ -4,11 +4,14 @@ import { createStoreSchema } from "@/lib/onboarding/schema";
 import { marketplaceExtrasColumns, toCraftProfileColumns } from "@/lib/store/craft-profile";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { buildStoreHandoff } from "@/lib/auth/handoff";
+import { hasAcceptedCurrentLegal, recordLegalAcceptance } from "@/lib/legal/acceptance";
 
 export type CreateStoreFormState = {
   error?: string;
   success?: boolean;
   storeSlug?: string;
+  // O aceite dos Termos ainda não está registrado: a tela mostra a caixa de aceite.
+  needsTermsAcceptance?: boolean;
   // Destino pós-criação: painel da loja já autenticado (repasse), ou o simples.
   redirectUrl?: string;
 };
@@ -61,6 +64,22 @@ export async function createStore(
     .maybeSingle();
   if (existingStore) {
     return { error: "Você já tem uma loja cadastrada. Entre no painel dela." };
+  }
+
+  // Aceite dos Termos e da Política: normalmente já foi registrado na criação da conta
+  // (registerAccount). Quem chegou aqui sem registro (conta criada por fora da tela de
+  // cadastro, ou falha na gravação) precisa aceitar agora; sem aceite, a loja não é criada.
+  if (!(await hasAcceptedCurrentLegal(user.id))) {
+    if (formData.get("acceptTerms") !== "on") {
+      return {
+        error: "Para criar a loja, aceite os Termos de Uso e a Política de Privacidade.",
+        needsTermsAcceptance: true,
+      };
+    }
+    const recorded = await recordLegalAcceptance(user.id, "store_creation");
+    if (!recorded.ok) {
+      return { error: "Não foi possível registrar o seu aceite. Tente novamente.", needsTermsAcceptance: true };
+    }
   }
 
   // profiles.id = auth.uid() (RLS profile_insert_own / profile_update_own).

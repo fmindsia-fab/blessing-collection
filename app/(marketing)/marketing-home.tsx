@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
+import { PALETTE_VARS } from "./craft-palette";
 import { YarnSkein, StitchWave, CrochetDots, YarnTangle, YarnBall, CrochetHooks } from "./craft-motifs";
 
 // Foto de uma artesã trabalhando, com o catálogo de bolsas visível no
@@ -170,16 +171,7 @@ const FAQ_ITEMS = [
 // (rosa suave) para bater com a paleta oficial; o nome da variável
 // ("mustard") não reflete mais a cor, mas trocar o nome exigiria atualizar
 // todas as ocorrências no JSX abaixo sem ganho real.
-const PALETTE_VARS = {
-  "--craft-bg": "oklch(0.975 0.015 75)",
-  "--craft-bg-warm": "oklch(0.93 0.035 60)",
-  "--craft-ink": "oklch(0.27 0.03 40)",
-  "--craft-muted": "oklch(0.48 0.025 45)",
-  "--craft-terracotta": "oklch(0.58 0.14 40)",
-  "--craft-mustard": "oklch(0.8 0.05 15)",
-  "--craft-card": "oklch(0.995 0.008 70)",
-  "--craft-border": "oklch(0.86 0.025 55)",
-} as React.CSSProperties;
+
 
 // CTA principal — maior, com ícone de seta e leve "respiração" (animate-pulse
 // no halo), para ficar impossível de ignorar. Repetido 3x na página
@@ -541,6 +533,20 @@ export function MarketingHome() {
             (43) 99143-4124 (WhatsApp) — Fabio Marcelo
           </Link>
         </span>
+        <nav aria-label="Documentos legais" className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-sm">
+          <Link
+            href="/termos"
+            className="underline underline-offset-4 outline-none transition-colors hover:text-[var(--craft-ink)] focus-visible:text-[var(--craft-ink)]"
+          >
+            Termos de Uso
+          </Link>
+          <Link
+            href="/privacidade"
+            className="underline underline-offset-4 outline-none transition-colors hover:text-[var(--craft-ink)] focus-visible:text-[var(--craft-ink)]"
+          >
+            Política de Privacidade
+          </Link>
+        </nav>
       </footer>
     </main>
   );

@@ -1,4 +1,5 @@
 import { LoginForm } from "./login-form";
+import { LegalLinks } from "@/components/legal/legal-links";
 
 export default async function LoginPage({
   searchParams,
@@ -21,6 +22,7 @@ export default async function LoginPage({
           <p className="text-sm text-muted-foreground">Acesse a administração da sua loja.</p>
         </div>
         <LoginForm redirectTo={redirectTo} />
+        <LegalLinks className="text-xs text-muted-foreground" />
       </div>
     </main>
   );

@@ -746,6 +746,7 @@ Concluído após o M11 (multi-loja por subdomínio, painel da plataforma, trial 
 - **Cadastro:** nome e CPF/CNPJ do responsável, cidade/UF (IBGE), tipo de artesanato, perfil de marketplace com consentimento explícito (LGPD).
 - **Billing:** trial de 30 dias por trigger, `store_has_access()` em tempo real, status da loja separado do status da assinatura.
 - **Plataforma:** painel com métricas, exclusão definitiva de loja/conta e de logins órfãos (exceções documentadas no `CLAUDE.md`).
+- **Jurídico:** páginas `/termos` e `/privacidade` (conteúdo em `lib/legal/`, identificação do responsável em `lib/legal/identity.ts`) e aceite eletrônico: caixa obrigatória no cadastro, gravada NO SERVIDOR no instante da criação da conta (`registerAccount`), com versões, data, IP e navegador, em `legal_acceptances` (migration `0042`; ninguém altera pela API, e o gatilho proíbe UPDATE). A criação da loja exige o aceite registrado (cobre contas criadas por fora da tela). Contas antigas não são forçadas a aceitar de novo. Mudou um texto de forma relevante? Atualize `lib/legal/versions.ts`.
 
 ### Auditoria de segurança (skill `supabase-security-audit`, 2026-10-17)
 
