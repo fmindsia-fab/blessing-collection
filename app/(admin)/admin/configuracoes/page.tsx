@@ -18,6 +18,10 @@ const CHECKOUT_NOTICE: Record<string, { ok: boolean; text: string }> = {
     ok: false,
     text: "A assinatura não foi concluída. Você pode tentar de novo quando quiser.",
   },
+  erro: {
+    ok: false,
+    text: "Não foi possível abrir o pagamento agora. Tente de novo em instantes; se continuar, fale com o suporte.",
+  },
   "outra-conta": {
     ok: false,
     text: "Você está logado com outra conta, que não é a dona desta loja. Entre com a conta da loja para assinar.",

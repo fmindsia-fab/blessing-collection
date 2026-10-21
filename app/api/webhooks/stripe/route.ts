@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import type Stripe from "stripe";
 import { stripe } from "@/lib/stripe/client";
 import type { SubscriptionStatus } from "@/types/database.types";
+import { cleanEnv } from "@/lib/stripe/env";
 import { createWebhookSupabaseClient } from "./service-role-client";
 
 // Único consumidor de STRIPE_WEBHOOK_SECRET e único escritor em
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest) {
     event = await stripe.webhooks.constructEventAsync(
       rawBody,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET!,
+      cleanEnv(process.env.STRIPE_WEBHOOK_SECRET),
     );
   } catch (err) {
     console.error("[stripe-webhook] assinatura inválida", err);

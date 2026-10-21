@@ -6,6 +6,7 @@ const { state } = vi.hoisted(() => ({
     sessionParams: null as Record<string, unknown> | null,
     notOwner: null as string | null,
     redirected: null as string | null,
+    createError: null as Error | null,
   },
 }));
 
@@ -41,6 +42,7 @@ vi.mock("@/lib/stripe/client", () => ({
     checkout: {
       sessions: {
         create: vi.fn(async (params: Record<string, unknown>) => {
+          if (state.createError) throw state.createError;
           state.sessionParams = params;
           return { url: "https://checkout.stripe.com/c/pay/cs_test_1" };
         }),
@@ -71,6 +73,7 @@ describe("startCheckout", () => {
     state.sessionParams = null;
     state.notOwner = null;
     state.redirected = null;
+    state.createError = null;
     process.env.STRIPE_PRICE_ID = "price_test_123";
   });
 
@@ -144,5 +147,22 @@ describe("startCheckout", () => {
     await run();
 
     expect(state.sessionParams).toMatchObject({ mode: "subscription", customer: "cus_9" });
+  });
+
+  it("erro do Stripe vira aviso claro na tela (e fica no log), sem estourar como erro de servidor", async () => {
+    const logSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    state.createError = Object.assign(new Error("The provided key does not have the required permissions"), {
+      type: "StripePermissionError",
+      statusCode: 403,
+    });
+
+    await run();
+
+    expect(state.redirected).toBe("/admin/configuracoes?checkout=erro");
+    expect(logSpy).toHaveBeenCalledWith(
+      "[startCheckout] falha ao criar a sessão de pagamento",
+      expect.objectContaining({ storeId: "loja-1", type: "StripePermissionError", statusCode: 403 }),
+    );
+    logSpy.mockRestore();
   });
 });

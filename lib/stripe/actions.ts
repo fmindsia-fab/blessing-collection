@@ -6,6 +6,8 @@ import { getActiveStore, getSiteUrl } from "@/lib/store/get-active-store";
 import { getNotOwnerError } from "@/lib/store/ownership";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { computeCheckoutTrialEnd } from "@/lib/stripe/trial";
+import { describeStripeError } from "@/lib/stripe/errors";
+import { getStripePriceId } from "@/lib/stripe/env";
 
 // Inicia uma assinatura paga para a loja ativa. O registro em
 // store_subscriptions só é criado/atualizado de verdade pelo webhook
@@ -51,28 +53,48 @@ export async function startCheckout() {
   const trialEnd = computeCheckoutTrialEnd(subscription ?? null, new Date());
 
   const siteUrl = await getSiteUrl();
-  const session = await stripe.checkout.sessions.create({
-    mode: "subscription",
-    ...(subscription?.stripe_customer_id
-      ? { customer: subscription.stripe_customer_id }
-      : { customer_email: user?.email ?? undefined }),
-    client_reference_id: store.id,
-    locale: "pt-BR",
-    // Sem payment_method_types: os meios de pagamento vêm das configurações do
-    // Dashboard (métodos dinâmicos).
-    line_items: [{ price: process.env.STRIPE_PRICE_ID!, quantity: 1 }],
-    // store_id chega no webhook via subscription.metadata, não só no
-    // customer — subscription.updated/deleted não reenvia o customer inteiro.
-    subscription_data: {
-      metadata: { store_id: store.id },
-      ...(trialEnd ? { trial_end: trialEnd } : {}),
-    },
-    success_url: `${siteUrl}/admin/configuracoes?checkout=sucesso`,
-    cancel_url: `${siteUrl}/admin/configuracoes?checkout=cancelado`,
-  });
 
-  if (!session.url) throw new Error("Stripe não retornou uma URL de checkout.");
-  redirect(session.url);
+  // ID do preço limpo e validado: ausente ou malformado vira aviso na tela + motivo
+  // claro no log, em vez de uma tela de erro do servidor.
+  const priceId = getStripePriceId();
+  if (!priceId) {
+    console.error("[startCheckout] STRIPE_PRICE_ID ausente ou com formato inválido (esperado: price_...)");
+    redirect("/admin/configuracoes?checkout=erro");
+  }
+
+  // redirect() lança uma exceção de controle do Next: precisa ficar FORA do try,
+  // senão o catch a engole e o cliente nunca chega ao Checkout.
+  let checkoutUrl: string | null = null;
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      ...(subscription?.stripe_customer_id
+        ? { customer: subscription.stripe_customer_id }
+        : { customer_email: user?.email ?? undefined }),
+      client_reference_id: store.id,
+      locale: "pt-BR",
+      // Sem payment_method_types: os meios de pagamento vêm das configurações do
+      // Dashboard (métodos dinâmicos).
+      line_items: [{ price: priceId, quantity: 1 }],
+      // store_id chega no webhook via subscription.metadata, não só no
+      // customer — subscription.updated/deleted não reenvia o customer inteiro.
+      subscription_data: {
+        metadata: { store_id: store.id },
+        ...(trialEnd ? { trial_end: trialEnd } : {}),
+      },
+      success_url: `${siteUrl}/admin/configuracoes?checkout=sucesso`,
+      cancel_url: `${siteUrl}/admin/configuracoes?checkout=cancelado`,
+    });
+    checkoutUrl = session.url;
+  } catch (error) {
+    console.error("[startCheckout] falha ao criar a sessão de pagamento", {
+      storeId: store.id,
+      ...describeStripeError(error),
+    });
+  }
+
+  if (!checkoutUrl) redirect("/admin/configuracoes?checkout=erro");
+  redirect(checkoutUrl);
 }
 
 // Portal de billing self-service (Stripe Customer Portal) — troca de cartão,
@@ -93,10 +115,21 @@ export async function openBillingPortal() {
   }
 
   const siteUrl = await getSiteUrl();
-  const session = await stripe.billingPortal.sessions.create({
-    customer: data.stripe_customer_id,
-    return_url: `${siteUrl}/admin/configuracoes`,
-  });
 
-  redirect(session.url);
+  let portalUrl: string | null = null;
+  try {
+    const session = await stripe.billingPortal.sessions.create({
+      customer: data.stripe_customer_id,
+      return_url: `${siteUrl}/admin/configuracoes`,
+    });
+    portalUrl = session.url;
+  } catch (error) {
+    console.error("[openBillingPortal] falha ao abrir o portal", {
+      storeId: store.id,
+      ...describeStripeError(error),
+    });
+  }
+
+  if (!portalUrl) redirect("/admin/configuracoes?checkout=erro");
+  redirect(portalUrl);
 }

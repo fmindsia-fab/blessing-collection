@@ -1,5 +1,6 @@
 import "server-only";
 import { stripe } from "@/lib/stripe/client";
+import { getStripePriceId } from "@/lib/stripe/env";
 
 // Rótulo do plano ("R$ 59,90/mês") lido direto do Preço no Stripe: o valor mora
 // SÓ lá. Para mudar o preço do plano, cria-se um novo Preço no Stripe (preços são
@@ -15,7 +16,7 @@ const INTERVAL_LABEL: Record<string, string> = {
 };
 
 export async function getPlanPriceLabel(): Promise<string | null> {
-  const priceId = process.env.STRIPE_PRICE_ID;
+  const priceId = getStripePriceId();
   if (!priceId) return null;
 
   try {
