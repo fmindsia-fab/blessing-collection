@@ -28,7 +28,7 @@ describe("getDeletionBlocker", () => {
     expect(getDeletionBlocker(sub({ billing_type: "complimentary", stripe_subscription_id: null }))).toMatch(
       /cortesia/i,
     );
-    expect(getDeletionBlocker(sub({}))).toMatch(/Stripe/);
+    expect(getDeletionBlocker(sub({}))).toMatch(/IMEDIATAMENTE/);
     expect(getDeletionBlocker(sub({ status: "canceled" }))).toBeNull();
   });
 });

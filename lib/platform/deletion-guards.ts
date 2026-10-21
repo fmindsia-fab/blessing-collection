@@ -28,7 +28,12 @@ export function getDeletionBlocker(facts: DeletionFacts): string | null {
   }
 
   if (sub?.stripe_subscription_id && LIVE_STRIPE_STATUSES.has(sub.status)) {
-    return "Há uma assinatura ativa no Stripe. Cancele-a no Stripe antes de excluir a conta.";
+    // Cancelar "no fim do período" (pelo portal) só AGENDA o cancelamento: a assinatura
+    // segue viva no Stripe até a data. Para excluir agora é preciso cancelar na hora.
+    return (
+      "Há uma assinatura viva no Stripe (inclusive com cancelamento só agendado para o fim do período). " +
+      "Para excluir agora, cancele-a IMEDIATAMENTE no Stripe: Assinaturas > Cancelar assinatura > Imediatamente."
+    );
   }
 
   return null;
