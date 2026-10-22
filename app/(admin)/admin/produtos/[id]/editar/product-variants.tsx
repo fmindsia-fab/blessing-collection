@@ -38,11 +38,11 @@ export function ProductVariants({ productId, variants, colors, catalogGroups }: 
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
         <h2 className="text-xl font-semibold tracking-tight">Variações</h2>
-        <p className="text-xs text-zinc-500">Cores, tamanhos ou outras variações. Preço opcional substitui o preço base.</p>
+        <p className="text-sm text-muted-foreground">Cores, tamanhos ou outras variações. Preço opcional substitui o preço base.</p>
       </div>
 
       {variants.length > 0 ? (
-        <div className="flex flex-col divide-y divide-zinc-200 border-y border-zinc-200">
+        <div className="flex flex-col gap-2">
           {variants.map((variant) => (
             <VariantRow
               key={variant.id}
@@ -55,7 +55,7 @@ export function ProductVariants({ productId, variants, colors, catalogGroups }: 
         </div>
       ) : null}
 
-      <form action={formAction} className="grid grid-cols-2 gap-3">
+      <form action={formAction} className="grid gap-3 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="variant-name">Nome</Label>
           <Input id="variant-name" name="name" placeholder="Cor: Caramelo" required />
@@ -114,8 +114,8 @@ export function ProductVariants({ productId, variants, colors, catalogGroups }: 
           </span>
         </div>
         <input type="hidden" name="status" value="available" />
-        {state.error ? <p className="col-span-2 text-sm text-destructive">{state.error}</p> : null}
-        <Button type="submit" variant="outline" disabled={isPending} className="col-span-2 w-fit">
+        {state.error ? <p className="sm:col-span-2 text-sm text-destructive">{state.error}</p> : null}
+        <Button type="submit" variant="outline" disabled={isPending} className="w-full sm:col-span-2 sm:w-fit">
           {isPending ? "Adicionando..." : "Adicionar variação"}
         </Button>
       </form>

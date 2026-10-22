@@ -93,7 +93,7 @@ export function ColorRow({ color }: { color: Color }) {
   }
 
   return (
-    <div className="flex items-center justify-between gap-4 rounded-[var(--radius-image)] border border-border bg-card px-5 py-4 shadow-sm transition-all duration-300 hover:border-foreground/25 hover:shadow-md">
+    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-2xl border border-border bg-card px-5 py-4 shadow-sm transition-all duration-300 hover:border-foreground/25 hover:shadow-md">
       <div className="flex min-w-0 items-center gap-3">
         <Swatch hex={color.hex} hexSecondary={color.hex_secondary} />
         <div className="flex min-w-0 flex-col gap-0.5">

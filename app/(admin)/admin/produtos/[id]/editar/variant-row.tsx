@@ -74,7 +74,7 @@ export function VariantRow({
           formAction(formData);
           setIsEditing(false);
         }}
-        className="flex flex-col gap-3 py-4"
+        className="flex flex-col gap-3 rounded-2xl border border-[var(--gold)]/40 bg-card p-4 shadow-sm"
       >
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
@@ -155,12 +155,12 @@ export function VariantRow({
   }
 
   return (
-    <div className="flex items-center justify-between gap-4 py-3">
-      <div className="flex min-w-0 items-center gap-3">
+    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-2xl border border-border bg-card p-3 shadow-sm sm:flex-nowrap">
+      <div className="flex min-w-0 flex-1 basis-48 items-center gap-3">
         {color ? <Swatch color={color} /> : null}
         <div className="flex min-w-0 flex-col">
-          <span className="truncate text-sm">{variant.name}</span>
-          <span className="text-xs text-zinc-500">
+          <span className="break-words text-sm font-medium">{variant.name}</span>
+          <span className="text-xs text-muted-foreground">
             {variant.variant_group ? `${variant.variant_group} · ` : ""}
             {variant.price ? formatPrice(variant.price) : "Preço base"} ·{" "}
             {variant.status === "available" ? "Disponível" : "Esgotado"}
@@ -172,14 +172,14 @@ export function VariantRow({
         </div>
       </div>
 
-      <div className="flex shrink-0 gap-2">
-        <Button type="button" variant="outline" size="xs" onClick={() => setIsEditing(true)}>
+      <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:shrink-0">
+        <Button type="button" variant="outline" size="sm" onClick={() => setIsEditing(true)}>
           Editar
         </Button>
         <Button
           type="button"
           variant="outline"
-          size="xs"
+          size="sm"
           disabled={isPending}
           onClick={() =>
             startTransition(() => toggleVariantStatus(productId, variant.id, variant.status))
@@ -190,7 +190,7 @@ export function VariantRow({
         <Button
           type="button"
           variant="outline"
-          size="xs"
+          size="sm"
           disabled={isPending}
           onClick={() => startTransition(() => archiveVariant(productId, variant.id))}
         >

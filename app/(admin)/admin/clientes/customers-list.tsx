@@ -36,7 +36,7 @@ export function CustomersList({ customers }: { customers: CustomerRow[] }) {
           {active.map((customer) => (
             <div
               key={customer.id}
-              className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-card px-4 py-3 shadow-sm transition-colors hover:border-[var(--gold)]/40"
+              className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-2xl border border-border bg-card px-4 py-3 shadow-sm transition-colors hover:border-[var(--gold)]/40"
             >
               <div className="flex min-w-0 items-center gap-3">
                 <span
