@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   ArrowLeftIcon,
@@ -17,6 +17,8 @@ import { Button } from "@/components/ui/button";
 import { HELP_TASKS, type HelpTask } from "@/lib/help/tasks";
 import { searchHelp } from "@/lib/help/search";
 import { usePortalThemeProps } from "@/app/(admin)/admin/theme-provider";
+import { useVoiceInput } from "./use-voice-input";
+import { VoiceNotice } from "./voice-notice";
 import { cn } from "@/lib/utils";
 
 // Ajuda do painel: a pessoa escreve (ou fala) o que quer fazer, escolhe o roteiro e o painel
@@ -32,29 +34,6 @@ export function useHelp() {
   return ctx;
 }
 
-// Reconhecimento de voz do navegador (Chrome, Edge, Safari). Não há tipos oficiais no TS.
-type SpeechResultEvent = { results: ArrayLike<ArrayLike<{ transcript: string }>> };
-type SpeechRecognitionLike = {
-  lang: string;
-  interimResults: boolean;
-  maxAlternatives: number;
-  onresult: ((event: SpeechResultEvent) => void) | null;
-  onerror: (() => void) | null;
-  onend: (() => void) | null;
-  start: () => void;
-  stop: () => void;
-};
-type SpeechRecognitionCtor = new () => SpeechRecognitionLike;
-
-function getSpeechRecognition(): SpeechRecognitionCtor | null {
-  if (typeof window === "undefined") return null;
-  const w = window as unknown as {
-    SpeechRecognition?: SpeechRecognitionCtor;
-    webkitSpeechRecognition?: SpeechRecognitionCtor;
-  };
-  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
-}
-
 const SUGGESTED_IDS = ["cadastrar-peca", "mudar-preco", "fotos", "novo-pedido", "logo", "texto-maior"];
 
 export function HelpProvider({ children }: { children: React.ReactNode }) {
@@ -67,9 +46,11 @@ export function HelpProvider({ children }: { children: React.ReactNode }) {
   const [selected, setSelected] = useState<HelpTask | null>(null);
   const [tour, setTour] = useState<{ task: HelpTask; index: number } | null>(null);
 
-  const [listening, setListening] = useState(false);
-  const [voiceMessage, setVoiceMessage] = useState<string | null>(null);
-  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  const voice = useVoiceInput((text, isFinal) => {
+    // O texto aparece no campo enquanto a pessoa fala; ao terminar, a busca já mostra o resultado.
+    setQuery(text);
+    if (isFinal) setSelected(null);
+  });
 
   const results = useMemo(() => (query.trim() ? searchHelp(query) : []), [query]);
   const suggestions = useMemo(
@@ -114,55 +95,18 @@ export function HelpProvider({ children }: { children: React.ReactNode }) {
     };
   }, [step, pathname]);
 
-  function stopListening() {
-    recognitionRef.current?.stop();
-    recognitionRef.current = null;
-    setListening(false);
-  }
-
   function close() {
-    stopListening();
+    voice.stop();
+    voice.clearIssue();
     setOpen(false);
     setSelected(null);
     setQuery("");
-    setVoiceMessage(null);
   }
 
   function startTour(task: HelpTask) {
     close();
     setTour({ task, index: 0 });
   }
-
-  function startListening() {
-    const Recognition = getSpeechRecognition();
-    if (!Recognition) return;
-
-    setVoiceMessage(null);
-    const recognition = new Recognition();
-    recognition.lang = "pt-BR";
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-    recognition.onresult = (event) => {
-      const text = event.results[0]?.[0]?.transcript ?? "";
-      if (text) {
-        setQuery(text);
-        setSelected(null);
-      }
-    };
-    recognition.onerror = () => {
-      setVoiceMessage("Não consegui ouvir. Veja se o microfone está liberado no navegador, ou escreva sua pergunta.");
-      setListening(false);
-    };
-    recognition.onend = () => {
-      setListening(false);
-      recognitionRef.current = null;
-    };
-    recognitionRef.current = recognition;
-    setListening(true);
-    recognition.start();
-  }
-
-  const voiceSupported = open && getSpeechRecognition() !== null;
 
   return (
     <HelpContext.Provider value={{ openHelp: () => setOpen(true) }}>
@@ -221,37 +165,34 @@ export function HelpProvider({ children }: { children: React.ReactNode }) {
                     className="h-12 w-full rounded-xl border border-input bg-background pl-10 pr-3 text-base outline-none transition-colors placeholder:text-muted-foreground/70 focus-visible:border-foreground/40 focus-visible:ring-2 focus-visible:ring-[var(--gold)]/40"
                   />
                 </div>
-                {voiceSupported ? (
-                  <button
-                    type="button"
-                    onClick={listening ? stopListening : startListening}
-                    aria-label={listening ? "Parar de ouvir" : "Falar o que você quer fazer"}
-                    aria-pressed={listening}
-                    className={cn(
-                      "flex size-12 shrink-0 items-center justify-center rounded-xl border outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--gold)]",
-                      listening
-                        ? "border-[var(--gold)] bg-[var(--gold)] text-primary-foreground"
-                        : "border-input bg-background text-muted-foreground hover:border-[var(--gold)] hover:text-foreground",
-                    )}
-                  >
-                    {listening ? <MicOffIcon className="size-5" /> : <MicIcon className="size-5" />}
-                  </button>
-                ) : null}
+                <button
+                  type="button"
+                  onClick={voice.listening ? voice.stop : voice.start}
+                  aria-label={voice.listening ? "Parar de ouvir" : "Falar o que você quer fazer"}
+                  aria-pressed={voice.listening}
+                  className={cn(
+                    "flex size-12 shrink-0 items-center justify-center rounded-xl border outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--gold)]",
+                    voice.listening
+                      ? "animate-pulse border-[var(--gold)] bg-[var(--gold)] text-primary-foreground motion-reduce:animate-none"
+                      : "border-input bg-background text-muted-foreground hover:border-[var(--gold)] hover:text-foreground",
+                  )}
+                >
+                  {voice.listening ? <MicOffIcon className="size-5" /> : <MicIcon className="size-5" />}
+                </button>
               </div>
 
-              {listening ? (
-                <p role="status" className="text-sm font-medium text-[var(--gold)]">
-                  Estou ouvindo… pode falar.
+              {voice.listening ? (
+                <p role="status" className="flex flex-col gap-0.5 text-sm font-medium text-[var(--gold)]">
+                  <span>Estou ouvindo… pode falar.</span>
+                  <span className="text-xs font-normal text-muted-foreground">
+                    Se o navegador perguntar sobre o microfone, toque em <strong>Permitir</strong>.
+                  </span>
                 </p>
               ) : null}
-              {voiceMessage ? (
-                <p role="alert" className="text-sm text-destructive">
-                  {voiceMessage}
-                </p>
-              ) : null}
-              {voiceSupported ? (
+              {voice.issue ? <VoiceNotice issue={voice.issue} onRetry={voice.start} /> : null}
+              {voice.supported && !voice.issue && !voice.listening ? (
                 <p className="text-xs text-muted-foreground">
-                  A voz é reconhecida pelo seu navegador, que pode enviar o áudio ao serviço de voz dele. Nada fica guardado aqui.
+                  Toque no microfone para falar. A voz é reconhecida pelo seu navegador, que pode enviar o áudio ao serviço de voz dele. Nada fica guardado aqui.
                 </p>
               ) : null}
 
