@@ -235,3 +235,51 @@
     box-shadow: none;
   }
 }
+/*
+ * Painel administrativo: as ações (ActionLink/ActionButton) vêm do vocabulário
+ * editorial do catálogo (caixa alta espaçada). Dentro do painel usam o visual de
+ * software: texto normal, cantos suaves e CTA em terracota. Fica FORA dos layers
+ * de propósito, para vencer as utilities da própria ação sem !important.
+ * O catálogo público não tem a classe .admin-ui e não muda.
+ */
+.admin-ui [data-slot="action"] {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.75rem;
+  height: 2.75rem;
+  padding-inline: 1.25rem;
+}
+.admin-ui [data-slot="action"][data-variant="solid"] {
+  background: var(--gold);
+  color: var(--primary-foreground);
+}
+.admin-ui [data-slot="action"][data-variant="solid"]:hover {
+  background: var(--gold);
+  opacity: 0.9;
+}
+.admin-ui [data-slot="action"][data-variant="outline"] {
+  border-color: var(--border);
+  background: var(--card);
+}
+.admin-ui [data-slot="action"][data-variant="outline"]:hover {
+  border-color: var(--gold);
+  background: var(--brand-soft);
+  color: var(--foreground);
+}
+.admin-ui [data-slot="action"][data-variant="ghost"],
+.admin-ui [data-slot="action"][data-variant="underline"] {
+  height: auto;
+  padding-inline: 0;
+  border-radius: 0.5rem;
+}
+.admin-ui [data-slot="action"][data-variant="ghost"]:hover,
+.admin-ui [data-slot="action"][data-variant="underline"]:hover {
+  color: var(--gold);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .admin-ui [data-slot="action"]:active {
+    transform: translateY(1px);
+  }
+}

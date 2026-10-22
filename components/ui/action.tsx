@@ -69,6 +69,8 @@ export function ActionLink({
         href={href}
         target="_blank"
         rel="noopener noreferrer"
+        data-slot="action"
+        data-variant={variant ?? "solid"}
         className={cn(actionVariants({ variant }), className)}
         {...props}
       >
@@ -78,7 +80,13 @@ export function ActionLink({
   }
 
   return (
-    <Link href={href} className={cn(actionVariants({ variant }), className)} {...props}>
+    <Link
+      href={href}
+      data-slot="action"
+      data-variant={variant ?? "solid"}
+      className={cn(actionVariants({ variant }), className)}
+      {...props}
+    >
       {content}
     </Link>
   );
@@ -92,7 +100,12 @@ export function ActionButton({
   ...props
 }: ActionProps & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
-    <button className={cn(actionVariants({ variant }), className)} {...props}>
+    <button
+      data-slot="action"
+      data-variant={variant ?? "solid"}
+      className={cn(actionVariants({ variant }), className)}
+      {...props}
+    >
       {children}
       {arrow ? <Arrow /> : null}
     </button>

@@ -85,7 +85,7 @@ export function AdminThemeProvider({
     <ThemeContext.Provider value={{ isDark, toggle: () => setIsDark((v) => !v) }}>
       <div
         className={cn(
-          "flex flex-1 flex-col bg-background text-foreground",
+          "admin-ui flex flex-1 flex-col bg-background text-foreground",
           isDark && "dark",
         )}
         style={(isDark ? ADMIN_DARK_VARS : ADMIN_LIGHT_VARS) as React.CSSProperties}
