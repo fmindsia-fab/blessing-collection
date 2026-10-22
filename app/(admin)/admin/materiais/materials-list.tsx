@@ -27,6 +27,13 @@ const initialState: PricingFormState = {};
 const inlineInput =
   "h-10 border-transparent bg-transparent px-2.5 text-sm shadow-none hover:border-input focus-visible:bg-background";
 
+// Completa os centavos ao sair do campo: 10 vira 10.00 (o navegador mostra 10,00 em pt-BR).
+function padCents(input: HTMLInputElement) {
+  if (input.value === "") return;
+  const value = Number(input.value);
+  if (Number.isFinite(value) && value >= 0) input.value = value.toFixed(2);
+}
+
 function normalize(value: string) {
   return value
     .toLowerCase()
@@ -49,6 +56,8 @@ export function MaterialsList({ materials }: { materials: Material[] }) {
   const [savedId, setSavedId] = useState<string | null>(null);
   // Remoção em duas etapas na própria linha (no lugar da janela nativa confirm()).
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  // Linhas removidas: somem na hora (sem esperar o servidor) e voltam se a remoção falhar.
+  const [removedIds, setRemovedIds] = useState<string[]>([]);
 
   // Limpa o formulário depois de adicionar com sucesso (e só então).
   useEffect(() => {
@@ -58,9 +67,10 @@ export function MaterialsList({ materials }: { materials: Material[] }) {
 
   const filtered = useMemo(() => {
     const needle = normalize(query.trim());
-    if (!needle) return materials;
-    return materials.filter((material) => normalize(material.name).includes(needle));
-  }, [materials, query]);
+    const visible = materials.filter((material) => !removedIds.includes(material.id));
+    if (!needle) return visible;
+    return visible.filter((material) => normalize(material.name).includes(needle));
+  }, [materials, query, removedIds]);
 
   function save(id: string, fields: { name?: string; unit?: string; unitCost?: number }) {
     setSavingId(id);
@@ -75,7 +85,14 @@ export function MaterialsList({ materials }: { materials: Material[] }) {
 
   function remove(material: Material) {
     setConfirmingId(null);
-    startTransition(() => toggleMaterial(material.id, "active"));
+    setRemovedIds((current) => [...current, material.id]);
+    startTransition(async () => {
+      try {
+        await toggleMaterial(material.id, "active");
+      } catch {
+        setRemovedIds((current) => current.filter((id) => id !== material.id));
+      }
+    });
   }
 
   return (
@@ -98,7 +115,15 @@ export function MaterialsList({ materials }: { materials: Material[] }) {
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="mat-cost">Preço unitário (R$)</Label>
-            <Input id="mat-cost" name="unitCost" type="number" step="0.01" min="0" placeholder="0,00" />
+            <Input
+              id="mat-cost"
+              name="unitCost"
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="0,00"
+              onBlur={(e) => padCents(e.target)}
+            />
           </div>
           <Button type="submit" disabled={isPending} className="w-full sm:w-auto">
             <PlusIcon />
@@ -118,7 +143,9 @@ export function MaterialsList({ materials }: { materials: Material[] }) {
           <div className="flex flex-col gap-0.5">
             <h2 className="text-lg font-semibold tracking-tight">
               Seus materiais{" "}
-              <span className="text-sm font-normal text-muted-foreground">({materials.length})</span>
+              <span className="text-sm font-normal text-muted-foreground">
+                ({materials.length - removedIds.filter((id) => materials.some((m) => m.id === id)).length})
+              </span>
             </h2>
             <p className="text-sm text-muted-foreground">
               Clique no nome, na unidade ou no preço para editar; salva ao sair do campo. Reajustar o preço
@@ -228,10 +255,11 @@ export function MaterialsList({ materials }: { materials: Material[] }) {
                         type="number"
                         step="0.01"
                         min="0"
-                        defaultValue={material.unit_cost || ""}
+                        defaultValue={material.unit_cost ? material.unit_cost.toFixed(2) : ""}
                         placeholder="0,00"
                         aria-label={`Preço unitário de ${material.name}`}
                         onBlur={(e) => {
+                          padCents(e.target);
                           const value = Number(e.target.value) || 0;
                           if (value === material.unit_cost) return;
                           save(material.id, { unitCost: value });
