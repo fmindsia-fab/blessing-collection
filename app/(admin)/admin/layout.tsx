@@ -2,10 +2,16 @@ import { cookies } from "next/headers";
 import { AdminSidebar, SIDEBAR_COOKIE } from "./admin-sidebar";
 import { AdminThemeProvider } from "./theme-provider";
 import { ThemeToggle } from "./theme-toggle";
+import { TextSizeControl } from "./text-size-control";
 import { MobileNav } from "./mobile-nav";
 import { PlatformMark } from "@/components/shared/platform-logo";
 import { getActiveStore, getSiteUrl } from "@/lib/store/get-active-store";
-import { DARK_MODE_COOKIE } from "@/lib/store/admin-theme";
+import {
+  DARK_MODE_COOKIE,
+  TEXT_SIZE_COOKIE,
+  TEXT_SIZE_PERCENT,
+  parseTextSize,
+} from "@/lib/store/admin-theme";
 import { SubscriptionBanner } from "./subscription-banner";
 import { OwnershipBanner } from "./ownership-banner";
 import { TrialDaysBadge } from "./trial-days-badge";
@@ -20,10 +26,13 @@ export default async function AdminAreaLayout({ children }: { children: React.Re
   const cookieStore = await cookies();
   const themeCookie = cookieStore.get(DARK_MODE_COOKIE)?.value;
   const initialDark = themeCookie === "dark" ? true : themeCookie === "light" ? false : null;
+  const textSize = parseTextSize(cookieStore.get(TEXT_SIZE_COOKIE)?.value);
   const sidebarCollapsed = cookieStore.get(SIDEBAR_COOKIE)?.value === "collapsed";
 
   return (
     <AdminThemeProvider initialDark={initialDark}>
+      {/* Tamanho do texto escolhido: escala o rem de toda a página já no primeiro paint. */}
+      {textSize !== "normal" ? <style>{`html{font-size:${TEXT_SIZE_PERCENT[textSize]}%}`}</style> : null}
       <div className="flex min-h-screen flex-1">
         <AdminSidebar storeName={storeName} siteUrl={siteUrl} initialCollapsed={sidebarCollapsed} />
 
@@ -43,6 +52,7 @@ export default async function AdminAreaLayout({ children }: { children: React.Re
 
             <div className="flex items-center gap-2">
               <TrialDaysBadge storeId={store.id} />
+              <TextSizeControl initial={textSize} />
               <ThemeToggle />
             </div>
           </header>

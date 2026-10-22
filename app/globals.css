@@ -311,3 +311,10 @@
 .admin-ui .sidebar-scroll:hover::-webkit-scrollbar-thumb {
   background: color-mix(in oklab, var(--foreground) 25%, transparent);
 }
+
+/* Legibilidade no painel (também para quem tem mais idade): o menor texto sobe de 12px
+   para 13px e os rótulos secundários ganham um pouco mais de contraste. */
+.admin-ui .text-xs {
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+}

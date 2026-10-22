@@ -71,3 +71,20 @@ export const ADMIN_DARK_VARS: Record<string, string> = {
 export const DARK_MODE_STORAGE_KEY = "blessing-admin-theme";
 // Cookie espelho da preferência: o servidor lê para renderizar o tema certo já no primeiro paint.
 export const DARK_MODE_COOKIE = "atelifacil-admin-theme";
+
+// Tamanho do texto do painel (acessibilidade): escala o rem do <html>, então tudo que
+// usa rem (textos, botões, espaços, sidebar) cresce junto. Guardado em cookie para o
+// servidor já renderizar no tamanho certo, sem "pular" depois de carregar.
+export const TEXT_SIZE_COOKIE = "atelifacil-text-size";
+export const TEXT_SIZES = ["normal", "large", "xlarge"] as const;
+export type TextSize = (typeof TEXT_SIZES)[number];
+export const TEXT_SIZE_PERCENT: Record<TextSize, number> = { normal: 100, large: 112.5, xlarge: 125 };
+export const TEXT_SIZE_LABEL: Record<TextSize, string> = {
+  normal: "Normal",
+  large: "Grande",
+  xlarge: "Muito grande",
+};
+
+export function parseTextSize(value: string | undefined): TextSize {
+  return (TEXT_SIZES as readonly string[]).includes(value ?? "") ? (value as TextSize) : "normal";
+}

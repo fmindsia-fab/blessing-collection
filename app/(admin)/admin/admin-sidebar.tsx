@@ -29,9 +29,9 @@ type SidebarProps = {
 };
 
 const itemBase =
-  "group/item relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-[var(--gold)]";
+  "group/item relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[0.9375rem] font-medium outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-[var(--gold)]";
 
-const itemIdle = "text-sidebar-foreground/75 hover:bg-[var(--brand-soft)] hover:text-sidebar-foreground";
+const itemIdle = "text-sidebar-foreground/85 hover:bg-[var(--brand-soft)] hover:text-sidebar-foreground";
 
 function NavItem({
   item,
@@ -108,7 +108,7 @@ function SecondaryGroup({
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={expanded}
-        className={cn(itemBase, "text-sidebar-foreground/60 hover:bg-[var(--brand-soft)] hover:text-sidebar-foreground")}
+        className={cn(itemBase, "text-sidebar-foreground/75 hover:bg-[var(--brand-soft)] hover:text-sidebar-foreground")}
       >
         <ChevronDownIcon
           className={cn("size-[1.125rem] shrink-0 transition-transform duration-200", !expanded && "-rotate-90")}
@@ -193,7 +193,7 @@ export function SidebarContent({ storeName, siteUrl, onNavigate, collapsed = fal
         </span>
         {collapsed ? null : (
           <span className="flex min-w-0 flex-col leading-tight">
-            <span className="text-xs text-sidebar-foreground/60">Loja conectada</span>
+            <span className="text-xs text-sidebar-foreground/75">Loja conectada</span>
             <span className="truncate text-sm font-semibold">{storeName}</span>
           </span>
         )}
@@ -205,7 +205,7 @@ export function SidebarContent({ storeName, siteUrl, onNavigate, collapsed = fal
             {collapsed ? (
               <span aria-hidden className="mx-3 h-px bg-sidebar-border" />
             ) : (
-              <span className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/55">
+              <span className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/75">
                 {group.label}
               </span>
             )}
@@ -247,7 +247,7 @@ export function SidebarContent({ storeName, siteUrl, onNavigate, collapsed = fal
             message={`Olha o catálogo da ${storeName}, que peças lindas!`}
             label="Compartilhar loja"
             variant="ghost"
-            className="h-auto justify-start gap-3 rounded-xl px-3 py-2 text-sm font-medium normal-case tracking-normal text-sidebar-foreground/75 hover:bg-[var(--brand-soft)] hover:text-sidebar-foreground [&_svg]:size-[1.125rem]"
+            className="h-auto justify-start gap-3 rounded-xl px-3 py-2 text-sm font-medium normal-case tracking-normal text-sidebar-foreground/85 hover:bg-[var(--brand-soft)] hover:text-sidebar-foreground [&_svg]:size-[1.125rem]"
           />
         )}
         <button
@@ -257,7 +257,7 @@ export function SidebarContent({ storeName, siteUrl, onNavigate, collapsed = fal
           className={cn(
             itemBase,
             collapsed && "justify-center px-0",
-            "text-sidebar-foreground/75 hover:bg-destructive/10 hover:text-destructive",
+            "text-sidebar-foreground/85 hover:bg-destructive/10 hover:text-destructive",
           )}
         >
           <LogOutIcon className="size-[1.125rem] shrink-0" aria-hidden />
@@ -301,7 +301,7 @@ export function AdminSidebar({
         onClick={toggle}
         aria-label={collapsed ? "Expandir menu lateral" : "Recolher menu lateral"}
         aria-pressed={collapsed}
-        className="mt-3 flex size-9 items-center justify-center self-end rounded-lg text-sidebar-foreground/60 outline-none transition-colors hover:bg-[var(--brand-soft)] hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
+        className="mt-3 flex size-9 items-center justify-center self-end rounded-lg text-sidebar-foreground/75 outline-none transition-colors hover:bg-[var(--brand-soft)] hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
       >
         {collapsed ? <PanelLeftOpenIcon className="size-4" /> : <PanelLeftCloseIcon className="size-4" />}
       </button>
