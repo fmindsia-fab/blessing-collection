@@ -58,7 +58,7 @@ export function LaborForm({ settings }: { settings: Settings }) {
   return (
     <form action={formAction} className="flex flex-col gap-6">
       <fieldset className="flex flex-col gap-4">
-        <legend className="admin-kicker mb-3">Sua hora de trabalho</legend>
+        <legend className="mb-3 text-lg font-semibold tracking-tight">Sua hora de trabalho</legend>
 
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="flex flex-col gap-1.5">
@@ -152,7 +152,7 @@ export function LaborForm({ settings }: { settings: Settings }) {
       </fieldset>
 
       <fieldset className="flex flex-col gap-4 border-t border-border pt-6">
-        <legend className="admin-kicker mb-3">Tributação</legend>
+        <legend className="mb-3 text-lg font-semibold tracking-tight">Tributação</legend>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
@@ -192,7 +192,7 @@ export function LaborForm({ settings }: { settings: Settings }) {
       </fieldset>
 
       <fieldset className="flex flex-col gap-4 border-t border-border pt-6">
-        <legend className="admin-kicker mb-3">Método padrão</legend>
+        <legend className="mb-3 text-lg font-semibold tracking-tight">Método padrão</legend>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">

@@ -19,9 +19,9 @@ export function BrandFontUpload({
   const [isRemoving, startTransition] = useTransition();
 
   return (
-    <div className="flex flex-col gap-4 border-t border-border pt-6">
+    <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <span className="text-sm font-medium">Enviar fonte própria</span>
+        <span className="text-lg font-semibold tracking-tight">Enviar fonte própria</span>
         <span className="text-xs leading-relaxed text-muted-foreground">
           Arquivo <code className="font-mono">.woff2</code>, até 2MB. Use apenas fontes que você tem
           licença para usar na web. Enquanto houver uma fonte enviada, ela substitui a lista curada.

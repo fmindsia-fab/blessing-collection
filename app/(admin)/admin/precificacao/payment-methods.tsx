@@ -29,19 +29,22 @@ export function PaymentMethods({ methods }: { methods: Method[] }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <p className="text-xs text-muted-foreground">
+      <p className="text-sm text-muted-foreground">
         As taxas variam por maquininha e por negociação — preencha com as que você realmente paga.
         Elas entram no cálculo do preço para que a margem não seja corroída.
       </p>
 
-      <div className="flex flex-col divide-y divide-border border-y border-border">
+      <div className="flex flex-col gap-2">
         {methods.map((method) => {
           const isArchived = method.status === "archived";
 
           return (
-            <div key={method.id} className="flex items-center justify-between gap-4 py-3">
+            <div
+              key={method.id}
+              className={`flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-2xl border border-border bg-card px-4 py-3 shadow-sm transition-colors hover:border-[var(--gold)]/40 ${isArchived ? "opacity-70" : ""}`}
+            >
               <div className="flex min-w-0 flex-col">
-                <span className="truncate text-sm">{method.label}</span>
+                <span className="truncate text-sm font-medium">{method.label}</span>
                 <span className="text-xs text-muted-foreground">
                   {method.installments > 1 ? `${method.installments} parcelas` : "à vista"}
                 </span>
@@ -60,7 +63,6 @@ export function PaymentMethods({ methods }: { methods: Method[] }) {
                     defaultValue={method.fee_percent || ""}
                     placeholder="0"
                     aria-label={`Taxa de ${method.label} em porcentagem`}
-                    disabled={isSaving}
                     onBlur={(e) => {
                       const value = Number(e.target.value) || 0;
                       if (value === method.fee_percent) return;
@@ -74,7 +76,7 @@ export function PaymentMethods({ methods }: { methods: Method[] }) {
                 <Button
                   type="button"
                   variant="outline"
-                  size="xs"
+                  size="sm"
                   disabled={isSaving}
                   onClick={() => startTransition(() => togglePaymentMethod(method.id, method.status))}
                 >
@@ -121,7 +123,9 @@ export function PaymentMethods({ methods }: { methods: Method[] }) {
         </Button>
 
         {state.error ? (
-          <p className="text-sm text-destructive sm:col-span-4">{state.error}</p>
+          <p role="alert" className="rounded-xl bg-destructive/10 px-3 py-2.5 text-sm font-medium text-destructive sm:col-span-4">
+            {state.error}
+          </p>
         ) : null}
       </form>
     </div>

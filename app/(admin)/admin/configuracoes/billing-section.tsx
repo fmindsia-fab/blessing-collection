@@ -40,8 +40,8 @@ export function BillingSection({
   // Cortesia (ex.: cliente sem cobrança): nada a pagar nem a gerenciar.
   if (billingType === "complimentary") {
     return (
-      <div className="flex flex-col gap-1 border-t border-border pt-6">
-        <span className="text-sm font-medium">Assinatura</span>
+      <div className="flex flex-col gap-1">
+        <span className="text-lg font-semibold tracking-tight">Assinatura</span>
         <span className="text-xs text-muted-foreground">Plano cortesia: sem cobrança.</span>
       </div>
     );
@@ -81,9 +81,9 @@ export function BillingSection({
   }
 
   return (
-    <div className="flex flex-col gap-3 border-t border-border pt-6">
+    <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
-        <span className="text-sm font-medium">Assinatura</span>
+        <span className="text-lg font-semibold tracking-tight">Assinatura</span>
         <span className="text-xs text-muted-foreground">
           {status ? STATUS_LABEL[status] : "Nenhuma assinatura iniciada"}
           {planPriceLabel ? ` · Plano mensal ${planPriceLabel}` : ""}

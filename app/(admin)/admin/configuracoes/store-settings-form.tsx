@@ -114,7 +114,7 @@ export function StoreSettingsForm({ store }: StoreSettingsFormProps) {
       <fieldset className="flex flex-col gap-4 border-t border-border pt-6">
         <legend className="sr-only">Divulgação</legend>
         <div className="flex flex-col gap-1">
-          <span className="text-sm font-medium">Divulgação no marketplace</span>
+          <span className="text-lg font-semibold tracking-tight">Divulgação no marketplace</span>
           <span className="text-xs text-muted-foreground">
             Ajuda clientes a encontrarem o seu ateliê quando o marketplace for lançado.
           </span>
@@ -130,7 +130,7 @@ export function StoreSettingsForm({ store }: StoreSettingsFormProps) {
       <fieldset className="flex flex-col gap-6 border-t border-border pt-6">
         <legend className="sr-only">Identidade visual</legend>
         <div className="flex flex-col gap-1">
-          <span className="text-sm font-medium">Identidade visual</span>
+          <span className="text-lg font-semibold tracking-tight">Identidade visual</span>
           <span className="text-xs text-muted-foreground">Cores e fonte aplicadas ao catálogo público.</span>
         </div>
 

@@ -8,6 +8,7 @@ import { BrandFontUpload } from "./brand-font-upload";
 import { ShareButton } from "@/components/shared/share-button";
 import { BillingSection } from "./billing-section";
 import { getPlanPriceLabel } from "@/lib/stripe/price";
+import { SettingsSection } from "./settings-section";
 
 const CHECKOUT_NOTICE: Record<string, { ok: boolean; text: string }> = {
   sucesso: {
@@ -27,6 +28,14 @@ const CHECKOUT_NOTICE: Record<string, { ok: boolean; text: string }> = {
     text: "Você está logado com outra conta, que não é a dona desta loja. Entre com a conta da loja para assinar.",
   },
 };
+
+const SECTION_LINKS = [
+  { id: "dados", label: "Dados da loja" },
+  { id: "fonte", label: "Fonte" },
+  { id: "logo", label: "Logo" },
+  { id: "divulgar", label: "Divulgar" },
+  { id: "assinatura", label: "Assinatura" },
+];
 
 export default async function AdminSettingsPage({
   searchParams,
@@ -50,7 +59,7 @@ export default async function AdminSettingsPage({
     .maybeSingle();
 
   return (
-    <div className="flex max-w-xl flex-col gap-8">
+    <div className="flex max-w-2xl flex-col gap-6">
       <PageHeading
         kicker="Sua loja"
         title="Configurações"
@@ -59,24 +68,44 @@ export default async function AdminSettingsPage({
       {notice ? (
         <p
           role={notice.ok ? "status" : "alert"}
-          className={`rounded-md border px-3 py-2 text-sm ${notice.ok ? "border-border bg-secondary" : "border-destructive/40 text-destructive"}`}
+          className={`rounded-xl border px-4 py-3 text-sm font-medium ${notice.ok ? "border-[var(--gold)]/40 bg-[var(--brand-soft)]" : "border-destructive/40 bg-destructive/10 text-destructive"}`}
         >
           {notice.text}
         </p>
       ) : null}
-      <StoreSettingsForm store={{ ...store, pix_key: storePrivate.pix_key }} />
 
-      <BrandFontUpload
-        customFontName={store.custom_font_name}
-        hasCustomFont={Boolean(store.custom_font_url)}
-      />
+      <nav aria-label="Seções das configurações" className="flex flex-wrap gap-2">
+        {SECTION_LINKS.map((link) => (
+          <a
+            key={link.id}
+            href={`#${link.id}`}
+            className="rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-muted-foreground outline-none transition-colors hover:border-[var(--gold)] hover:text-foreground focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
+          >
+            {link.label}
+          </a>
+        ))}
+      </nav>
 
-      <StoreLogoForm logoUrl={store.logo_url} />
+      <SettingsSection id="dados" title="Dados da loja">
+        <StoreSettingsForm store={{ ...store, pix_key: storePrivate.pix_key }} />
+      </SettingsSection>
 
-      <div className="flex flex-col gap-3 border-t border-border pt-6">
+      <SettingsSection id="fonte">
+        <BrandFontUpload
+          customFontName={store.custom_font_name}
+          hasCustomFont={Boolean(store.custom_font_url)}
+        />
+      </SettingsSection>
+
+      <SettingsSection id="logo">
+        <StoreLogoForm logoUrl={store.logo_url} />
+      </SettingsSection>
+
+      <SettingsSection id="divulgar">
+      <div className="flex flex-col gap-3">
         <div className="flex flex-col gap-1">
-          <span className="text-sm font-medium">Divulgar o catálogo</span>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-lg font-semibold tracking-tight">Divulgar o catálogo</span>
+          <span className="text-sm text-muted-foreground">
             Envie o link para clientes por WhatsApp, Instagram ou onde preferir.
           </span>
         </div>
@@ -87,11 +116,13 @@ export default async function AdminSettingsPage({
           label="Compartilhar catálogo"
           className="w-fit"
         />
-        <code className="w-fit border border-border bg-secondary/60 px-3 py-2 font-mono text-xs text-muted-foreground">
+        <code className="w-fit max-w-full overflow-x-auto rounded-lg border border-border bg-secondary/60 px-3 py-2 font-mono text-xs text-muted-foreground">
           {siteUrl || "Defina NEXT_PUBLIC_SITE_URL"}
         </code>
       </div>
+      </SettingsSection>
 
+      <SettingsSection id="assinatura">
       <BillingSection
         status={subscription?.status ?? null}
         billingType={subscription?.billing_type ?? null}
@@ -103,6 +134,7 @@ export default async function AdminSettingsPage({
         cancelAt={subscription?.cancel_at ?? null}
         planPriceLabel={planPriceLabel}
       />
+      </SettingsSection>
     </div>
   );
 }
