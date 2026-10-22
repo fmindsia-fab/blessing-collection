@@ -7,8 +7,6 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   CircleHelpIcon,
-  MicIcon,
-  MicOffIcon,
   SearchIcon,
   XIcon,
 } from "lucide-react";
@@ -17,11 +15,9 @@ import { Button } from "@/components/ui/button";
 import { HELP_TASKS, type HelpTask } from "@/lib/help/tasks";
 import { searchHelp } from "@/lib/help/search";
 import { usePortalThemeProps } from "@/app/(admin)/admin/theme-provider";
-import { useVoiceInput } from "./use-voice-input";
-import { VoiceNotice } from "./voice-notice";
 import { cn } from "@/lib/utils";
 
-// Ajuda do painel: a pessoa escreve (ou fala) o que quer fazer, escolhe o roteiro e o painel
+// Ajuda do painel: a pessoa escreve o que quer fazer, escolhe o roteiro e o painel
 // a leva passo a passo, destacando na tela o botão ou o campo de cada passo.
 // Tudo local: sem IA, sem envio de dados e sem registrar nada do que foi pesquisado.
 
@@ -45,12 +41,6 @@ export function HelpProvider({ children }: { children: React.ReactNode }) {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<HelpTask | null>(null);
   const [tour, setTour] = useState<{ task: HelpTask; index: number } | null>(null);
-
-  const voice = useVoiceInput((text, isFinal) => {
-    // O texto aparece no campo enquanto a pessoa fala; ao terminar, a busca já mostra o resultado.
-    setQuery(text);
-    if (isFinal) setSelected(null);
-  });
 
   const results = useMemo(() => (query.trim() ? searchHelp(query) : []), [query]);
   const suggestions = useMemo(
@@ -96,8 +86,6 @@ export function HelpProvider({ children }: { children: React.ReactNode }) {
   }, [step, pathname]);
 
   function close() {
-    voice.stop();
-    voice.clearIssue();
     setOpen(false);
     setSelected(null);
     setQuery("");
@@ -146,7 +134,7 @@ export function HelpProvider({ children }: { children: React.ReactNode }) {
             <>
               <DialogTitle>Como posso ajudar?</DialogTitle>
               <DialogDescription>
-                Escreva ou fale o que você quer fazer. Por exemplo: &quot;cadastrar produto&quot; ou &quot;mudar preço&quot;.
+                Escreva o que você quer fazer. Por exemplo: &quot;cadastrar produto&quot; ou &quot;mudar preço&quot;.
               </DialogDescription>
 
               <div className="flex items-center gap-2">
@@ -160,41 +148,16 @@ export function HelpProvider({ children }: { children: React.ReactNode }) {
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="O que você quer fazer?"
-                    aria-label="O que você quer fazer?"
+                    aria-label="O que você quer fazer?" enterKeyHint="search"
                     autoFocus
                     className="h-12 w-full rounded-xl border border-input bg-background pl-10 pr-3 text-base outline-none transition-colors placeholder:text-muted-foreground/70 focus-visible:border-foreground/40 focus-visible:ring-2 focus-visible:ring-[var(--gold)]/40"
                   />
                 </div>
-                <button
-                  type="button"
-                  onClick={voice.listening ? voice.stop : voice.start}
-                  aria-label={voice.listening ? "Parar de ouvir" : "Falar o que você quer fazer"}
-                  aria-pressed={voice.listening}
-                  className={cn(
-                    "flex size-12 shrink-0 items-center justify-center rounded-xl border outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--gold)]",
-                    voice.listening
-                      ? "animate-pulse border-[var(--gold)] bg-[var(--gold)] text-primary-foreground motion-reduce:animate-none"
-                      : "border-input bg-background text-muted-foreground hover:border-[var(--gold)] hover:text-foreground",
-                  )}
-                >
-                  {voice.listening ? <MicOffIcon className="size-5" /> : <MicIcon className="size-5" />}
-                </button>
               </div>
 
-              {voice.listening ? (
-                <p role="status" className="flex flex-col gap-0.5 text-sm font-medium text-[var(--gold)]">
-                  <span>Estou ouvindo… pode falar.</span>
-                  <span className="text-xs font-normal text-muted-foreground">
-                    Se o navegador perguntar sobre o microfone, toque em <strong>Permitir</strong>.
-                  </span>
-                </p>
-              ) : null}
-              {voice.issue ? <VoiceNotice issue={voice.issue} onRetry={voice.start} /> : null}
-              {voice.supported && !voice.issue && !voice.listening ? (
-                <p className="text-xs text-muted-foreground">
-                  Toque no microfone para falar. A voz é reconhecida pelo seu navegador, que pode enviar o áudio ao serviço de voz dele. Nada fica guardado aqui.
-                </p>
-              ) : null}
+              <p className="text-sm text-muted-foreground">
+                Dica: no celular, toque no <strong>microfone do teclado</strong> para falar em vez de digitar.
+              </p>
 
               <div className="flex flex-col gap-2">
                 {query.trim() && results.length === 0 ? (

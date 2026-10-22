@@ -13,7 +13,7 @@ export type HelpStep = {
 export type HelpTask = {
   id: string;
   title: string;
-  /** Frases e palavras que a pessoa pode digitar ou falar para chegar nesta tarefa. */
+  /** Frases e palavras que a pessoa pode digitar para chegar nesta tarefa. */
   keywords: string[];
   steps: HelpStep[];
 };
