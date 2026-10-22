@@ -8,48 +8,45 @@ import { YarnSkein, StitchWave, CrochetDots, YarnTangle, YarnBall, CrochetHooks 
 // laptop/tablet ao fundo — fornecida pelo usuário.
 const HERO_PHOTO_URL = "/marketing/hero-produto.jpg";
 
-// "Por dentro do AteliFácil" — 6 cards com imagem real + título + texto,
-// dando contexto a cada print em vez de deixá-los soltos. Reaproveita a
-// foto do hero (card 1) e os prints que já existiam na galeria, mais 3
-// novos prints do painel (dashboard, precificação, cadastro de produto).
-// Valores em R$ foram borrados antes do envio nas telas que mostravam
-// números reais da loja.
+// "Por dentro do AteliFácil": 6 pôsteres do catálogo real da Blessing Collection, cada
+// um mostrando uma funcionalidade da vitrine, com título e texto de apoio. As imagens
+// são verticais (9:16) e já trazem o título desenhado; o texto abaixo explica o recurso.
 const SHOWCASE_CARDS = [
   {
-    url: HERO_PHOTO_URL,
-    alt: "Artesã produzindo uma bolsa de crochê, com o catálogo de produtos visível no notebook",
-    title: "Sua vitrine, com a sua identidade",
-    text: "Apresente suas peças com fotos, preços, variações e todos os detalhes que sua cliente precisa.",
+    url: "/marketing/vitrine-catalogo-real.jpg",
+    alt: "Catálogo real da Blessing Collection no celular: logo, nome da loja e a bolsa Valentina com fotos e preço",
+    title: "Seu catálogo, com a sua identidade",
+    text: "Logo, cores e fotos do seu ateliê numa vitrine elegante, como esta, que já está no ar.",
   },
   {
-    url: "/marketing/galeria-pedidos.jpg",
-    alt: "Painel de pedidos organizados por etapa: orçamento, confirmado, em produção, entregue",
-    title: "Pedidos sem bagunça",
-    text: "Saiba o que está em orçamento, confirmado, em produção ou já foi entregue.",
+    url: "/marketing/vitrine-peca.jpg",
+    alt: "Página de uma peça com galeria de fotos, nome, valor de referência e se é sob encomenda",
+    title: "Cada peça com fotos, nome e preço",
+    text: "Várias fotos, valor de referência e a informação de pronta entrega ou sob encomenda, tudo na página da peça.",
   },
   {
-    url: "/marketing/galeria-colecoes.jpg",
-    alt: "Coleções do catálogo público: Blessing, Moda Praia, Casual, Festa",
-    title: "Coleções que facilitam a escolha",
-    text: "Organize seus produtos por categoria, estilo ou ocasião e deixe seu catálogo mais fácil de navegar.",
+    url: "/marketing/vitrine-categorias.jpg",
+    alt: "Seção de categorias do catálogo: Bolsas, Acessórios, Organizadores e Kits e Presentes",
+    title: "Separe seus produtos por categorias",
+    text: "Bolsas, acessórios, kits e o que mais você fizer: seu catálogo fica mais claro e fácil de navegar.",
   },
   {
-    url: "/marketing/showcase-produto-form.jpg",
-    alt: "Formulário de cadastro de produto, com descrição, materiais, peso e dimensões",
-    title: "Cadastro completo, do seu jeito",
-    text: "Descrição, materiais, peso e medidas — tudo registrado para você não depender da memória.",
+    url: "/marketing/vitrine-lancamentos.jpg",
+    alt: "Seção de lançamentos do catálogo, com as peças recém-chegadas",
+    title: "Destaque lançamentos e novidades",
+    text: "Mostre as peças recém-chegadas na página inicial e mantenha seu catálogo sempre atualizado.",
   },
   {
-    url: "/marketing/showcase-precificacao.jpg",
-    alt: "Calculadora de precificação do painel administrativo",
-    title: "Precificação com mais segurança",
-    text: "Veja custo de material, mão de obra e sugestão de venda — saiba exatamente quanto cobrar.",
+    url: "/marketing/vitrine-busca-filtros.jpg",
+    alt: "Página de peças do catálogo com busca por nome e filtros de categoria, modelo, cor e disponibilidade",
+    title: "Busca e filtros para a cliente",
+    text: "Ela busca pelo nome e filtra por categoria, modelo, cor e disponibilidade para achar a peça ideal mais rápido.",
   },
   {
-    url: "/marketing/showcase-dashboard.jpg",
-    alt: "Painel com indicadores da loja: produtos no catálogo, visualizações e cliques no WhatsApp",
-    title: "Saiba o que está funcionando",
-    text: "Acompanhe visualizações, cliques no WhatsApp e os produtos mais procurados do seu catálogo.",
+    url: "/marketing/vitrine-compartilhar.jpg",
+    alt: "Rodapé do catálogo com botões de WhatsApp, Instagram e Compartilhar",
+    title: "Compartilhe sua vitrine com facilidade",
+    text: "WhatsApp, Instagram e um botão de compartilhar: mande o link onde quiser e receba os pedidos.",
   },
 ];
 
@@ -290,24 +287,25 @@ export function MarketingHome() {
               Por dentro do AteliFácil
             </span>
             <h2 className="font-[family-name:var(--font-brand)] text-3xl tracking-tight sm:text-4xl">
-              Tudo do seu ateliê, organizado em um só lugar
+              Uma vitrine bonita, fácil de navegar e de compartilhar
             </h2>
             <p className="max-w-xl text-pretty text-base leading-relaxed text-[var(--craft-muted)]">
-              Do catálogo ao pedido, você apresenta melhor suas peças e mantém suas vendas e
-              encomendas mais organizadas.
+              Veja o que suas clientes encontram quando abrem o seu catálogo, com exemplos do
+              catálogo real da Blessing Collection.
             </p>
           </div>
 
-          <div className="grid gap-8 sm:grid-cols-3">
+          {/* Celular: carrossel deslizante (cada pôster é alto). Telas maiores: grade de 3 colunas. */}
+          <div className="-mx-6 flex snap-x snap-mandatory gap-5 overflow-x-auto px-6 pb-4 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-8 sm:overflow-visible sm:px-0 sm:pb-0">
             {SHOWCASE_CARDS.map((card) => (
-              <div key={card.title} className="flex flex-col gap-4">
-                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[var(--radius-image)] border border-[var(--craft-border)] bg-[var(--craft-card)] shadow-sm">
+              <div key={card.title} className="flex w-[78%] shrink-0 snap-center flex-col gap-4 sm:w-auto">
+                <div className="relative aspect-[941/1672] w-full overflow-hidden rounded-[var(--radius-image)] border border-[var(--craft-border)] bg-[var(--craft-card)] shadow-sm">
                   <Image
                     src={card.url}
                     alt={card.alt}
                     fill
-                    className="object-cover object-top"
-                    sizes="(min-width: 640px) 30vw, 90vw"
+                    className="object-cover"
+                    sizes="(min-width: 640px) 30vw, 78vw"
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
