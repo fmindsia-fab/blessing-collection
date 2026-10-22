@@ -10,16 +10,14 @@ export default async function MaterialsPage() {
   const materials = await listActiveMaterials(store.id);
 
   return (
-    <div className="flex max-w-2xl flex-col gap-10">
+    <div className="flex max-w-3xl flex-col gap-8">
       <PageHeading
         kicker="Financeiro"
         title="Materiais"
         description="Cadastre fio, fecho, etiqueta, alça… uma vez, e reaproveite o preço em toda peça que usa."
       />
 
-      <section className="rounded-[var(--radius-image)] border border-border bg-card p-6 shadow-sm">
-        <MaterialsList materials={materials} />
-      </section>
+      <MaterialsList materials={materials} />
     </div>
   );
 }
