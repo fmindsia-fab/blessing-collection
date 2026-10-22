@@ -103,7 +103,7 @@ export function AdminThemeProvider({
 export function usePortalThemeProps(): { className: string; style: React.CSSProperties } {
   const { isDark } = useAdminTheme();
   return {
-    className: cn("admin-ui", isDark && "dark"),
+    className: cn("admin-ui text-foreground", isDark && "dark"),
     style: (isDark ? ADMIN_DARK_VARS : ADMIN_LIGHT_VARS) as React.CSSProperties,
   };
 }
