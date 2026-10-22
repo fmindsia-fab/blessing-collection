@@ -48,7 +48,7 @@ export function ProductRow({ product, statusLabel, isFirst, isLast, drag }: Prod
       onDrop={drag?.onDrop}
       onDragEnd={drag?.onDragEnd}
       className={cn(
-        "flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm transition-all duration-200 hover:border-[var(--gold)]/40 hover:shadow-md sm:flex-nowrap sm:px-4",
+        "flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm transition-all duration-200 hover:border-[var(--gold)]/40 hover:shadow-md lg:flex-nowrap sm:px-4",
         drag?.isDragging && "opacity-40",
         drag?.isOver && !drag.isDragging && "border-[var(--gold)]",
       )}
@@ -93,7 +93,7 @@ export function ProductRow({ product, statusLabel, isFirst, isLast, drag }: Prod
         )}
       </Link>
 
-      <div className="flex min-w-0 flex-1 flex-col gap-2">
+      <div className="flex min-w-0 flex-1 basis-40 flex-col gap-2">
         <Link
           href={`/admin/produtos/${product.id}/editar`}
           className="font-semibold text-base outline-none transition-colors hover:text-[var(--gold)] focus-visible:text-[var(--gold)] focus-visible:underline focus-visible:underline-offset-4"
@@ -111,7 +111,7 @@ export function ProductRow({ product, statusLabel, isFirst, isLast, drag }: Prod
         </div>
       </div>
 
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex w-full shrink-0 items-center justify-end gap-2 border-t border-border/60 pt-3 lg:w-auto lg:border-t-0 lg:pt-0">
         <Button
           type="button"
           variant="outline"
