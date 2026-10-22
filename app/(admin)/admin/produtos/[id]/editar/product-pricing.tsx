@@ -200,7 +200,7 @@ export function ProductPricing({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h2 className="text-sm font-medium">Formação de preço</h2>
+        <h2 className="text-xl font-semibold tracking-tight">Formação de preço</h2>
         <p className="text-xs text-muted-foreground">
           Uso interno — nada disto aparece no catálogo.
         </p>

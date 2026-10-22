@@ -4,6 +4,7 @@ import { listAllCollectionsForAdmin } from "@/lib/collections/queries";
 import { listAllModelsForAdmin } from "@/lib/models/queries";
 import { ProductForm } from "../product-form";
 import { PageHeading } from "@/components/admin/page-heading";
+import { PageSection } from "@/components/admin/page-section";
 
 export default async function NewProductPage() {
   const store = await getActiveStore();
@@ -20,7 +21,9 @@ export default async function NewProductPage() {
         title="Nova peça"
         description="Depois de salvar, você poderá enviar fotos e cadastrar variações na tela de edição."
       />
-      <ProductForm categories={categories} collections={collections} models={models} />
+      <PageSection id="dados">
+        <ProductForm categories={categories} collections={collections} models={models} />
+      </PageSection>
     </div>
   );
 }

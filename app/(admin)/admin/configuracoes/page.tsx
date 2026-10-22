@@ -8,7 +8,7 @@ import { BrandFontUpload } from "./brand-font-upload";
 import { ShareButton } from "@/components/shared/share-button";
 import { BillingSection } from "./billing-section";
 import { getPlanPriceLabel } from "@/lib/stripe/price";
-import { SettingsSection } from "./settings-section";
+import { PageSection as SettingsSection } from "@/components/admin/page-section";
 
 const CHECKOUT_NOTICE: Record<string, { ok: boolean; text: string }> = {
   sucesso: {

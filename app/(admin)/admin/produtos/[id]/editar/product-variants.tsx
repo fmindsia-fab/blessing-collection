@@ -37,7 +37,7 @@ export function ProductVariants({ productId, variants, colors, catalogGroups }: 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <h2 className="text-sm font-medium">Variações</h2>
+        <h2 className="text-xl font-semibold tracking-tight">Variações</h2>
         <p className="text-xs text-zinc-500">Cores, tamanhos ou outras variações. Preço opcional substitui o preço base.</p>
       </div>
 

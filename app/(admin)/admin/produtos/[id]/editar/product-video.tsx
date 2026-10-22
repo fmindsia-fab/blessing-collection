@@ -99,7 +99,7 @@ export function ProductVideo({ productId, storeId, videoUrl, videoPosterUrl }: P
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <h2 className="text-sm font-medium">Vídeo</h2>
+        <h2 className="text-xl font-semibold tracking-tight">Vídeo</h2>
         <p className="text-xs text-muted-foreground">
           Um vídeo curto opcional, separado das fotos — até 1 minuto.
         </p>

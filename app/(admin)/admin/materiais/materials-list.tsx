@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { padCents } from "@/lib/admin/pad-cents";
 
 type Material = {
   id: string;
@@ -26,13 +27,6 @@ const initialState: PricingFormState = {};
 // Salva ao sair do campo (sem botão por linha), com o aviso "Salvo" na própria linha.
 const inlineInput =
   "h-10 border-transparent bg-transparent px-2.5 text-sm shadow-none hover:border-input focus-visible:bg-background";
-
-// Completa os centavos ao sair do campo: 10 vira 10.00 (o navegador mostra 10,00 em pt-BR).
-function padCents(input: HTMLInputElement) {
-  if (input.value === "") return;
-  const value = Number(input.value);
-  if (Number.isFinite(value) && value >= 0) input.value = value.toFixed(2);
-}
 
 function normalize(value: string) {
   return value

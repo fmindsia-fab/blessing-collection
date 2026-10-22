@@ -1,5 +1,5 @@
-// Bloco da tela de Configurações: cartão com âncora (#id) para o menu de seções do topo.
-export function SettingsSection({
+// Bloco de uma tela do painel: cartão com âncora (#id) para o menu de seções do topo.
+export function PageSection({
   id,
   title,
   children,

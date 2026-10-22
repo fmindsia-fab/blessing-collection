@@ -14,11 +14,20 @@ import {
 } from "@/lib/pricing/queries";
 import { ProductForm } from "../../product-form";
 import { PageHeading } from "@/components/admin/page-heading";
+import { PageSection } from "@/components/admin/page-section";
 import { ProductImages } from "./product-images";
 import { ProductVideo } from "./product-video";
 import { ProductSlug } from "./product-slug";
 import { ProductVariants } from "./product-variants";
 import { ProductPricing } from "./product-pricing";
+
+const SECTION_LINKS = [
+  { id: "dados", label: "Dados" },
+  { id: "fotos", label: "Fotos" },
+  { id: "video", label: "Vídeo" },
+  { id: "variacoes", label: "Variações" },
+  { id: "preco", label: "Formação de preço" },
+];
 
 export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -53,35 +62,56 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
   const { product, images, variants } = result;
 
   return (
-    <div className="flex max-w-2xl flex-col gap-10">
+    <div className="flex max-w-2xl flex-col gap-6">
       <PageHeading kicker="Catálogo" title="Editar peça" description={product.name} />
 
-      <ProductSlug productId={product.id} name={product.name} slug={product.slug} />
+      <nav aria-label="Seções da peça" className="flex flex-wrap gap-2">
+        {SECTION_LINKS.map((link) => (
+          <a
+            key={link.id}
+            href={`#${link.id}`}
+            className="rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-muted-foreground outline-none transition-colors hover:border-[var(--gold)] hover:text-foreground focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
+          >
+            {link.label}
+          </a>
+        ))}
+      </nav>
 
-      <ProductForm
-        categories={categories}
-        collections={collections}
-        models={models}
-        product={product}
-      />
+      <PageSection id="dados" title="Dados da peça">
+        <div className="flex flex-col gap-6">
+          <ProductSlug productId={product.id} name={product.name} slug={product.slug} />
+          <ProductForm
+            categories={categories}
+            collections={collections}
+            models={models}
+            product={product}
+          />
+        </div>
+      </PageSection>
 
-      <ProductImages productId={product.id} images={images} />
+      <PageSection id="fotos">
+        <ProductImages productId={product.id} images={images} />
+      </PageSection>
 
-      <ProductVideo
-        productId={product.id}
-        storeId={store.id}
-        videoUrl={product.video_url}
-        videoPosterUrl={product.video_poster_url}
-      />
+      <PageSection id="video">
+        <ProductVideo
+          productId={product.id}
+          storeId={store.id}
+          videoUrl={product.video_url}
+          videoPosterUrl={product.video_poster_url}
+        />
+      </PageSection>
 
-      <ProductVariants
-        productId={product.id}
-        variants={variants}
-        colors={colors}
-        catalogGroups={variantGroups.map((g) => g.name)}
-      />
+      <PageSection id="variacoes">
+        <ProductVariants
+          productId={product.id}
+          variants={variants}
+          colors={colors}
+          catalogGroups={variantGroups.map((g) => g.name)}
+        />
+      </PageSection>
 
-      <div className="border-t border-border pt-10">
+      <PageSection id="preco">
         <ProductPricing
           productId={product.id}
           currentPrice={product.price}
@@ -98,7 +128,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
           storeDefaultRate={pricing.defaultRatePercent}
           hasLaborConfigured={pricing.rates.totalPerHourCents > 0}
         />
-      </div>
+      </PageSection>
     </div>
   );
 }

@@ -72,7 +72,7 @@ export function ProductImages({ productId, images }: ProductImagesProps) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <h2 className="text-sm font-medium">Imagens ({images.length}/8)</h2>
+        <h2 className="text-xl font-semibold tracking-tight">Imagens ({images.length}/8)</h2>
         <p className="text-xs text-muted-foreground">
           Marque a imagem principal e descreva cada foto para leitores de tela.
         </p>

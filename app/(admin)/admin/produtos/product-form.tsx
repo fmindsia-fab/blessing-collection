@@ -10,6 +10,7 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { QuickCreateSelect } from "./quick-create-select";
 import type { ProductStatus } from "@/types/database.types";
 import { FormFooter } from "@/components/admin/form-footer";
+import { padCents } from "@/lib/admin/pad-cents";
 
 type ProductFormProps = {
   categories: { id: string; name: string }[];
@@ -48,18 +49,21 @@ export function ProductForm({ categories, collections, models, product }: Produc
   const [state, formAction, isPending] = useActionState(action, initialState);
 
   return (
-    <form action={formAction} className="flex flex-col gap-4">
+    <form action={formAction} className="flex flex-col gap-5">
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="name">Nome</Label>
-        <Input id="name" name="name" defaultValue={product?.name} required />
+        <Input id="name" name="name" defaultValue={product?.name} required placeholder="Ex.: Bolsa Florence" />
       </div>
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="description">Descrição</Label>
         <Textarea id="description" name="description" defaultValue={product?.description ?? ""} rows={4} />
+        <p className="text-sm text-muted-foreground">
+          Conte o que torna a peça especial: material, tamanho, acabamento. É o que a cliente lê no catálogo.
+        </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="price">Preço base (R$)</Label>
           {/* `key` força remontar quando o preço muda por fora deste form —
@@ -76,7 +80,11 @@ export function ProductForm({ categories, collections, models, product }: Produc
             min="0"
             defaultValue={product?.price}
             required
+            onBlur={(e) => padCents(e.target)}
           />
+          <p className="text-sm text-muted-foreground">
+            Quanto você cobra pela peça. Em &quot;Formação de preço&quot; o sistema ajuda a calcular.
+          </p>
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="status">Status</Label>
@@ -87,6 +95,7 @@ export function ProductForm({ categories, collections, models, product }: Produc
               </option>
             ))}
           </NativeSelect>
+          <p className="text-sm text-muted-foreground">&quot;Inativo&quot; tira a peça do catálogo sem apagar.</p>
         </div>
       </div>
 
@@ -100,11 +109,11 @@ export function ProductForm({ categories, collections, models, product }: Produc
       {/* Peso e dimensões numéricos: aparecem em "Mais detalhes" na página da
           peça e servem de base para estimar frete no futuro. O campo de
           medidas acima segue como texto livre para exibição. */}
-      <fieldset className="flex flex-col gap-4 rounded-[var(--radius-image)] border border-border bg-card p-5">
+      <fieldset className="flex flex-col gap-4 rounded-2xl border border-border bg-secondary/40 p-5">
         <legend className="sr-only">Peso e dimensões</legend>
         <div className="flex flex-col gap-1">
-          <span className="text-sm font-medium">Peso e dimensões</span>
-          <span className="text-xs leading-relaxed text-muted-foreground">
+          <span className="text-base font-semibold">Peso e dimensões</span>
+          <span className="text-sm leading-relaxed text-muted-foreground">
             Opcional. Aparece na página da peça em &quot;Mais detalhes&quot; e ajuda a calcular o envio.
           </span>
         </div>
@@ -161,7 +170,7 @@ export function ProductForm({ categories, collections, models, product }: Produc
         </div>
       </fieldset>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid gap-4 sm:grid-cols-2">
         <QuickCreateSelect
           kind="category"
           id="categoryId"
@@ -194,7 +203,7 @@ export function ProductForm({ categories, collections, models, product }: Produc
         />
       </div>
 
-      <div className="flex gap-6">
+      <div className="flex flex-wrap gap-x-6 gap-y-3">
         <Label className="flex items-center gap-2 font-normal">
           <Checkbox name="isFeatured" defaultChecked={product?.is_featured} />
           Produto em destaque
