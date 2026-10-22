@@ -48,7 +48,7 @@ export default async function OrdersDashboardPage({
         <PageHeading
           kicker="Encomendas"
           title="Dashboard de pedidos"
-          description={`Indicadores financeiros e gerenciais — ${ORDER_DASHBOARD_PERIOD_LABEL[period].toLowerCase()}.`}
+          description={`Pedidos por situação, pagamentos pendentes e materiais a comprar — ${ORDER_DASHBOARD_PERIOD_LABEL[period].toLowerCase()}.`}
         />
         <PeriodFilter
           basePath="/admin/pedidos/dashboard"

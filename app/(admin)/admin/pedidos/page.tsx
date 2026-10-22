@@ -21,7 +21,7 @@ export default async function AdminOrdersPage() {
         action={
           <div className="flex flex-wrap items-center gap-3">
             <ActionLink href="/admin/pedidos/dashboard" variant="outline" className="h-11 px-6">
-              Dashboard
+              Resumo
             </ActionLink>
             <ActionLink href="/admin/pedidos/calendario" variant="outline" className="h-11 px-6">
               Calendário

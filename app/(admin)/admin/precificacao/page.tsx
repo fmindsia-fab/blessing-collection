@@ -19,7 +19,7 @@ export default async function PricingSettingsPage() {
       <PageHeading
         kicker="Financeiro"
         title="Precificação"
-        description="Estes valores alimentam a sugestão de preço de cada peça."
+        description="Quanto vale a sua hora, os impostos e as taxas de pagamento. Com isso o sistema sugere o preço de cada peça."
       />
 
       <section className="rounded-[var(--radius-image)] border border-border bg-card p-6 shadow-sm">

@@ -48,7 +48,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
         { href: "/admin/modelos", label: "Modelos", icon: ShapesIcon },
         { href: "/admin/cores", label: "Cores", icon: PaletteIcon },
         { href: "/admin/materiais", label: "Materiais", icon: GemIcon },
-        { href: "/admin/grupos-variacao", label: "Grupos", icon: BoxesIcon },
+        { href: "/admin/grupos-variacao", label: "Variações", icon: BoxesIcon },
       ],
     },
   },

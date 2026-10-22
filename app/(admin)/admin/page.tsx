@@ -47,13 +47,13 @@ export default async function AdminDashboardPage({
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           icon={PackageIcon}
-          label="Produtos no catálogo"
+          label="Peças no catálogo"
           value={String(publicProducts)}
-          hint={`${products.length} cadastrados no total`}
+          hint={`${products.length} peças cadastradas no total`}
         />
         <StatCard
           icon={EyeIcon}
-          label="Visualizações de produto"
+          label="Vezes que viram suas peças"
           value={String(totals.productViews)}
           hint={PERIOD_LABEL[period]}
         />
@@ -61,13 +61,13 @@ export default async function AdminDashboardPage({
           icon={MessageCircleIcon}
           label="Cliques no WhatsApp"
           value={String(totals.whatsappClicks)}
-          hint="Contatos iniciados"
+          hint="Vezes que clicaram para chamar você no WhatsApp"
         />
         <StatCard
           icon={TrendingUpIcon}
           label="Taxa de interesse"
           value={`${totals.interestRate}%`}
-          hint="Cliques no WhatsApp por visualização"
+          hint="De cada 100 visualizações, quantas viraram uma conversa no WhatsApp"
         />
       </div>
 

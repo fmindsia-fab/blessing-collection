@@ -4,11 +4,11 @@ import { useActionState, useState } from "react";
 import { updatePricingSettings, type PricingFormState } from "@/lib/pricing/actions";
 import { calculateLaborRates } from "@/lib/pricing/calculate";
 import { formatBRL, toCents } from "@/lib/pricing/money";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
 import type { PricingMethodValue, TaxRegime } from "@/types/database.types";
+import { FormFooter } from "@/components/admin/form-footer";
 
 const initialState: PricingFormState = {};
 
@@ -230,12 +230,14 @@ export function LaborForm({ settings }: { settings: Settings }) {
         </div>
       </fieldset>
 
-      {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
-      {state.success ? <p className="text-sm text-green-700">Configurações salvas.</p> : null}
-
-      <Button type="submit" disabled={isPending} className="w-fit">
-        {isPending ? "Salvando..." : "Salvar configurações"}
-      </Button>
+      <FormFooter
+        sticky
+        isPending={isPending}
+        error={state.error}
+        success={state.success}
+        successMessage="Configurações salvas."
+        submitLabel="Salvar configurações"
+      />
     </form>
   );
 }

@@ -8,6 +8,7 @@ import { formatPhoneBR } from "@/lib/customers/phone-mask";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 
 const initialState: CustomerFormState = {};
 
@@ -15,6 +16,7 @@ export function CustomersList({ customers }: { customers: CustomerRow[] }) {
   const [state, formAction, isPending] = useActionState(createCustomer, initialState);
   const [isSaving, startTransition] = useTransition();
   const [phone, setPhone] = useState("");
+  const [archiving, setArchiving] = useState<{ id: string; name: string } | null>(null);
 
   const active = customers.filter((c) => c.status === "active");
   const archived = customers.filter((c) => c.status === "archived");
@@ -60,10 +62,7 @@ export function CustomersList({ customers }: { customers: CustomerRow[] }) {
                 <button
                   type="button"
                   disabled={isSaving}
-                  onClick={() => {
-                    if (!confirm(`Arquivar "${customer.name}"?`)) return;
-                    startTransition(() => toggleCustomer(customer.id, "active"));
-                  }}
+                  onClick={() => setArchiving({ id: customer.id, name: customer.name })}
                   className="text-sm font-medium text-muted-foreground outline-none transition-colors hover:text-destructive focus-visible:text-destructive"
                 >
                   Arquivar
@@ -121,6 +120,19 @@ export function CustomersList({ customers }: { customers: CustomerRow[] }) {
           </div>
         </details>
       ) : null}
+
+      <ConfirmDialog
+        open={archiving !== null}
+        onOpenChange={(open) => {
+          if (!open) setArchiving(null);
+        }}
+        title={`Arquivar ${archiving?.name ?? "cliente"}?`}
+        description="A cliente sai da lista, mas o histórico de pedidos dela continua guardado."
+        confirmLabel="Arquivar"
+        onConfirm={() => {
+          if (archiving) startTransition(() => toggleCustomer(archiving.id, "active"));
+        }}
+      />
     </div>
   );
 }

@@ -13,8 +13,8 @@ export default async function VariantGroupsPage() {
     <div className="flex max-w-2xl flex-col gap-10">
       <PageHeading
         kicker="Organização"
-        title="Grupos de variação"
-        description="Cadastre os eixos de variação (Cor, Alça, Tamanho…) uma vez, e escolha entre eles ao cadastrar cada peça."
+        title="Variações das peças"
+        description="Cadastre uma vez as opções que a cliente pode escolher (Cor, Alça, Tamanho…) e use em cada peça."
       />
 
       <section className="rounded-[var(--radius-image)] border border-border bg-card p-6 shadow-sm">

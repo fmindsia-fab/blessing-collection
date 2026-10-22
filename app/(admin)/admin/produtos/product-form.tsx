@@ -2,7 +2,6 @@
 
 import { useActionState } from "react";
 import { createProduct, updateProduct, type ProductFormState } from "@/lib/products/actions";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { NativeSelect } from "@/components/ui/native-select";
 import { QuickCreateSelect } from "./quick-create-select";
 import type { ProductStatus } from "@/types/database.types";
+import { FormFooter } from "@/components/admin/form-footer";
 
 type ProductFormProps = {
   categories: { id: string; name: string }[];
@@ -205,11 +205,12 @@ export function ProductForm({ categories, collections, models, product }: Produc
         </Label>
       </div>
 
-      {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
-
-      <Button type="submit" disabled={isPending} className="w-fit">
-        {isPending ? "Salvando..." : product ? "Salvar alterações" : "Criar produto"}
-      </Button>
+      <FormFooter
+        sticky
+        isPending={isPending}
+        error={state.error}
+        submitLabel={product ? "Salvar alterações" : "Criar produto"}
+      />
     </form>
   );
 }

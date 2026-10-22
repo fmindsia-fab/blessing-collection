@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useTransition } from "react";
+import { useActionState, useState, useTransition } from "react";
 import { TrashIcon } from "lucide-react";
 import {
   createVariantGroup,
@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 
 type VariantGroup = {
   id: string;
@@ -26,6 +27,7 @@ const initialState: VariantGroupFormState = {};
 export function VariantGroupsList({ groups }: { groups: VariantGroup[] }) {
   const [state, formAction, isPending] = useActionState(createVariantGroup, initialState);
   const [isSaving, startTransition] = useTransition();
+  const [removing, setRemoving] = useState<VariantGroup | null>(null);
 
   return (
     <div className="flex flex-col gap-5">
@@ -55,10 +57,7 @@ export function VariantGroupsList({ groups }: { groups: VariantGroup[] }) {
               <button
                 type="button"
                 disabled={isSaving}
-                onClick={() => {
-                  if (!confirm(`Remover "${group.name}" do catálogo de grupos?`)) return;
-                  startTransition(() => archiveVariantGroup(group.id));
-                }}
+                onClick={() => setRemoving(group)}
                 aria-label={`Remover ${group.name}`}
                 className="flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:bg-secondary hover:text-destructive focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
               >
@@ -84,6 +83,18 @@ export function VariantGroupsList({ groups }: { groups: VariantGroup[] }) {
 
         {state.error ? <p className="text-sm text-destructive sm:col-span-2">{state.error}</p> : null}
       </form>
+
+      <ConfirmDialog
+        open={removing !== null}
+        onOpenChange={(open) => {
+          if (!open) setRemoving(null);
+        }}
+        title={`Remover ${removing?.name ?? "grupo"}?`}
+        description="Ele sai desta lista. As peças que já usam esta opção continuam como estão."
+        onConfirm={() => {
+          if (removing) startTransition(() => archiveVariantGroup(removing.id));
+        }}
+      />
     </div>
   );
 }

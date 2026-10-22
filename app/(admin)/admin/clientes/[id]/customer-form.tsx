@@ -4,10 +4,10 @@ import { useActionState, useState } from "react";
 import { updateCustomer, type CustomerFormState } from "@/lib/customers/actions";
 import type { CustomerRow } from "@/lib/customers/queries";
 import { formatPhoneBR } from "@/lib/customers/phone-mask";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { FormFooter } from "@/components/admin/form-footer";
 
 const initialState: CustomerFormState = {};
 
@@ -40,12 +40,13 @@ export function CustomerForm({ customer }: { customer: CustomerRow }) {
         <Textarea id="notes" name="notes" rows={3} defaultValue={customer.notes ?? ""} />
       </div>
 
-      {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
-      {state.success ? <p className="text-sm text-green-700">Salvo.</p> : null}
-
-      <Button type="submit" variant="outline" disabled={isPending} className="w-fit">
-        {isPending ? "Salvando..." : "Salvar"}
-      </Button>
+      <FormFooter
+        isPending={isPending}
+        error={state.error}
+        success={state.success}
+        successMessage="Dados da cliente salvos."
+        variant="outline"
+      />
     </form>
   );
 }

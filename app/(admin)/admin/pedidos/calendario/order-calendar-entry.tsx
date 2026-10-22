@@ -5,6 +5,7 @@ import { ORDER_STATUS_LABEL } from "@/lib/orders/labels";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import type { OrderStatus } from "@/types/database.types";
+import { usePortalThemeProps } from "../../theme-provider";
 
 // Nome e resumo do pedido truncam na célula do calendário (espaço é
 // limitado em telas pequenas) — o popup existe para mostrar o texto
@@ -24,6 +25,8 @@ export function OrderCalendarEntry({
   expectedDeliveryDate: string | null;
   statusDotClassName: string;
 }) {
+  const portalTheme = usePortalThemeProps();
+
   return (
     <Dialog>
       <DialogTrigger
@@ -41,7 +44,7 @@ export function OrderCalendarEntry({
         <span className="truncate pl-3 text-xs text-muted-foreground">{itemsSummaryLabel}</span>
       </DialogTrigger>
 
-      <DialogContent>
+      <DialogContent {...portalTheme}>
         <DialogTitle>{customerName}</DialogTitle>
         <DialogDescription>{itemsSummaryLabel}</DialogDescription>
 

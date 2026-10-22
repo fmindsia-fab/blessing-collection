@@ -96,6 +96,18 @@ export function AdminThemeProvider({
   );
 }
 
+/**
+ * Popups (drawer, diálogo) abrem num portal, FORA do wrapper do tema: sem isto herdariam o
+ * tema da loja em vez do painel. Espalhe o resultado no conteúdo do popup.
+ */
+export function usePortalThemeProps(): { className: string; style: React.CSSProperties } {
+  const { isDark } = useAdminTheme();
+  return {
+    className: cn("admin-ui", isDark && "dark"),
+    style: (isDark ? ADMIN_DARK_VARS : ADMIN_LIGHT_VARS) as React.CSSProperties,
+  };
+}
+
 export function useAdminTheme() {
   const ctx = useContext(ThemeContext);
   if (!ctx) throw new Error("useAdminTheme precisa estar dentro de AdminThemeProvider");

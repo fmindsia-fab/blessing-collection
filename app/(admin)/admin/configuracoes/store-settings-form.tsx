@@ -3,7 +3,6 @@
 import { useActionState, useState } from "react";
 import { formatWhatsappBR } from "@/lib/customers/phone-mask";
 import { updateStoreSettings, type StoreSettingsFormState } from "@/lib/store/actions";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,6 +12,7 @@ import { CraftProfileFields } from "@/components/shared/craft-profile-fields";
 import { MarketplaceProfileFields } from "@/components/shared/marketplace-profile-fields";
 import { BrandFontField } from "./brand-font-field";
 import type { FontFamily } from "@/types/database.types";
+import { FormFooter } from "@/components/admin/form-footer";
 
 type StoreSettingsFormProps = {
   store: {
@@ -143,12 +143,13 @@ export function StoreSettingsForm({ store }: StoreSettingsFormProps) {
         />
       </fieldset>
 
-      {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
-      {state.success ? <p className="text-sm text-green-700">Configurações salvas.</p> : null}
-
-      <Button type="submit" disabled={isPending} className="w-fit">
-        {isPending ? "Salvando..." : "Salvar"}
-      </Button>
+      <FormFooter
+        sticky
+        isPending={isPending}
+        error={state.error}
+        success={state.success}
+        successMessage="Configurações salvas."
+      />
     </form>
   );
 }
