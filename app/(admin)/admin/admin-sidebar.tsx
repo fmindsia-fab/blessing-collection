@@ -112,7 +112,7 @@ function SecondaryGroup({
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={expanded}
-        className={cn(itemBase, "text-sidebar-foreground/75 hover:bg-[var(--brand-soft)] hover:text-sidebar-foreground")}
+        className={cn(itemBase, "text-sidebar-foreground/90 hover:bg-[var(--brand-soft)] hover:text-sidebar-foreground")}
       >
         <ChevronDownIcon
           className={cn("size-[1.125rem] shrink-0 transition-transform duration-200", !expanded && "-rotate-90")}
@@ -186,7 +186,7 @@ export function SidebarContent({ storeName, siteUrl, onNavigate, collapsed = fal
             {collapsed ? (
               <span aria-hidden className="mx-3 h-px bg-sidebar-border" />
             ) : (
-              <span className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/75">
+              <span className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/90">
                 {group.label}
               </span>
             )}
@@ -287,7 +287,7 @@ export function AdminSidebar({
         onClick={toggle}
         aria-label={collapsed ? "Expandir menu lateral" : "Recolher menu lateral"}
         aria-pressed={collapsed}
-        className="mt-3 flex size-9 items-center justify-center self-end rounded-lg text-sidebar-foreground/75 outline-none transition-colors hover:bg-[var(--brand-soft)] hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
+        className="mt-3 flex size-9 items-center justify-center self-end rounded-lg text-sidebar-foreground/90 outline-none transition-colors hover:bg-[var(--brand-soft)] hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
       >
         {collapsed ? <PanelLeftOpenIcon className="size-4" /> : <PanelLeftCloseIcon className="size-4" />}
       </button>

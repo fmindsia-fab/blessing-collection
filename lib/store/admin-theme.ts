@@ -34,7 +34,7 @@ export const ADMIN_LIGHT_VARS: Record<string, string> = {
   "--input": "oklch(0.9 0.014 65)",
   "--ring": "oklch(0.56 0.13 40)",
   // Terracota da marca: botões principais, foco e destaques (substitui o dourado/indigo).
-  "--gold": "oklch(0.54 0.13 40)",
+  "--gold": "oklch(0.52 0.13 40)",
   "--brand-soft": "oklch(0.93 0.03 55)",
   "--sidebar": "oklch(0.965 0.012 65)",
   "--sidebar-foreground": "oklch(0.3 0.03 45)",
