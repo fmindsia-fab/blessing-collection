@@ -29,7 +29,7 @@ type SidebarProps = {
 };
 
 const itemBase =
-  "group/item relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-[var(--gold)]";
+  "group/item relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-[var(--gold)]";
 
 const itemIdle = "text-sidebar-foreground/75 hover:bg-[var(--brand-soft)] hover:text-sidebar-foreground";
 
@@ -135,7 +135,7 @@ function Brand({ collapsed }: { collapsed: boolean }) {
             width={176}
             height={59}
             priority
-            className="h-auto w-44 dark:hidden"
+            className="h-auto w-40 dark:hidden"
           />
           {/* Modo escuro: monograma + palavra, legíveis sobre fundo escuro. */}
           <span className="hidden items-center gap-2 text-xl font-semibold tracking-tight dark:flex">
@@ -162,7 +162,7 @@ export function SidebarContent({ storeName, siteUrl, onNavigate, collapsed = fal
   }
 
   return (
-    <div className="flex h-full flex-col gap-5">
+    <div className="flex h-full flex-col gap-4">
       <div className={cn("px-1 pt-1", collapsed && "flex justify-center")}>
         <Brand collapsed={collapsed} />
       </div>
@@ -189,7 +189,7 @@ export function SidebarContent({ storeName, siteUrl, onNavigate, collapsed = fal
         )}
       </div>
 
-      <nav aria-label="Menu do painel" className="flex flex-1 flex-col gap-5 overflow-y-auto pr-0.5">
+      <nav aria-label="Menu do painel" className="flex flex-1 flex-col gap-4 overflow-y-auto pr-0.5">
         {ADMIN_NAV_GROUPS.map((group) => (
           <div key={group.label} className="flex flex-col gap-1">
             {collapsed ? (
@@ -237,7 +237,7 @@ export function SidebarContent({ storeName, siteUrl, onNavigate, collapsed = fal
             message={`Olha o catálogo da ${storeName}, que peças lindas!`}
             label="Compartilhar loja"
             variant="ghost"
-            className="h-auto justify-start gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-sidebar-foreground/75 hover:bg-[var(--brand-soft)] hover:text-sidebar-foreground [&_svg]:size-[1.125rem]"
+            className="h-auto justify-start gap-3 rounded-xl px-3 py-2 text-sm font-medium normal-case tracking-normal text-sidebar-foreground/75 hover:bg-[var(--brand-soft)] hover:text-sidebar-foreground [&_svg]:size-[1.125rem]"
           />
         )}
         <button

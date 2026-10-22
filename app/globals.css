@@ -283,3 +283,9 @@
     transform: translateY(1px);
   }
 }
+
+/* Painel: tipografia sem serifa (Geist, já carregada no layout raiz). Escopo só do
+   painel; o catálogo público mantém a tipografia da marca de cada loja. */
+.admin-ui {
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
