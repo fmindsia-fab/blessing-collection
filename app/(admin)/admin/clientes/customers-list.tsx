@@ -30,19 +30,30 @@ export function CustomersList({ customers }: { customers: CustomerRow[] }) {
   return (
     <div className="flex flex-col gap-6">
       {active.length > 0 ? (
-        <div className="flex flex-col divide-y divide-border border-y border-border">
+        <div className="flex flex-col gap-2">
           {active.map((customer) => (
-            <div key={customer.id} className="flex items-center justify-between gap-4 py-3">
-              <div className="flex min-w-0 flex-col">
-                <span className="truncate text-sm">{customer.name}</span>
-                {customer.phone ? (
-                  <span className="text-xs text-muted-foreground">{formatPhoneBR(customer.phone)}</span>
-                ) : null}
+            <div
+              key={customer.id}
+              className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-card px-4 py-3 shadow-sm transition-colors hover:border-[var(--gold)]/40"
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                <span
+                  aria-hidden
+                  className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[var(--brand-soft)] text-sm font-semibold text-[var(--gold)]"
+                >
+                  {customer.name.trim().charAt(0).toUpperCase()}
+                </span>
+                <div className="flex min-w-0 flex-col">
+                  <span className="truncate text-sm font-medium">{customer.name}</span>
+                  {customer.phone ? (
+                    <span className="text-xs text-muted-foreground">{formatPhoneBR(customer.phone)}</span>
+                  ) : null}
+                </div>
               </div>
               <div className="flex shrink-0 items-center gap-4">
                 <Link
                   href={`/admin/clientes/${customer.id}`}
-                  className="text-xs uppercase tracking-[0.08em] text-muted-foreground underline-offset-4 outline-none transition-colors hover:text-foreground hover:underline focus-visible:text-foreground focus-visible:underline"
+                  className="text-sm font-medium text-muted-foreground underline-offset-4 outline-none transition-colors hover:text-foreground hover:underline focus-visible:text-foreground focus-visible:underline"
                 >
                   Editar
                 </Link>
@@ -53,7 +64,7 @@ export function CustomersList({ customers }: { customers: CustomerRow[] }) {
                     if (!confirm(`Arquivar "${customer.name}"?`)) return;
                     startTransition(() => toggleCustomer(customer.id, "active"));
                   }}
-                  className="text-xs uppercase tracking-[0.08em] text-muted-foreground outline-none transition-colors hover:text-destructive focus-visible:text-destructive"
+                  className="text-sm font-medium text-muted-foreground outline-none transition-colors hover:text-destructive focus-visible:text-destructive"
                 >
                   Arquivar
                 </button>

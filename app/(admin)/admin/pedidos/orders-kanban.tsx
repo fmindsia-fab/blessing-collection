@@ -48,7 +48,7 @@ export function OrdersKanban({ orders }: { orders: OrderKanbanRow[] }) {
   }
 
   return (
-    <div className="-mx-6 flex gap-5 overflow-x-auto px-6 pb-4 lg:-mx-10 lg:px-10">
+    <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6 lg:-mx-10 lg:px-10">
       {ORDER_STATUS_ORDER.map((status) => {
         const columnOrders = localOrders.filter((o) => o.status === status);
 
@@ -65,17 +65,17 @@ export function OrdersKanban({ orders }: { orders: OrderKanbanRow[] }) {
               if (draggingId) moveOrder(draggingId, status);
               setOverStatus(null);
             }}
-            className={`flex w-72 shrink-0 flex-col gap-3 rounded-[var(--radius-image)] border-2 border-dashed p-3 transition-all duration-200 ${
+            className={`flex w-72 shrink-0 flex-col gap-3 rounded-2xl border-2 border-dashed p-3 transition-all duration-200 ${
               overStatus === status
                 ? "scale-[1.02] border-[var(--gold)] bg-[var(--gold)]/8 shadow-md"
-                : "border-transparent bg-secondary/25"
+                : "border-transparent bg-secondary/60"
             }`}
           >
             <div className="flex items-center justify-between gap-2 px-1 pb-1">
-              <span className="text-xs font-semibold uppercase tracking-[0.12em] text-foreground">
+              <span className="text-sm font-semibold text-foreground">
                 {ORDER_STATUS_LABEL[status]}
               </span>
-              <span className="flex size-5 items-center justify-center rounded-full bg-secondary text-xs font-medium tabular-nums text-muted-foreground">
+              <span className="flex size-6 items-center justify-center rounded-full bg-[var(--brand-soft)] text-xs font-medium tabular-nums text-muted-foreground">
                 {columnOrders.length}
               </span>
             </div>
@@ -94,7 +94,7 @@ export function OrdersKanban({ orders }: { orders: OrderKanbanRow[] }) {
                     setDraggingId(null);
                     setOverStatus(null);
                   }}
-                  className={`group flex cursor-grab flex-col gap-2 rounded-[var(--radius)] border border-border bg-card p-3.5 shadow-sm transition-all duration-200 ease-out active:cursor-grabbing ${
+                  className={`group flex cursor-grab flex-col gap-2 rounded-xl border border-border bg-card p-3.5 hover:border-[var(--gold)]/40 shadow-sm transition-all duration-200 ease-out active:cursor-grabbing ${
                     draggingId === order.id
                       ? "rotate-2 scale-105 opacity-50 shadow-lg"
                       : "hover:-translate-y-0.5 hover:shadow-md"
