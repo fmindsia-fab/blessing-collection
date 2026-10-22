@@ -79,14 +79,24 @@ function SecondaryGroup({
   const hasActive = items.some((item) => isNavItemActive(pathname, item.href));
   const [open, setOpen] = useState(false);
 
-  // Sidebar recolhida: os ícones aparecem direto (não há espaço para um disclosure).
+  // Sidebar recolhida: um único ícone representa o bloco (leva ao primeiro item; para os
+  // demais é só expandir o menu). Evita uma coluna de 6 ícones que obrigaria a rolar.
   if (collapsed) {
+    const Icon = items[0].icon;
     return (
-      <>
-        {items.map((item) => (
-          <NavItem key={item.href} item={item} collapsed onNavigate={onNavigate} />
-        ))}
-      </>
+      <Link
+        href={items[0].href}
+        onClick={onNavigate}
+        title={label}
+        className={cn(
+          itemBase,
+          "justify-center px-0",
+          hasActive ? "bg-[var(--gold)] text-primary-foreground shadow-sm" : itemIdle,
+        )}
+      >
+        <Icon className="size-[1.125rem] shrink-0" aria-hidden />
+        <span className="sr-only">{label}</span>
+      </Link>
     );
   }
 
@@ -189,11 +199,11 @@ export function SidebarContent({ storeName, siteUrl, onNavigate, collapsed = fal
         )}
       </div>
 
-      <nav aria-label="Menu do painel" className="flex flex-1 flex-col gap-4 overflow-y-auto pr-0.5">
+      <nav aria-label="Menu do painel" className="sidebar-scroll flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
         {ADMIN_NAV_GROUPS.map((group) => (
           <div key={group.label} className="flex flex-col gap-1">
             {collapsed ? (
-              <span aria-hidden className="mx-3 mb-1 h-px bg-sidebar-border" />
+              <span aria-hidden className="mx-3 h-px bg-sidebar-border" />
             ) : (
               <span className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/55">
                 {group.label}
