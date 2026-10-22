@@ -3,32 +3,37 @@ import { listAllModelsForAdmin } from "@/lib/models/queries";
 import { ModelForm } from "./model-form";
 import { ModelRow } from "./model-row";
 import { PageHeading } from "@/components/admin/page-heading";
+import { PageSection } from "@/components/admin/page-section";
+import { EmptyState } from "@/components/admin/empty-state";
+import { ShapesIcon } from "lucide-react";
 
 export default async function AdminModelsPage() {
   const store = await getActiveStore();
   const models = await listAllModelsForAdmin(store.id);
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex max-w-3xl flex-col gap-6">
       <PageHeading
         kicker="Organização"
         title="Modelos"
         description="O formato da peça: clutch, tote, transversal, mochila…"
       />
 
-      <div className="mx-auto w-full max-w-md rounded-[var(--radius-image)] border border-border bg-card p-6 shadow-sm">
+      <PageSection id="novo" title="Novo modelo">
         <ModelForm />
-      </div>
+      </PageSection>
 
-      <div className="flex flex-col gap-3">
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold tracking-tight">
+          Seus modelos{" "}
+          <span className="text-sm font-normal text-muted-foreground">({models.length})</span>
+        </h2>
         {models.length === 0 ? (
-          <p className="rounded-[var(--radius-image)] border border-dashed border-border py-12 text-center text-sm text-muted-foreground">
-            Nenhum modelo cadastrado ainda.
-          </p>
+          <EmptyState icon={ShapesIcon}>Nenhum modelo ainda. Cadastre o primeiro acima, por exemplo: tote, clutch, mochila.</EmptyState>
         ) : (
           models.map((model) => <ModelRow key={model.id} model={model} />)
         )}
-      </div>
+      </section>
     </div>
   );
 }

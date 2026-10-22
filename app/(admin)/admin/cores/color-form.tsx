@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { createColor, type ColorFormState } from "@/lib/colors/actions";
-import { Button } from "@/components/ui/button";
+import { FormFooter } from "@/components/admin/form-footer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ColorSwatchInput } from "./color-swatch-input";
@@ -34,17 +34,13 @@ export function ColorForm() {
         <button
           type="button"
           onClick={() => setHasSecondary(true)}
-          className="self-start text-xs text-muted-foreground underline underline-offset-4 outline-none transition-colors hover:text-foreground focus-visible:text-foreground"
+          className="self-start text-sm text-muted-foreground underline underline-offset-4 outline-none transition-colors hover:text-foreground focus-visible:text-foreground"
         >
           + Segunda cor (peças bicolores)
         </button>
       )}
 
-      {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
-
-      <Button type="submit" disabled={isPending} className="w-fit">
-        {isPending ? "Salvando..." : "Adicionar cor"}
-      </Button>
+      <FormFooter isPending={isPending} error={state.error} submitLabel="Adicionar cor" />
     </form>
   );
 }

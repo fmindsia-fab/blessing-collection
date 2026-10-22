@@ -3,32 +3,37 @@ import { listAllCollectionsForAdmin } from "@/lib/collections/queries";
 import { CollectionForm } from "./collection-form";
 import { CollectionRow } from "./collection-row";
 import { PageHeading } from "@/components/admin/page-heading";
+import { PageSection } from "@/components/admin/page-section";
+import { EmptyState } from "@/components/admin/empty-state";
+import { LayersIcon } from "lucide-react";
 
 export default async function AdminCollectionsPage() {
   const store = await getActiveStore();
   const collections = await listAllCollectionsForAdmin(store.id);
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex max-w-3xl flex-col gap-6">
       <PageHeading
         kicker="Organização"
         title="Coleções"
         description="Reúna peças em coleções temáticas."
       />
 
-      <div className="mx-auto w-full max-w-md rounded-[var(--radius-image)] border border-border bg-card p-6 shadow-sm">
+      <PageSection id="novo" title="Nova coleção">
         <CollectionForm />
-      </div>
+      </PageSection>
 
-      <div className="flex flex-col gap-3">
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold tracking-tight">
+          Suas coleções{" "}
+          <span className="text-sm font-normal text-muted-foreground">({collections.length})</span>
+        </h2>
         {collections.length === 0 ? (
-          <p className="rounded-[var(--radius-image)] border border-dashed border-border py-12 text-center text-sm text-muted-foreground">
-            Nenhuma coleção cadastrada ainda.
-          </p>
+          <EmptyState icon={LayersIcon}>Nenhuma coleção ainda. Cadastre a primeira acima, por exemplo: Festa, Verão.</EmptyState>
         ) : (
           collections.map((collection) => <CollectionRow key={collection.id} collection={collection} />)
         )}
-      </div>
+      </section>
     </div>
   );
 }
