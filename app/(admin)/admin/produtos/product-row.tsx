@@ -1,8 +1,9 @@
 "use client";
 
 import { useTransition } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { GripVerticalIcon } from "lucide-react";
+import { GripVerticalIcon, ImageIcon } from "lucide-react";
 import { deactivateProduct, restoreProduct, moveProduct } from "@/lib/products/actions";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/admin/status-pill";
@@ -20,6 +21,7 @@ export type AdminProduct = {
   is_featured: boolean;
   is_new_arrival: boolean;
   category_id: string | null;
+  cover_url?: string | null;
 };
 
 type ProductRowProps = {
@@ -46,7 +48,7 @@ export function ProductRow({ product, statusLabel, isFirst, isLast, drag }: Prod
       onDrop={drag?.onDrop}
       onDragEnd={drag?.onDragEnd}
       className={cn(
-        "flex items-center gap-3 rounded-[var(--radius-image)] border border-border bg-card px-5 py-4 shadow-sm transition-all duration-300 hover:border-foreground/25 hover:shadow-md",
+        "flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm transition-all duration-200 hover:border-[var(--gold)]/40 hover:shadow-md sm:flex-nowrap sm:px-4",
         drag?.isDragging && "opacity-40",
         drag?.isOver && !drag.isDragging && "border-[var(--gold)]",
       )}
@@ -73,7 +75,25 @@ export function ProductRow({ product, statusLabel, isFirst, isLast, drag }: Prod
         onMove={(direction) => startTransition(() => moveProduct(product.id, direction))}
       />
 
-      <div className="flex flex-1 flex-col gap-2">
+      <Link
+        href={`/admin/produtos/${product.id}/editar`}
+        aria-hidden
+        tabIndex={-1}
+        className={cn(
+          "relative size-16 shrink-0 overflow-hidden rounded-xl bg-secondary sm:size-[4.5rem]",
+          isInactive && "opacity-60 grayscale",
+        )}
+      >
+        {product.cover_url ? (
+          <Image src={product.cover_url} alt="" fill sizes="96px" className="object-cover" />
+        ) : (
+          <span className="flex size-full items-center justify-center text-muted-foreground/60">
+            <ImageIcon className="size-5" />
+          </span>
+        )}
+      </Link>
+
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
         <Link
           href={`/admin/produtos/${product.id}/editar`}
           className="font-semibold text-base outline-none transition-colors hover:text-[var(--gold)] focus-visible:text-[var(--gold)] focus-visible:underline focus-visible:underline-offset-4"

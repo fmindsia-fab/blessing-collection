@@ -78,7 +78,7 @@ export function ProductSearch({
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Buscar peça pelo nome…"
           aria-label="Buscar peça pelo nome"
-          className="w-full rounded-full border border-input bg-background py-2.5 pl-10 pr-10 text-sm outline-none transition-colors placeholder:text-muted-foreground/70 focus-visible:border-foreground/40 focus-visible:ring-2 focus-visible:ring-[var(--gold)]/40"
+          className="w-full rounded-full border border-input bg-card py-3 pl-10 pr-10 text-sm outline-none transition-colors placeholder:text-muted-foreground/70 focus-visible:border-foreground/40 focus-visible:ring-2 focus-visible:ring-[var(--gold)]/40"
         />
         {query ? (
           <button

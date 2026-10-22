@@ -41,3 +41,24 @@ export async function getProductForAdmin(storeId: string, productId: string) {
 
   return { product, images: images ?? [], variants: variants ?? [] };
 }
+
+// Miniaturas do painel: a foto de capa (ou a primeira) de cada peça, numa única
+// consulta (sem N+1). Só leitura, mesma RLS de getProductForAdmin.
+export async function getProductCoverUrls(productIds: string[]): Promise<Record<string, string>> {
+  if (productIds.length === 0) return {};
+
+  const supabase = await createServerSupabaseClient();
+  const { data } = await supabase
+    .from("product_images")
+    .select("product_id, url, is_cover, sort_order")
+    .in("product_id", productIds)
+    .order("is_cover", { ascending: false })
+    .order("sort_order", { ascending: true });
+
+  const covers: Record<string, string> = {};
+  for (const image of data ?? []) {
+    // A ordenação já põe a capa primeiro; só guarda a primeira de cada peça.
+    if (!(image.product_id in covers)) covers[image.product_id] = image.url;
+  }
+  return covers;
+}

@@ -1,5 +1,6 @@
+import { EyeIcon, MessageCircleIcon, PackageIcon, TrendingUpIcon } from "lucide-react";
 import { getActiveStore } from "@/lib/store/get-active-store";
-import { listAllProductsForAdmin } from "@/lib/products/admin-queries";
+import { getProductCoverUrls, listAllProductsForAdmin } from "@/lib/products/admin-queries";
 import {
   ANALYTICS_PERIODS,
   getAnalyticsTotals,
@@ -10,8 +11,8 @@ import {
 import { PeriodFilter } from "@/components/admin/period-filter";
 import { PageHeading } from "@/components/admin/page-heading";
 import { ActionLink } from "@/components/ui/action";
-import { RankingTable } from "@/components/admin/ranking-table";
 import { StatCard } from "@/components/admin/stat-card";
+import { TopProducts } from "@/components/admin/top-products";
 
 export default async function AdminDashboardPage({
   searchParams,
@@ -28,44 +29,53 @@ export default async function AdminDashboardPage({
     listAllProductsForAdmin(store.id),
   ]);
 
+  const topFive = rankings.slice(0, 5);
+  const covers = await getProductCoverUrls(topFive.map((row) => row.product_id));
   const publicProducts = products.filter((product) => product.status !== "inactive").length;
 
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-5">
         <PageHeading
-          kicker="Visão geral"
-          title="Dashboard"
-          description={`Indicadores da loja — ${PERIOD_LABEL[period].toLowerCase()}.`}
+          kicker="Painel da loja"
+          title="Seu ateliê em destaque ✨"
+          description={`Acompanhe o desempenho da sua loja e descubra oportunidades para crescer. Período: ${PERIOD_LABEL[period].toLowerCase()}.`}
         />
         <PeriodFilter basePath="/admin" active={period} periods={ANALYTICS_PERIODS} labels={PERIOD_LABEL} />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
+          icon={PackageIcon}
           label="Produtos no catálogo"
           value={String(publicProducts)}
           hint={`${products.length} cadastrados no total`}
         />
-        <StatCard label="Visualizações de produto" value={String(totals.productViews)} />
-        <StatCard label="Cliques no WhatsApp" value={String(totals.whatsappClicks)} />
         <StatCard
+          icon={EyeIcon}
+          label="Visualizações de produto"
+          value={String(totals.productViews)}
+          hint={PERIOD_LABEL[period]}
+        />
+        <StatCard
+          icon={MessageCircleIcon}
+          label="Cliques no WhatsApp"
+          value={String(totals.whatsappClicks)}
+          hint="Contatos iniciados"
+        />
+        <StatCard
+          icon={TrendingUpIcon}
           label="Taxa de interesse"
           value={`${totals.interestRate}%`}
           hint="Cliques no WhatsApp por visualização"
         />
       </div>
 
-      <RankingTable
+      <TopProducts
         title="Top 5 produtos do período"
-        rows={rankings.slice(0, 5)}
-        emptyMessage="Nenhum evento registrado neste período."
-        columns={[
-          { header: "Produto", cell: (row) => row.product_name },
-          { header: "Visualizações", align: "right", cell: (row) => row.views },
-          { header: "Cliques", align: "right", cell: (row) => row.clicks },
-          { header: "Taxa de interesse", align: "right", cell: (row) => `${row.interest_rate}%` },
-        ]}
+        rows={topFive}
+        covers={covers}
+        emptyMessage="Nenhum evento registrado neste período. Compartilhe o link da sua loja para começar a receber visitas."
       />
 
       <ActionLink href={`/admin/analytics?periodo=${period}`} variant="ghost" arrow className="w-fit">

@@ -18,7 +18,7 @@ export function PeriodFilter<T extends string>({
   labels: Record<T, string>;
 }) {
   return (
-    <div className="flex flex-wrap justify-center gap-2">
+    <div className="flex flex-wrap gap-2">
       {periods.map((period) => (
         <Link
           key={period}
@@ -27,7 +27,7 @@ export function PeriodFilter<T extends string>({
           className={cn(
             "rounded-full border px-4 py-2 text-sm font-medium outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-background",
             period === active
-              ? "border-foreground bg-foreground text-background shadow-sm"
+              ? "border-[var(--gold)] bg-[var(--gold)] text-primary-foreground shadow-sm"
               : "border-border text-muted-foreground hover:border-foreground hover:bg-secondary hover:text-foreground",
           )}
         >

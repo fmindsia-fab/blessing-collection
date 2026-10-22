@@ -1,5 +1,5 @@
 import { getActiveStore } from "@/lib/store/get-active-store";
-import { listAllProductsForAdmin } from "@/lib/products/admin-queries";
+import { getProductCoverUrls, listAllProductsForAdmin } from "@/lib/products/admin-queries";
 import { listAllCategoriesForAdmin } from "@/lib/categories/queries";
 import { PageHeading } from "@/components/admin/page-heading";
 import { ActionLink } from "@/components/ui/action";
@@ -14,10 +14,12 @@ const STATUS_LABEL: Record<string, string> = {
 
 export default async function AdminProductsPage() {
   const store = await getActiveStore();
-  const [products, categories] = await Promise.all([
+  const [rawProducts, categories] = await Promise.all([
     listAllProductsForAdmin(store.id),
     listAllCategoriesForAdmin(store.id),
   ]);
+  const covers = await getProductCoverUrls(rawProducts.map((product) => product.id));
+  const products = rawProducts.map((product) => ({ ...product, cover_url: covers[product.id] ?? null }));
 
   return (
     <div className="flex flex-col gap-6">
