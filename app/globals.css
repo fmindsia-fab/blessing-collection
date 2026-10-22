@@ -318,3 +318,25 @@
   font-size: 0.8125rem;
   line-height: 1.25rem;
 }
+
+/* Guia da Ajuda: destaca o botão ou campo do passo atual. */
+.help-pulse {
+  outline: 3px solid var(--gold);
+  outline-offset: 4px;
+  border-radius: 0.75rem;
+  animation: help-pulse 1.4s ease-in-out infinite;
+}
+@keyframes help-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--gold) 45%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 10px transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .help-pulse {
+    animation: none;
+  }
+}

@@ -23,10 +23,10 @@ export default async function AdminOrdersPage() {
             <ActionLink href="/admin/pedidos/dashboard" variant="outline" className="h-11 px-6">
               Resumo
             </ActionLink>
-            <ActionLink href="/admin/pedidos/calendario" variant="outline" className="h-11 px-6">
+            <ActionLink href="/admin/pedidos/calendario" variant="outline" className="h-11 px-6" data-help="orders-calendar">
               Calendário
             </ActionLink>
-            <ActionLink href="/admin/pedidos/novo" variant="solid" className="h-11 px-6">
+            <ActionLink href="/admin/pedidos/novo" variant="solid" className="h-11 px-6" data-help="new-order">
               Novo pedido
             </ActionLink>
           </div>

@@ -116,6 +116,7 @@ export function ProductRow({ product, statusLabel, isFirst, isLast, drag }: Prod
           type="button"
           variant="outline"
           size="sm"
+          data-help="product-edit"
           render={<Link href={`/admin/produtos/${product.id}/editar`} />}
         >
           Editar
@@ -124,6 +125,7 @@ export function ProductRow({ product, statusLabel, isFirst, isLast, drag }: Prod
           type="button"
           variant={isInactive ? "secondary" : "ghost"}
           size="sm"
+          data-help="product-toggle"
           disabled={isPending}
           onClick={() =>
             startTransition(() => (isInactive ? restoreProduct(product.id) : deactivateProduct(product.id)))

@@ -53,7 +53,7 @@ export function FormFooter({
         </p>
       ) : null}
 
-      <Button type="submit" variant={variant} disabled={isPending} className="w-full sm:w-fit">
+      <Button type="submit" data-help="save" variant={variant} disabled={isPending} className="w-full sm:w-fit">
         {isPending ? pendingLabel : submitLabel}
       </Button>
     </div>

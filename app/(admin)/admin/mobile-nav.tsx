@@ -27,7 +27,7 @@ export function MobileNav({ storeName, siteUrl }: { storeName: string; siteUrl: 
         style={portalTheme.style}
       >
         <SheetTitle className="sr-only">Menu do painel de {storeName}</SheetTitle>
-        <SidebarContent storeName={storeName} siteUrl={siteUrl} onNavigate={() => setOpen(false)} />
+        <SidebarContent variant="drawer" storeName={storeName} siteUrl={siteUrl} onNavigate={() => setOpen(false)} />
       </SheetContent>
     </Sheet>
   );

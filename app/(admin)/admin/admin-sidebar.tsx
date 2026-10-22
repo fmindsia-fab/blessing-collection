@@ -21,6 +21,8 @@ import { cn } from "@/lib/utils";
 export const SIDEBAR_COOKIE = "atelifacil-sidebar";
 
 type SidebarProps = {
+  /** No drawer do celular, os atalhos da loja (Ver catálogo, Compartilhar) ficam aqui; no desktop ficam no topo. */
+  variant?: "desktop" | "drawer";
   storeName: string;
   siteUrl: string;
   /** Fecha o drawer no mobile ao navegar. */
@@ -50,6 +52,7 @@ function NavItem({
     <Link
       href={item.href}
       onClick={onNavigate}
+      data-help={`nav:${item.href}`}
       aria-current={active ? "page" : undefined}
       title={collapsed ? item.label : undefined}
       className={cn(
@@ -77,7 +80,8 @@ function SecondaryGroup({
 }) {
   const pathname = usePathname();
   const hasActive = items.some((item) => isNavItemActive(pathname, item.href));
-  const [open, setOpen] = useState(false);
+  // Aberto por padrão: nada de Categorias, Cores, Materiais… escondido atrás de um clique.
+  const [open, setOpen] = useState(true);
 
   // Sidebar recolhida: um único ícone representa o bloco (leva ao primeiro item; para os
   // demais é só expandir o menu). Evita uma coluna de 6 ícones que obrigaria a rolar.
@@ -160,9 +164,8 @@ function Brand({ collapsed }: { collapsed: boolean }) {
   );
 }
 
-export function SidebarContent({ storeName, siteUrl, onNavigate, collapsed = false }: SidebarProps) {
+export function SidebarContent({ storeName, siteUrl, onNavigate, collapsed = false, variant = "desktop" }: SidebarProps) {
   const router = useRouter();
-  const initial = storeName.trim().charAt(0).toUpperCase() || "A";
 
   async function handleLogout() {
     const supabase = createBrowserSupabaseClient();
@@ -175,28 +178,6 @@ export function SidebarContent({ storeName, siteUrl, onNavigate, collapsed = fal
     <div className="flex h-full flex-col gap-4">
       <div className={cn("px-1 pt-1", collapsed && "flex justify-center")}>
         <Brand collapsed={collapsed} />
-      </div>
-
-      {/* Loja conectada: o nome vem do tenant autenticado, nunca fixo no código. */}
-      <div
-        className={cn(
-          "flex items-center gap-3 rounded-xl border border-sidebar-border bg-card/70 p-2.5",
-          collapsed && "justify-center border-transparent bg-transparent p-0",
-        )}
-        title={collapsed ? storeName : undefined}
-      >
-        <span
-          aria-hidden
-          className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[var(--brand-soft)] text-sm font-semibold text-[var(--gold)]"
-        >
-          {initial}
-        </span>
-        {collapsed ? null : (
-          <span className="flex min-w-0 flex-col leading-tight">
-            <span className="text-xs text-sidebar-foreground/75">Loja conectada</span>
-            <span className="truncate text-sm font-semibold">{storeName}</span>
-          </span>
-        )}
       </div>
 
       <nav aria-label="Menu do painel" className="sidebar-scroll flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
@@ -230,8 +211,10 @@ export function SidebarContent({ storeName, siteUrl, onNavigate, collapsed = fal
           collapsed={collapsed}
           onNavigate={onNavigate}
         />
+        <div className={cn("flex flex-col gap-1", variant === "desktop" && "lg:hidden")}>
         <a
           href="/"
+          data-help="view-store"
           target="_blank"
           rel="noopener noreferrer"
           title={collapsed ? "Ver catálogo" : undefined}
@@ -241,6 +224,7 @@ export function SidebarContent({ storeName, siteUrl, onNavigate, collapsed = fal
           {collapsed ? <span className="sr-only">Ver catálogo</span> : <span>Ver catálogo</span>}
         </a>
         {collapsed ? null : (
+          <span data-help="share" className="flex flex-col">
           <ShareButton
             url={siteUrl}
             title={storeName}
@@ -249,7 +233,9 @@ export function SidebarContent({ storeName, siteUrl, onNavigate, collapsed = fal
             variant="ghost"
             className="h-auto justify-start gap-3 rounded-xl px-3 py-2 text-sm font-medium normal-case tracking-normal text-sidebar-foreground/85 hover:bg-[var(--brand-soft)] hover:text-sidebar-foreground [&_svg]:size-[1.125rem]"
           />
+          </span>
         )}
+        </div>
         <button
           type="button"
           onClick={handleLogout}

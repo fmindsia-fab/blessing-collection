@@ -28,7 +28,7 @@ export default async function AdminProductsPage() {
         title="Produtos"
         description={`${products.length} ${products.length === 1 ? "peça cadastrada" : "peças cadastradas"}`}
         action={
-          <ActionLink href="/admin/produtos/novo" variant="solid" className="h-11 px-6">
+          <ActionLink href="/admin/produtos/novo" variant="solid" className="h-11 px-6" data-help="new-product">
             Nova peça
           </ActionLink>
         }

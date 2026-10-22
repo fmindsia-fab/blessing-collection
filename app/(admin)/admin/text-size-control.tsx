@@ -27,6 +27,7 @@ export function TextSizeControl({ initial }: { initial: TextSize }) {
   return (
     <button
       type="button"
+      data-help="text-size"
       onClick={cycle}
       title={`Tamanho do texto: ${TEXT_SIZE_LABEL[size]}. Clique para mudar para ${TEXT_SIZE_LABEL[next]}.`}
       aria-label={`Tamanho do texto: ${TEXT_SIZE_LABEL[size]}. Clique para mudar para ${TEXT_SIZE_LABEL[next]}.`}
