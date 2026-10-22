@@ -226,7 +226,7 @@ export const HELP_TASKS: HelpTask[] = [
     title: "Ver quantas pessoas olharam minhas peças",
     keywords: ["visualizacoes", "visitas", "estatisticas", "analytics", "desempenho", "quantas pessoas", "mais vistas", "ranking", "cliques no whatsapp"],
     steps: [
-      { text: 'O "Dashboard" mostra as visualizações, os cliques no WhatsApp e as peças mais vistas. Troque o período nos botões do alto.', href: "/admin", target: nav("/admin") },
+      { text: 'O "Dashboard" mostra as visualizações, os cliques no WhatsApp, a evolução por dia nos gráficos e as peças mais vistas. Troque o período nos botões do alto.', href: "/admin", target: nav("/admin") },
       { text: 'Para ver mais detalhes, abra "Analytics" no menu.', href: "/admin/analytics", target: nav("/admin/analytics") },
     ],
   },

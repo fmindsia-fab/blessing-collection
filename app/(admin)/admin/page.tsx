@@ -4,6 +4,8 @@ import { getProductCoverUrls, listAllProductsForAdmin } from "@/lib/products/adm
 import {
   ANALYTICS_PERIODS,
   getAnalyticsTotals,
+  getDailySeries,
+  getPreviousPeriodTotals,
   getProductRankings,
   parsePeriod,
   PERIOD_LABEL,
@@ -13,6 +15,8 @@ import { PageHeading } from "@/components/admin/page-heading";
 import { ActionLink } from "@/components/ui/action";
 import { StatCard } from "@/components/admin/stat-card";
 import { TopProducts } from "@/components/admin/top-products";
+import { TrendChart } from "@/components/admin/trend-chart";
+import { calculateTrend } from "@/lib/analytics/series";
 import { GettingStarted } from "@/components/admin/getting-started";
 import { getGettingStarted } from "@/lib/onboarding/getting-started";
 
@@ -25,11 +29,17 @@ export default async function AdminDashboardPage({
   const period = parsePeriod(periodo);
 
   const store = await getActiveStore();
-  const [totals, rankings, products] = await Promise.all([
+  const [totals, rankings, products, series, previous] = await Promise.all([
     getAnalyticsTotals(store.id, period),
     getProductRankings(store.id, period),
     listAllProductsForAdmin(store.id),
+    getDailySeries(store.id, period),
+    getPreviousPeriodTotals(store.id, period),
   ]);
+
+  // Tendência só quando há período anterior com dados reais para comparar.
+  const viewsTrend = previous ? calculateTrend(totals.productViews, previous.productViews) : null;
+  const clicksTrend = previous ? calculateTrend(totals.whatsappClicks, previous.whatsappClicks) : null;
 
   const topFive = rankings.slice(0, 5);
   const covers = await getProductCoverUrls(topFive.map((row) => row.product_id));
@@ -63,12 +73,14 @@ export default async function AdminDashboardPage({
           icon={EyeIcon}
           label="Vezes que viram suas peças"
           value={String(totals.productViews)}
+          trend={viewsTrend}
           hint={PERIOD_LABEL[period]}
         />
         <StatCard
           icon={MessageCircleIcon}
           label="Cliques no WhatsApp"
           value={String(totals.whatsappClicks)}
+          trend={clicksTrend}
           hint="Vezes que clicaram para chamar você no WhatsApp"
         />
         <StatCard
@@ -78,6 +90,18 @@ export default async function AdminDashboardPage({
           hint="De cada 100 visualizações, quantas viraram uma conversa no WhatsApp"
         />
       </div>
+
+      {series ? (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <TrendChart title="Visualizações por dia" points={series.views} singular="visualização" plural="visualizações" />
+          <TrendChart title="Cliques no WhatsApp por dia" points={series.clicks} singular="clique" plural="cliques" />
+          {series.truncated ? (
+            <p className="text-sm text-muted-foreground lg:col-span-2">
+              Há muitos registros neste período: os gráficos mostram só uma parte dos dias mais antigos.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
       <TopProducts
         title="Top 5 produtos do período"

@@ -1,5 +1,6 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { AnalyticsEventType } from "@/types/database.types";
+import { buildDailySeries, type DailyPoint } from "./series";
 
 // Períodos aceitos no filtro do painel. `total` vira p_days = null na RPC.
 export const ANALYTICS_PERIODS = ["7", "30", "90", "total"] as const;
@@ -135,4 +136,92 @@ export async function getAnalyticsTotals(storeId: string, period: AnalyticsPerio
     collectionViews,
     interestRate: interestRate(productViews, whatsappClicks),
   };
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const SERIES_PAGE_SIZE = 1000;
+const SERIES_MAX_PAGES = 10;
+
+export type DailySeries = {
+  views: DailyPoint[];
+  clicks: DailyPoint[];
+  /** true quando havia mais eventos que o limite de leitura (o gráfico mostra só uma parte). */
+  truncated: boolean;
+};
+
+// Evolução por dia de visualizações e cliques no WhatsApp. Só para janelas fechadas (7/30/90
+// dias): "todo o período" não tem um número de barras razoável. Lê só horário e tipo dos
+// eventos do próprio dono (mesma RLS dos totais), em páginas de 1000, com teto de 10 mil.
+export async function getDailySeries(storeId: string, period: AnalyticsPeriod): Promise<DailySeries | null> {
+  const days = periodToDays(period);
+  if (days === null) return null;
+
+  const supabase = await createServerSupabaseClient();
+  // Janela com folga de um dia: o corte é refinado ao agrupar por dia no fuso da loja.
+  const since = new Date(Date.now() - (days + 1) * DAY_MS).toISOString();
+
+  const viewTimes: string[] = [];
+  const clickTimes: string[] = [];
+  let truncated = false;
+
+  for (let page = 0; page < SERIES_MAX_PAGES; page += 1) {
+    const from = page * SERIES_PAGE_SIZE;
+    const { data, error } = await supabase
+      .from("analytics_events")
+      .select("created_at, event_type")
+      .eq("store_id", storeId)
+      .in("event_type", ["product_view", "whatsapp_click"])
+      .gte("created_at", since)
+      .order("created_at", { ascending: true })
+      .range(from, from + SERIES_PAGE_SIZE - 1);
+
+    if (error) {
+      console.warn("[analytics] série diária", error.message);
+      return null;
+    }
+
+    for (const event of data ?? []) {
+      (event.event_type === "product_view" ? viewTimes : clickTimes).push(event.created_at);
+    }
+
+    if ((data?.length ?? 0) < SERIES_PAGE_SIZE) break;
+    if (page === SERIES_MAX_PAGES - 1) truncated = true;
+  }
+
+  return {
+    views: buildDailySeries(viewTimes, days),
+    clicks: buildDailySeries(clickTimes, days),
+    truncated,
+  };
+}
+
+// Visualizações e cliques do período imediatamente anterior (mesmo tamanho), para a tendência.
+export async function getPreviousPeriodTotals(
+  storeId: string,
+  period: AnalyticsPeriod,
+): Promise<{ productViews: number; whatsappClicks: number } | null> {
+  const days = periodToDays(period);
+  if (days === null) return null;
+
+  const supabase = await createServerSupabaseClient();
+  const end = new Date(Date.now() - days * DAY_MS).toISOString();
+  const start = new Date(Date.now() - 2 * days * DAY_MS).toISOString();
+
+  const count = async (eventType: AnalyticsEventType) => {
+    const { count: total, error } = await supabase
+      .from("analytics_events")
+      .select("id", { count: "exact", head: true })
+      .eq("store_id", storeId)
+      .eq("event_type", eventType)
+      .gte("created_at", start)
+      .lt("created_at", end);
+    if (error) {
+      console.warn(`[analytics] período anterior de ${eventType}`, error.message);
+      return 0;
+    }
+    return total ?? 0;
+  };
+
+  const [productViews, whatsappClicks] = await Promise.all([count("product_view"), count("whatsapp_click")]);
+  return { productViews, whatsappClicks };
 }
