@@ -97,7 +97,7 @@ export function BrandPaletteField({ initialColors }: { initialColors: string[] }
                       type="button"
                       onClick={generateFromPrimary}
                       disabled={!isValidHexColor(colors[0])}
-                      className="flex items-center gap-1.5 text-xs uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                      className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       <WandSparklesIcon className="size-3.5" />
                       Gerar paleta a partir desta cor
@@ -108,7 +108,7 @@ export function BrandPaletteField({ initialColors }: { initialColors: string[] }
                     <button
                       type="button"
                       onClick={() => removeColor(index)}
-                      className="text-xs uppercase tracking-wider text-muted-foreground transition-colors hover:text-destructive"
+                      className="text-sm font-medium text-muted-foreground transition-colors hover:text-destructive"
                     >
                       Remover
                     </button>
@@ -131,7 +131,7 @@ export function BrandPaletteField({ initialColors }: { initialColors: string[] }
         <button
           type="button"
           onClick={addColor}
-          className="w-fit border border-border px-4 py-2 text-xs uppercase tracking-wider transition-colors hover:border-foreground"
+          className="w-fit border border-border px-4 py-2 text-sm font-medium transition-colors hover:border-foreground"
         >
           Adicionar cor
         </button>

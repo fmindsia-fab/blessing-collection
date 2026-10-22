@@ -10,6 +10,20 @@ import { OrderStatusControl } from "./order-status-control";
 import { CancelOrderButton } from "./cancel-order-button";
 import { InvoiceButton } from "./invoice-button";
 import { getStorePrivate } from "@/lib/store/private";
+import { StatusPill } from "@/components/admin/status-pill";
+
+function PaymentCard({ label, amount, paidAt }: { label: string; amount: string; paidAt: string | null }) {
+  return (
+    <div className="flex flex-col gap-2 rounded-xl border border-border bg-secondary/40 p-4">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-base font-semibold">{label}</span>
+        <StatusPill tone={paidAt ? "positive" : "muted"}>{paidAt ? "Pago" : "Não pago"}</StatusPill>
+      </div>
+      <p className="text-lg font-semibold tabular-nums">{amount}</p>
+      {paidAt ? <p className="text-sm text-muted-foreground">Pago em {paidAt}</p> : null}
+    </div>
+  );
+}
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -22,6 +36,10 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   const productionList = await getOrderProductionList(id);
 
   const formatBRL = (value: number) => value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  // Mesma conta do resumo de pedidos: o pago de cada pedido nunca passa do total.
+  const paidAmount =
+    (order.deposit_paid_at ? order.deposit_amount : 0) + (order.balance_paid_at ? order.balance_amount : 0);
+  const pendingAmount = order.total_amount - Math.min(paidAmount, order.total_amount);
   const formatDate = (value: string | null) => {
     if (!value) return "—";
     const [year, month, day] = value.split("-");
@@ -29,7 +47,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   };
 
   return (
-    <div className="flex max-w-2xl flex-col gap-8">
+    <div className="flex max-w-2xl flex-col gap-5">
       <BackLink href="/admin/pedidos">Pedidos</BackLink>
 
       <PageHeading
@@ -65,8 +83,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
       <CancelOrderButton orderId={id} cancelled={order.status === "cancelled"} />
 
-      <section className="flex flex-col gap-3">
-        <span className="admin-kicker">Itens</span>
+      <section className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <h2 className="text-lg font-semibold tracking-tight">Itens</h2>
         <div className="flex flex-col divide-y divide-border border-y border-border">
           {items.map((item) => (
             <div key={item.id} className="flex items-center gap-3 py-3">
@@ -108,25 +126,23 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         </p>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2">
-        <div className="flex flex-col gap-2 rounded-[var(--radius-image)] border border-border p-4">
-          <span className="text-sm font-medium">Sinal</span>
-          <p className="text-sm tabular-nums">{formatBRL(order.deposit_amount)}</p>
-          <p className="text-xs text-muted-foreground">
-            {order.deposit_paid_at ? `Pago em ${formatDate(order.deposit_paid_at)}` : "Não pago"}
-          </p>
+      <section className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="text-lg font-semibold tracking-tight">Pagamento</h2>
+          {order.status === "cancelled" ? null : (
+            <p className="text-sm text-muted-foreground">
+              Falta receber: <strong className="tabular-nums text-foreground">{formatBRL(pendingAmount)}</strong>
+            </p>
+          )}
         </div>
-        <div className="flex flex-col gap-2 rounded-[var(--radius-image)] border border-border p-4">
-          <span className="text-sm font-medium">Saldo</span>
-          <p className="text-sm tabular-nums">{formatBRL(order.balance_amount)}</p>
-          <p className="text-xs text-muted-foreground">
-            {order.balance_paid_at ? `Pago em ${formatDate(order.balance_paid_at)}` : "Não pago"}
-          </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <PaymentCard label="Sinal" amount={formatBRL(order.deposit_amount)} paidAt={order.deposit_paid_at ? formatDate(order.deposit_paid_at) : null} />
+          <PaymentCard label="Saldo" amount={formatBRL(order.balance_amount)} paidAt={order.balance_paid_at ? formatDate(order.balance_paid_at) : null} />
         </div>
       </section>
 
-      <section className="flex flex-col gap-3">
-        <span className="admin-kicker">Prazos</span>
+      <section className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <h2 className="text-lg font-semibold tracking-tight">Prazos</h2>
         <p className="text-sm">Pedido em {formatDate(order.order_date)}</p>
         <p className="text-sm">Previsão de entrega: {formatDate(order.expected_delivery_date)}</p>
         {order.delivered_at ? (
@@ -134,8 +150,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         ) : null}
       </section>
 
-      <section className="flex flex-col gap-3">
-        <span className="admin-kicker">Lista de produção</span>
+      <section className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <h2 className="text-lg font-semibold tracking-tight">Lista de produção</h2>
         <p className="text-xs text-muted-foreground">
           Materiais somados a partir do cadastro de cada peça do pedido, multiplicados pela
           quantidade encomendada.
@@ -159,7 +175,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
         {order.production_notes ? (
           <div className="flex flex-col gap-1 pt-2">
-            <span className="text-xs font-medium uppercase tracking-[0.1em] text-muted-foreground">
+            <span className="text-sm font-semibold text-muted-foreground">
               Insumos extras / observações
             </span>
             <p className="whitespace-pre-wrap text-sm">{order.production_notes}</p>
@@ -168,8 +184,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       </section>
 
       {order.notes ? (
-        <section className="flex flex-col gap-2">
-          <span className="admin-kicker">Observações</span>
+        <section className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+          <h2 className="text-lg font-semibold tracking-tight">Observações</h2>
           <p className="whitespace-pre-wrap text-sm">{order.notes}</p>
         </section>
       ) : null}

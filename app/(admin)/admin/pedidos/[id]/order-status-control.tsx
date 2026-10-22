@@ -9,17 +9,18 @@ export function OrderStatusControl({ orderId, status }: { orderId: string; statu
   const [isPending, startTransition] = useTransition();
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div role="group" aria-label="Situação do pedido" className="flex flex-wrap gap-2">
       {ORDER_STATUS_ORDER.map((option) => (
         <button
           key={option}
           type="button"
           disabled={isPending}
           onClick={() => startTransition(() => updateOrderStatus(orderId, option))}
-          className={`rounded-full border px-3 py-1.5 text-xs uppercase tracking-[0.08em] transition-colors disabled:opacity-50 ${
+          aria-pressed={status === option}
+          className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 ${
             status === option
-              ? "border-foreground bg-foreground text-background"
-              : "border-border text-muted-foreground hover:text-foreground"
+              ? "border-[var(--gold)] bg-[var(--gold)] text-primary-foreground shadow-sm"
+              : "border-border bg-card text-muted-foreground hover:border-[var(--gold)] hover:text-foreground"
           }`}
         >
           {ORDER_STATUS_LABEL[option]}

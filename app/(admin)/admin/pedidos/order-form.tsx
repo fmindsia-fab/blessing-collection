@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { NativeSelect } from "@/components/ui/native-select";
+import { FormFooter } from "@/components/admin/form-footer";
 
 type ProductOption = {
   id: string;
@@ -134,11 +135,11 @@ export function OrderForm({
   }
 
   return (
-    <form action={formAction} className="flex flex-col gap-8">
+    <form action={formAction} className="flex flex-col gap-5">
       <input type="hidden" name="itemCount" value={items.length} />
 
-      <section className="flex flex-col gap-4">
-        <span className="admin-kicker">Cliente e datas</span>
+      <section className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <h2 className="text-lg font-semibold tracking-tight">Cliente e datas</h2>
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="customerId">Cliente</Label>
@@ -198,8 +199,8 @@ export function OrderForm({
         </div>
       </section>
 
-      <section className="flex flex-col gap-3">
-        <span className="admin-kicker">Itens do pedido</span>
+      <section className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <h2 className="text-lg font-semibold tracking-tight">Itens do pedido</h2>
 
         <div className="flex flex-col gap-4">
           {items.map((item, index) => {
@@ -329,8 +330,8 @@ export function OrderForm({
         </p>
       </section>
 
-      <section className="flex flex-col gap-4">
-        <span className="admin-kicker">Pagamento</span>
+      <section className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <h2 className="text-lg font-semibold tracking-tight">Pagamento</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-3 rounded-[var(--radius-image)] border border-border p-4">
             <span className="text-sm font-medium">Sinal</span>
@@ -402,8 +403,8 @@ export function OrderForm({
         </div>
       </section>
 
-      <section className="flex flex-col gap-4">
-        <span className="admin-kicker">Observações e produção</span>
+      <section className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <h2 className="text-lg font-semibold tracking-tight">Observações e produção</h2>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="notes">Observações gerais</Label>
           <Textarea id="notes" name="notes" rows={3} defaultValue={order?.notes ?? ""} />
@@ -424,11 +425,12 @@ export function OrderForm({
         </div>
       </section>
 
-      {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
-
-      <Button type="submit" disabled={isPending} className="h-11 w-fit px-8">
-        {isPending ? "Salvando..." : order ? "Salvar pedido" : "Criar pedido"}
-      </Button>
+      <FormFooter
+        sticky
+        isPending={isPending}
+        error={state.error}
+        submitLabel={order ? "Salvar pedido" : "Criar pedido"}
+      />
     </form>
   );
 }

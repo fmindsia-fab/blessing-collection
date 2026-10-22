@@ -7,7 +7,7 @@ import type { OrderListRow } from "@/lib/orders/queries";
 export function OverdueBanner({ orders }: { orders: OrderListRow[] }) {
   return (
     <div className="flex flex-col gap-3 rounded-[var(--radius-image)] border border-destructive/40 bg-destructive/5 p-5">
-      <p className="text-xs font-medium uppercase tracking-[0.14em] text-destructive">
+      <p className="text-sm font-semibold text-destructive">
         {orders.length === 1 ? "1 pedido atrasado" : `${orders.length} pedidos atrasados`}
       </p>
       <ul className="flex flex-col gap-2">

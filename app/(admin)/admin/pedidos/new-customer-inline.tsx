@@ -65,7 +65,7 @@ export function NewCustomerInline({
   return (
     <div className="flex flex-col gap-3 rounded-[var(--radius)] border border-dashed border-border p-3">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
+        <span className="text-sm font-semibold text-muted-foreground">
           Nova cliente
         </span>
         <button

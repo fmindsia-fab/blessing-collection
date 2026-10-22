@@ -75,7 +75,7 @@ export default async function OrdersDashboardPage({
 
       {overdueCount > 0 ? (
         <div className="flex flex-col gap-2 rounded-[var(--radius-image)] border border-destructive/40 bg-destructive/5 p-5">
-          <p className="text-xs font-medium uppercase tracking-[0.14em] text-destructive">
+          <p className="text-sm font-semibold text-destructive">
             {overdueCount === 1 ? "1 pedido atrasado" : `${overdueCount} pedidos atrasados`} —{" "}
             {formatBRL(overdueAmount)} em risco
           </p>
@@ -85,8 +85,8 @@ export default async function OrdersDashboardPage({
         </div>
       ) : null}
 
-      <section className="flex flex-col gap-3">
-        <span className="admin-kicker">Pedidos por status</span>
+      <section className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <h2 className="text-lg font-semibold tracking-tight">Pedidos por status</h2>
         <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {ORDER_STATUS_ORDER.map((status) => {
             const entry = statusMap.get(status);
@@ -106,8 +106,8 @@ export default async function OrdersDashboardPage({
       </section>
 
       {pendingPayments.length > 0 ? (
-        <section className="flex flex-col gap-3">
-          <span className="admin-kicker">Pagamentos pendentes</span>
+        <section className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+          <h2 className="text-lg font-semibold tracking-tight">Pagamentos pendentes</h2>
           <ul className="flex flex-col divide-y divide-border border-y border-border">
             {pendingPayments.map((entry) => (
               <li key={entry.orderId} className="flex items-center justify-between gap-3 py-2.5 text-sm">
@@ -125,8 +125,8 @@ export default async function OrdersDashboardPage({
       ) : null}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <section className="flex flex-col gap-3">
-          <span className="admin-kicker">Top produtos pedidos</span>
+        <section className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+          <h2 className="text-lg font-semibold tracking-tight">Top produtos pedidos</h2>
           {topProducts.length > 0 ? (
             <ul className="flex flex-col divide-y divide-border border-y border-border">
               {topProducts.map((entry, index) => (
@@ -148,8 +148,8 @@ export default async function OrdersDashboardPage({
           )}
         </section>
 
-        <section className="flex flex-col gap-3">
-          <span className="admin-kicker">Top clientes</span>
+        <section className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+          <h2 className="text-lg font-semibold tracking-tight">Top clientes</h2>
           {topCustomers.length > 0 ? (
             <ul className="flex flex-col divide-y divide-border border-y border-border">
               {topCustomers.map((entry, index) => (
@@ -172,8 +172,8 @@ export default async function OrdersDashboardPage({
         </section>
       </div>
 
-      <section className="flex flex-col gap-3">
-        <span className="admin-kicker">Materiais a comprar</span>
+      <section className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <h2 className="text-lg font-semibold tracking-tight">Materiais a comprar</h2>
         <p className="text-xs text-muted-foreground">
           Soma dos materiais cadastrados nas peças de pedidos com status &quot;Confirmado&quot; —
           não considera período nem outros status.

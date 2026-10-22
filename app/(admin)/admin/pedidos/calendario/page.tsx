@@ -62,6 +62,9 @@ export default async function OrdersCalendarPage({
   // Preenche a última semana para a grade fechar em múltiplos de 7.
   while (cells.length % 7 !== 0) cells.push(null);
 
+  // Dias com entrega, em ordem, para a agenda do celular.
+  const agendaDays = Array.from(ordersByDay.entries()).sort((a, b) => a[0] - b[0]);
+
   const isCurrentMonth = year === now.getFullYear() && month === now.getMonth() + 1;
   const todayDay = now.getDate();
 
@@ -69,14 +72,14 @@ export default async function OrdersCalendarPage({
   const nextMonth = month === 12 ? { year: year + 1, month: 1 } : { year, month: month + 1 };
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <BackLink href="/admin/pedidos">Pedidos</BackLink>
       <PageHeading
         kicker="Encomendas"
         title={`${MONTH_NAMES[month - 1]} ${year}`}
         description="Pedidos por previsão de entrega"
         action={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <ActionLink
               href={`/admin/pedidos/calendario?ano=${prevMonth.year}&mes=${prevMonth.month}`}
               variant="outline"
@@ -106,7 +109,48 @@ export default async function OrdersCalendarPage({
         }
       />
 
-      <div className="overflow-hidden rounded-[var(--radius-image)] border border-border shadow-sm">
+      {/* Celular: agenda em lista, só com os dias que têm entrega (a grade de 7 colunas não cabe). */}
+      <div className="flex flex-col gap-3 sm:hidden">
+        {agendaDays.length === 0 ? (
+          <p className="rounded-2xl border border-dashed border-border py-10 text-center text-sm text-muted-foreground">
+            Nenhuma entrega prevista neste mês.
+          </p>
+        ) : (
+          agendaDays.map(([day, dayOrders]) => (
+            <section key={day} className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-4 shadow-sm">
+              <h2 className="flex items-center gap-2 text-base font-semibold">
+                <span
+                  className={`flex size-8 items-center justify-center rounded-full text-sm tabular-nums ${
+                    isCurrentMonth && day === todayDay
+                      ? "bg-[var(--gold)] text-primary-foreground"
+                      : "bg-[var(--brand-soft)] text-[var(--gold)]"
+                  }`}
+                >
+                  {day}
+                </span>
+                <span className="capitalize">
+                  {new Date(year, month - 1, day).toLocaleDateString("pt-BR", { weekday: "long" })}
+                </span>
+              </h2>
+              <div className="flex flex-col gap-1.5">
+                {dayOrders.map((order) => (
+                  <OrderCalendarEntry
+                    key={order.id}
+                    orderId={order.id}
+                    customerName={order.customer?.name ?? "Cliente"}
+                    itemsSummaryLabel={order.itemsSummary.label}
+                    status={order.status}
+                    expectedDeliveryDate={order.expected_delivery_date}
+                    statusDotClassName={STATUS_DOT[order.status] ?? "bg-muted-foreground"}
+                  />
+                ))}
+              </div>
+            </section>
+          ))
+        )}
+      </div>
+
+      <div className="hidden overflow-hidden rounded-2xl border border-border shadow-sm sm:block">
         <div className="grid grid-cols-7 border-b border-border bg-secondary/40">
           {WEEKDAY_LABELS.map((label) => (
             <div
@@ -135,7 +179,7 @@ export default async function OrdersCalendarPage({
                     <span
                       className={`flex size-6 items-center justify-center rounded-full text-xs tabular-nums ${
                         isToday
-                          ? "bg-[var(--gold)] font-semibold text-background"
+                          ? "bg-[var(--gold)] font-semibold text-primary-foreground"
                           : "text-muted-foreground"
                       }`}
                     >
