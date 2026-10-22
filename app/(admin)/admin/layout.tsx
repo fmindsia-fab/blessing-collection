@@ -1,81 +1,58 @@
-import Link from "next/link";
-import { LogoutButton } from "./logout-button";
-import { AdminNavLink } from "./admin-nav-link";
+import { cookies } from "next/headers";
+import { AdminSidebar, SIDEBAR_COOKIE } from "./admin-sidebar";
 import { AdminThemeProvider } from "./theme-provider";
 import { ThemeToggle } from "./theme-toggle";
 import { MobileNav } from "./mobile-nav";
-import { ShareButton } from "@/components/shared/share-button";
+import { PlatformMark } from "@/components/shared/platform-logo";
 import { getActiveStore, getSiteUrl } from "@/lib/store/get-active-store";
+import { DARK_MODE_COOKIE } from "@/lib/store/admin-theme";
 import { SubscriptionBanner } from "./subscription-banner";
 import { OwnershipBanner } from "./ownership-banner";
 import { TrialDaysBadge } from "./trial-days-badge";
-
-const NAV_ITEMS = [
-  { href: "/admin", label: "Dashboard" },
-  { href: "/admin/pedidos", label: "Pedidos" },
-  { href: "/admin/clientes", label: "Clientes" },
-  { href: "/admin/produtos", label: "Produtos" },
-  { href: "/admin/categorias", label: "Categorias" },
-  { href: "/admin/colecoes", label: "Coleções" },
-  { href: "/admin/modelos", label: "Modelos" },
-  { href: "/admin/cores", label: "Cores" },
-  { href: "/admin/materiais", label: "Materiais" },
-  { href: "/admin/grupos-variacao", label: "Grupos" },
-  { href: "/admin/precificacao", label: "Precificação" },
-  { href: "/admin/analytics", label: "Analytics" },
-  { href: "/admin/configuracoes", label: "Configurações" },
-];
 
 export default async function AdminAreaLayout({ children }: { children: React.ReactNode }) {
   const store = await getActiveStore();
   const storeName = store.name;
   const siteUrl = await getSiteUrl();
 
+  // Preferências visuais lidas no servidor: o primeiro paint já sai com o tema e a
+  // sidebar certos (sem "piscar" claro→escuro).
+  const cookieStore = await cookies();
+  const themeCookie = cookieStore.get(DARK_MODE_COOKIE)?.value;
+  const initialDark = themeCookie === "dark" ? true : themeCookie === "light" ? false : null;
+  const sidebarCollapsed = cookieStore.get(SIDEBAR_COOKIE)?.value === "collapsed";
+
   return (
-    <AdminThemeProvider>
-      <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-md">
-        <div className="flex items-center justify-between gap-6 px-6 py-4 lg:px-10">
-          <div className="flex items-center gap-4">
-            <MobileNav navItems={NAV_ITEMS} storeName={storeName} siteUrl={siteUrl} />
+    <AdminThemeProvider initialDark={initialDark}>
+      <div className="flex min-h-screen flex-1">
+        <AdminSidebar storeName={storeName} siteUrl={siteUrl} initialCollapsed={sidebarCollapsed} />
 
-            <Link href="/admin" className="flex flex-col leading-none">
-              <span className="text-base font-semibold tracking-tight">{storeName}</span>
-              <span className="text-xs text-muted-foreground">Painel</span>
-            </Link>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <header className="sticky top-0 z-40 flex items-center justify-between gap-3 border-b border-border bg-background/85 px-4 py-3 backdrop-blur-md sm:px-6 lg:px-10">
+            <div className="flex items-center gap-2 md:hidden">
+              <MobileNav storeName={storeName} siteUrl={siteUrl} />
+              <span className="flex items-center gap-2 text-base font-semibold tracking-tight">
+                <PlatformMark className="size-7 text-foreground [--mark-accent:var(--gold)]" />
+                <span className="max-w-[9rem] truncate">{storeName}</span>
+              </span>
+            </div>
+            <div className="hidden min-w-0 flex-col leading-tight md:flex">
+              <span className="text-xs text-muted-foreground">Painel da loja</span>
+              <span className="truncate text-sm font-semibold">{storeName}</span>
+            </div>
 
-            <nav className="hidden flex-wrap gap-1 md:flex">
-              {NAV_ITEMS.map((item) => (
-                <AdminNavLink key={item.href} href={item.href} label={item.label} />
-              ))}
-            </nav>
-          </div>
+            <div className="flex items-center gap-2">
+              <TrialDaysBadge storeId={store.id} />
+              <ThemeToggle />
+            </div>
+          </header>
 
-          <div className="flex items-center gap-2">
-            <TrialDaysBadge storeId={store.id} />
-            <ShareButton
-              url={siteUrl}
-              title={storeName}
-              message={`Olha o catálogo da ${storeName}, que peças lindas!`}
-              label="Compartilhar"
-              variant="ghost"
-              className="hidden sm:inline-flex"
-            />
-            <Link
-              href="/"
-              className="hidden text-sm text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:text-foreground focus-visible:underline focus-visible:underline-offset-4 sm:inline"
-            >
-              Ver catálogo ↗
-            </Link>
-            <ThemeToggle />
-            <LogoutButton />
-          </div>
+          <OwnershipBanner store={store} />
+          <SubscriptionBanner storeId={store.id} />
+
+          <main className="flex flex-1 flex-col px-4 py-8 sm:px-6 lg:px-10 lg:py-10">{children}</main>
         </div>
-      </header>
-
-      <OwnershipBanner store={store} />
-      <SubscriptionBanner storeId={store.id} />
-
-      <div className="flex flex-1 flex-col px-6 py-10 lg:px-10">{children}</div>
+      </div>
     </AdminThemeProvider>
   );
 }

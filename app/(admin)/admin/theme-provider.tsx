@@ -1,7 +1,12 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, useSyncExternalStore } from "react";
-import { ADMIN_DARK_VARS, ADMIN_LIGHT_VARS, DARK_MODE_STORAGE_KEY } from "@/lib/store/admin-theme";
+import {
+  ADMIN_DARK_VARS,
+  ADMIN_LIGHT_VARS,
+  DARK_MODE_COOKIE,
+  DARK_MODE_STORAGE_KEY,
+} from "@/lib/store/admin-theme";
 import { cn } from "@/lib/utils";
 
 type ThemeContextValue = {
@@ -47,7 +52,14 @@ function readStoredPreference(): boolean {
  * para saber quando a hidratação terminou, evitando divergência entre o
  * HTML do servidor (sempre claro) e o primeiro render do cliente.
  */
-export function AdminThemeProvider({ children }: { children: React.ReactNode }) {
+export function AdminThemeProvider({
+  children,
+  initialDark = null,
+}: {
+  children: React.ReactNode;
+  /** Preferência lida do cookie no servidor (evita o flash do tema errado); null = sem cookie ainda. */
+  initialDark?: boolean | null;
+}) {
   const isHydrated = useSyncExternalStore(
     subscribeToNothing,
     () => true,
@@ -55,7 +67,7 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
   );
 
   const [isDark, setIsDark] = useState<boolean>(() =>
-    typeof window === "undefined" ? false : readStoredPreference(),
+    initialDark ?? (typeof window === "undefined" ? false : readStoredPreference()),
   );
 
   useEffect(() => {
@@ -65,6 +77,8 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
     } catch {
       // Modo privado ou storage cheio: o tema segue funcionando na sessão.
     }
+    // Cookie espelho: o servidor lê no próximo carregamento e já pinta o tema certo.
+    document.cookie = `${DARK_MODE_COOKIE}=${isDark ? "dark" : "light"}; path=/; max-age=31536000; samesite=lax`;
   }, [isDark, isHydrated]);
 
   return (

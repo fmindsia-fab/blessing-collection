@@ -4,7 +4,7 @@
 // suspensa pela plataforma (bloqueio administrativo) ou rota digitada errada.
 export default function AdminNotFound() {
   return (
-    <main className="flex flex-1 items-center justify-center px-6 py-16">
+    <div className="flex flex-1 items-center justify-center px-6 py-16">
       <div className="flex max-w-sm flex-col items-center gap-4 text-center">
         <h1 className="text-2xl tracking-tight">Loja indisponível</h1>
         <p className="text-sm text-muted-foreground">
@@ -12,6 +12,6 @@ export default function AdminNotFound() {
           contato com o suporte.
         </p>
       </div>
-    </main>
+    </div>
   );
 }
