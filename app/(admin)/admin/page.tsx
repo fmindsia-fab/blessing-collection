@@ -13,6 +13,8 @@ import { PageHeading } from "@/components/admin/page-heading";
 import { ActionLink } from "@/components/ui/action";
 import { StatCard } from "@/components/admin/stat-card";
 import { TopProducts } from "@/components/admin/top-products";
+import { GettingStarted } from "@/components/admin/getting-started";
+import { getGettingStarted } from "@/lib/onboarding/getting-started";
 
 export default async function AdminDashboardPage({
   searchParams,
@@ -31,6 +33,10 @@ export default async function AdminDashboardPage({
 
   const topFive = rankings.slice(0, 5);
   const covers = await getProductCoverUrls(topFive.map((row) => row.product_id));
+  const gettingStarted = await getGettingStarted(
+    { id: store.id, logo_url: store.logo_url },
+    products.map((product) => product.id),
+  );
   const publicProducts = products.filter((product) => product.status !== "inactive").length;
 
   return (
@@ -43,6 +49,8 @@ export default async function AdminDashboardPage({
         />
         <PeriodFilter basePath="/admin" active={period} periods={ANALYTICS_PERIODS} labels={PERIOD_LABEL} />
       </div>
+
+      <GettingStarted items={gettingStarted} />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
