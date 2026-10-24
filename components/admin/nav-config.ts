@@ -9,8 +9,10 @@ import {
   PackageIcon,
   PaletteIcon,
   ShapesIcon,
+  ReceiptTextIcon,
   ShoppingBagIcon,
   UsersIcon,
+  WarehouseIcon,
   type LucideIcon,
 } from "lucide-react";
 
@@ -51,6 +53,13 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
         { href: "/admin/grupos-variacao", label: "Variações", icon: BoxesIcon },
       ],
     },
+  },
+  {
+    label: "Estoque e compras",
+    items: [
+      { href: "/admin/estoque", label: "Estoque", icon: WarehouseIcon },
+      { href: "/admin/compras", label: "Compras", icon: ReceiptTextIcon },
+    ],
   },
   {
     label: "Gestão",

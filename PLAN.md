@@ -653,6 +653,18 @@ página + imagem manual no WhatsApp.
       `Dancing Script` (assinatura cursiva) mantidos
 - [x] `next build`, `tsc --noEmit`, `eslint` e suíte completa (246 testes) verdes
 
+### M18 a M22 — Estoque de insumos, compras, contas a pagar, fluxo de caixa e funil (pedido do usuário, 24/10/2026)
+
+**Extensão de escopo aprovada** sobre o PRD (seção 5.2 deixava financeiro e estoque fora do MVP). Plano completo, modelo de dados, regras e decisões em [`docs/plano-estoque-financeiro-funil.md`](docs/plano-estoque-financeiro-funil.md). Fases, cada uma em produção antes da próxima:
+
+- **M18 — Compras e estoque** (migration `0044`): lançar compras de insumos, saldo por material, estoque mínimo, ajuste e extrato, histórico de preços. Livro-razão `stock_movements` imutável (sem UPDATE/DELETE para ninguém); compra/ajuste/cancelamento por funções atômicas no banco.
+- **M19 — Baixa automática por pedido** (`set_order_status` atômica): ao entrar em produção desconta a receita; custo e margem reais do pedido.
+- **M20 — Contas a pagar e fluxo de caixa.**
+- **M21 — Funil de vendas básico.**
+- **M22 — Acabamento:** cartões no Dashboard, roteiros da Ajuda, menu.
+
+Decisões fixadas (docs, seção 9): baixa em "Em produção"; cancelar em produção pergunta se devolve; estoque negativo permitido com aviso; custo do material só atualiza se a pessoa confirmar na compra; controle de estoque material a material; fornecedor em texto livre; caixa por data de pagamento, em valor bruto.
+
 ### M9 — Sistema de botões, links e setas
 
 - [x] `components/ui/action.tsx`: vocabulário único de ações (`solid`, `outline`, `quiet`, `underline`,

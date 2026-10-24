@@ -143,6 +143,28 @@ export const HELP_TASKS: HelpTask[] = [
     ],
   },
   {
+    id: "registrar-compra",
+    title: "Registrar uma compra de materiais (fio, fecho, alça…)",
+    keywords: ["registrar compra", "lancar compra", "comprei fio", "comprei material", "compra de material", "compra de insumo", "insumos", "comprei", "nota de compra", "historico de compras", "quanto paguei"],
+    steps: [
+      { text: 'Abra "Compras" no menu.', href: "/admin/compras", target: nav("/admin/compras") },
+      { text: 'Clique em "Registrar compra".', target: '[data-help="new-purchase"]' },
+      { text: "Confira a data e, se quiser, diga onde comprou.", href: "/admin/compras/nova", target: "#purchasedAt" },
+      { text: "Escolha o material, a quantidade e quanto você pagou. Se comprou por novelo ou pacote, use \"Contar por embalagem\".", target: "#material-1" },
+      { text: 'Clique em "Registrar compra". O estoque soma sozinho e o preço fica guardado no histórico.', target: '[data-help="save"]' },
+    ],
+  },
+  {
+    id: "ver-estoque",
+    title: "Ver quanto tenho de cada material e o que está acabando",
+    keywords: ["estoque", "ver estoque", "quanto tenho", "saldo de material", "material acabando", "estoque minimo", "controlar estoque", "contar estoque", "ajustar estoque", "inventario", "acabou o fio"],
+    steps: [
+      { text: 'Abra "Estoque" no menu.', href: "/admin/estoque", target: nav("/admin/estoque") },
+      { text: 'Cada material mostra quanto você tem. Para começar a controlar um material, clique em "Controlar este material" e diga quanto tem guardado.' },
+      { text: 'Use "Ajustar" para acertar a quantidade depois de contar, e "Avisar quando chegar em" para ser lembrada antes de acabar.' },
+    ],
+  },
+  {
     id: "cadastrar-cliente",
     title: "Cadastrar uma cliente",
     keywords: ["cliente", "clientes", "cadastrar cliente", "nova cliente", "adicionar cliente", "telefone da cliente"],

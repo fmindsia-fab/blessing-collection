@@ -390,6 +390,10 @@ export interface Database {
           name: string;
           unit: string;
           unit_cost: number;
+          /** Controle de estoque ligado para este material (migration 0044). */
+          track_stock: boolean;
+          /** Alerta de "acabando" quando o saldo chega neste valor; null = sem alerta. */
+          min_stock: number | null;
           status: ArchivableStatus;
           sort_order: number;
           created_at: string;
@@ -401,6 +405,8 @@ export interface Database {
           name: string;
           unit?: string;
           unit_cost?: number;
+          track_stock?: boolean;
+          min_stock?: number | null;
           status?: ArchivableStatus;
           sort_order?: number;
           created_at?: string;
@@ -408,6 +414,116 @@ export interface Database {
         };
         Update: Partial<Database["public"]["Tables"]["materials"]["Insert"]>;
         Relationships: [];
+      };
+      /** Compras de insumos (migration 0044). */
+      purchases: {
+        Row: {
+          id: string;
+          store_id: string;
+          purchased_at: string;
+          supplier: string | null;
+          freight: number;
+          total_amount: number;
+          notes: string | null;
+          status: "active" | "cancelled";
+          cancelled_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          store_id: string;
+          purchased_at?: string;
+          supplier?: string | null;
+          freight?: number;
+          total_amount?: number;
+          notes?: string | null;
+          status?: "active" | "cancelled";
+          cancelled_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["purchases"]["Insert"]>;
+        Relationships: [];
+      };
+      purchase_items: {
+        Row: {
+          id: string;
+          purchase_id: string;
+          material_id: string;
+          quantity: number;
+          /** O que foi pago por esta linha (não o preço da unidade). */
+          total_cost: number;
+          /** total_cost / quantity (coluna gerada). */
+          unit_cost: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          purchase_id: string;
+          material_id: string;
+          quantity: number;
+          total_cost: number;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["purchase_items"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "purchase_items_purchase_id_fkey";
+            columns: ["purchase_id"];
+            referencedRelation: "purchases";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "purchase_items_material_id_fkey";
+            columns: ["material_id"];
+            referencedRelation: "materials";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      /** Livro-razão do estoque (migration 0044): imutável, o saldo é a soma dos movimentos. */
+      stock_movements: {
+        Row: {
+          id: string;
+          store_id: string;
+          material_id: string;
+          kind: "purchase" | "consumption" | "return" | "adjustment";
+          /** Com sinal: entrada positiva, saída negativa. */
+          quantity: number;
+          unit_cost: number | null;
+          purchase_item_id: string | null;
+          order_id: string | null;
+          note: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          store_id: string;
+          material_id: string;
+          kind: "purchase" | "consumption" | "return" | "adjustment";
+          quantity: number;
+          unit_cost?: number | null;
+          purchase_item_id?: string | null;
+          order_id?: string | null;
+          note?: string | null;
+          created_at?: string;
+        };
+        Update: never;
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_purchase_item_id_fkey";
+            columns: ["purchase_item_id"];
+            referencedRelation: "purchase_items";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stock_movements_material_id_fkey";
+            columns: ["material_id"];
+            referencedRelation: "materials";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       customers: {
         Row: {
@@ -734,7 +850,13 @@ export interface Database {
         Relationships: [];
       };
     };
-    Views: Record<string, never>;
+    Views: {
+      /** Saldo de estoque por material (migration 0044). */
+      material_stock: {
+        Row: { store_id: string; material_id: string; stock: number };
+        Relationships: [];
+      };
+    };
     Functions: {
       /** Acesso comercial em tempo real (migration 0032) — boolean, sem dados de cobrança. */
       store_has_access: {
@@ -770,6 +892,26 @@ export interface Database {
       get_popular_product_ids: {
         Args: { p_store_id: string; p_days?: number; p_limit?: number };
         Returns: { product_id: string }[];
+      };
+      /** Compras e estoque (migration 0044) — transação única, com a RLS do usuário. */
+      create_purchase: {
+        Args: {
+          p_store_id: string;
+          p_purchased_at: string;
+          p_supplier: string | null;
+          p_freight: number;
+          p_notes: string | null;
+          p_items: { material_id: string; quantity: number; total_cost: number; update_cost: boolean }[];
+        };
+        Returns: string;
+      };
+      cancel_purchase: {
+        Args: { p_purchase_id: string };
+        Returns: undefined;
+      };
+      adjust_stock: {
+        Args: { p_material_id: string; p_new_quantity: number; p_note: string | null };
+        Returns: number;
       };
       get_category_rankings: {
         Args: { p_store_id: string; p_days?: number | null };

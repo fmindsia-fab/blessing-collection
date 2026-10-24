@@ -1,6 +1,6 @@
 # Plano: compras e estoque de insumos, contas a pagar, fluxo de caixa e funil de vendas
 
-Status: **proposta para aprovação** (24/10/2026). Nada disto foi implementado.
+Status: **aprovado em 24/10/2026** com as recomendações da seção 9. Em implementação por fases (milestones M18 a M22 no `PLAN.md`).
 
 Escrito para: a dona do produto (decisão de escopo) e para quem for implementar.
 
@@ -22,7 +22,7 @@ O que já existe e será reaproveitado:
 
 ## 2. Decisão de escopo (registrar)
 
-O PRD (seção 5.2) deixou **fora do MVP** o controle financeiro e o controle de estoque. A migration 0025 (pedidos) já registrou isso como extensão aprovada e disse que não havia contas a pagar, fluxo de caixa nem baixa de insumo. Este plano é uma **nova extensão de escopo**, pedida em 24/10/2026. Ao aprovar, registrar no `PLAN.md` como Milestones 13 a 16.
+O PRD (seção 5.2) deixou **fora do MVP** o controle financeiro e o controle de estoque. A migration 0025 (pedidos) já registrou isso como extensão aprovada e disse que não havia contas a pagar, fluxo de caixa nem baixa de insumo. Este plano é uma **nova extensão de escopo**, pedida em 24/10/2026. Aprovado e registrado no `PLAN.md` como milestones **M18 a M22**.
 
 ## 3. Módulos e telas
 
