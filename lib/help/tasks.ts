@@ -76,6 +76,7 @@ export const HELP_TASKS: HelpTask[] = [
       { text: 'Clique em "Editar" na peça.', target: '[data-help="product-edit"]' },
       { text: 'Vá até a parte "Variações", escolha a variação (Cor, Alça…) e dê um nome à opção. Se escolher "Alça", dá para escolher um material cadastrado e o preço dele é somado ao da peça.', target: "#variacoes" },
       { text: 'Se a cliente precisa escolher uma destas opções para comprar (ex.: o tipo de alça), marque "Escolha obrigatória". Deixe desmarcado para complementos opcionais (ex.: um tiracolo extra).', target: "#variacoes" },
+      { text: 'Se a variação é um material do seu estoque (ex.: uma alça), escolha o material em "Material do estoque". Quando um pedido com essa variação entra em produção, o estoque desconta esse material.', target: "#variacoes" },
       { text: 'Se a cliente pode levar duas ou mais opções do mesmo grupo (ex.: duas alças), marque "Pode escolher mais de uma". Vale para todas as opções do grupo.', target: "#variacoes" },
       { text: 'Clique em "Adicionar variação".', target: "#variacoes" },
     ],

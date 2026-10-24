@@ -131,3 +131,27 @@ describe("grupo que aceita mais de uma escolha", () => {
   });
 });
 
+describe("material da variação copiado no pedido", () => {
+  const comMaterial = new Map<string, VariantRecord>(
+    [
+      record("alca", "Alça", 475, { material_id: "mat-alca", material_quantity: 2 }),
+      record("cor", "Cor", null),
+    ].map((r) => [r.id, r]),
+  );
+
+  it("copia o material e a quantidade só das variações escolhidas", () => {
+    const result = buildItemVariantRows(409.9, ["alca", "cor"], comMaterial, PRODUCT);
+
+    expect("rows" in result && result.rows.map((r) => [r.variant_id, r.material_id, r.material_quantity])).toEqual([
+      ["alca", "mat-alca", 2],
+      ["cor", null, 1],
+    ]);
+  });
+
+  it("variação não escolhida não leva material nenhum", () => {
+    const result = buildItemVariantRows(409.9, ["cor"], comMaterial, PRODUCT);
+
+    expect("rows" in result && result.rows.some((r) => r.material_id)).toBe(false);
+  });
+});
+

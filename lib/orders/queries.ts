@@ -1,5 +1,5 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { calculateProductionList } from "@/lib/orders/calculate";
+import { calculateProductionList, mergeMaterialNeeds, type VariantMaterialNeed } from "@/lib/orders/calculate";
 import type { OrderStatus } from "@/types/database.types";
 
 export type OrderListRow = {
@@ -271,6 +271,43 @@ export async function getOrder(storeId: string, orderId: string) {
 }
 
 /**
+ * Materiais das variações escolhidas nos itens dos pedidos dados (ex.: a alça escolhida), já
+ * multiplicados pela quantidade do item. Lê o vínculo copiado no dia do pedido, então só entram
+ * as variações lançadas naquele pedido.
+ */
+export async function getVariantMaterialNeeds(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  orderIds: string[],
+): Promise<VariantMaterialNeed[]> {
+  if (orderIds.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from("order_item_variants")
+    .select("material_id, material_quantity, order_items!inner(order_id, quantity), materials(name, unit)")
+    .in("order_items.order_id", orderIds)
+    .not("material_id", "is", null);
+
+  if (error) {
+    console.error("getVariantMaterialNeeds falhou:", error.message);
+    return [];
+  }
+
+  return (data ?? []).flatMap((row) => {
+    const item = Array.isArray(row.order_items) ? row.order_items[0] : row.order_items;
+    const material = Array.isArray(row.materials) ? row.materials[0] : row.materials;
+    if (!row.material_id || !item || !material) return [];
+    return [
+      {
+        materialId: row.material_id,
+        name: material.name,
+        unit: material.unit,
+        quantity: Number(row.material_quantity) * Number(item.quantity),
+      },
+    ];
+  });
+}
+
+/**
  * Lista de materiais para produção: soma dos materiais cadastrados em cada
  * peça do catálogo presente no pedido, multiplicados pela quantidade
  * encomendada. Itens avulsos (sem product_id) não entram aqui — não têm
@@ -310,8 +347,11 @@ export async function getOrderProductionList(orderId: string) {
       name: catalogMaterial?.name ?? material.description,
       unit: catalogMaterial?.unit ?? material.unit,
       quantityPerUnit: material.quantity,
+      materialId: material.material_id,
     };
   });
 
-  return calculateProductionList(quantityByProduct, materialInputs);
+  const variantNeeds = await getVariantMaterialNeeds(supabase, [orderId]);
+
+  return mergeMaterialNeeds(calculateProductionList(quantityByProduct, materialInputs), variantNeeds);
 }

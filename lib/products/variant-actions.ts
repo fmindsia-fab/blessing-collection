@@ -24,6 +24,13 @@ const variantSchema = z.object({
   isRequired: z.boolean().default(false),
   // A cliente pode escolher mais de uma opção deste grupo (migration 0048). Vale para o grupo todo.
   allowMultiple: z.boolean().default(false),
+  // Material do estoque que esta variação usa (ex.: a alça) e quanto; a baixa de estoque desconta isso
+  // quando a variação é escolhida num pedido (migration 0049).
+  materialId: z
+    .union([z.literal(""), z.uuid("Material inválido")])
+    .optional()
+    .transform((value) => value || null),
+  materialQuantity: z.coerce.number().positive("A quantidade do material precisa ser maior que zero").max(1_000_000).default(1),
   status: z.enum(["available", "sold_out"]),
 });
 
@@ -70,6 +77,23 @@ async function colorBelongsToStore(
   return data !== null;
 }
 
+async function materialBelongsToStore(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  storeId: string,
+  materialId: string | null,
+) {
+  if (!materialId) return true;
+
+  const { data } = await supabase
+    .from("materials")
+    .select("id")
+    .eq("id", materialId)
+    .eq("store_id", storeId)
+    .maybeSingle();
+
+  return data !== null;
+}
+
 // "Pode escolher mais de uma opção" vale para o GRUPO inteiro da peça (todas as alças, por exemplo):
 // ao salvar uma variação, a escolha é copiada para as outras do mesmo grupo, para nunca ficarem
 // desencontradas (uma alça aceitando duas escolhas e outra não).
@@ -104,6 +128,8 @@ export async function createVariant(
     price: formData.get("price") || undefined,
     isRequired: formData.get("isRequired") === "on",
     allowMultiple: formData.get("allowMultiple") === "on",
+    materialId: formData.get("materialId") ?? "",
+    materialQuantity: formData.get("materialQuantity") || 1,
     status: formData.get("status"),
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -120,6 +146,10 @@ export async function createVariant(
     return { error: "Cor não encontrada." };
   }
 
+  if (!(await materialBelongsToStore(supabase, store.id, parsed.data.materialId))) {
+    return { error: "Material não encontrado." };
+  }
+
   const { error } = await supabase.from("product_variants").insert({
     product_id: productId,
     name: parsed.data.name,
@@ -129,6 +159,8 @@ export async function createVariant(
     price: parsed.data.price || null,
     is_required: parsed.data.isRequired,
     allow_multiple: parsed.data.allowMultiple,
+    material_id: parsed.data.materialId,
+    material_quantity: parsed.data.materialQuantity,
     status: parsed.data.status,
   });
 
@@ -165,6 +197,8 @@ export async function updateVariant(
     price: formData.get("price") || undefined,
     isRequired: formData.get("isRequired") === "on",
     allowMultiple: formData.get("allowMultiple") === "on",
+    materialId: formData.get("materialId") ?? "",
+    materialQuantity: formData.get("materialQuantity") || 1,
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
@@ -180,6 +214,10 @@ export async function updateVariant(
     return { error: "Cor não encontrada." };
   }
 
+  if (!(await materialBelongsToStore(supabase, store.id, parsed.data.materialId))) {
+    return { error: "Material não encontrado." };
+  }
+
   const { error } = await supabase
     .from("product_variants")
     .update({
@@ -190,6 +228,8 @@ export async function updateVariant(
       price: parsed.data.price || null,
       is_required: parsed.data.isRequired,
       allow_multiple: parsed.data.allowMultiple,
+      material_id: parsed.data.materialId,
+      material_quantity: parsed.data.materialQuantity,
     })
     .eq("id", variantId)
     // Ancora no produto já validado: sem isto, um id de variação de outra loja

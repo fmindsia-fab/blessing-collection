@@ -59,3 +59,40 @@ export function calculateProductionList(
 
   return [...aggregated.values()].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 }
+
+export type VariantMaterialNeed = {
+  materialId: string;
+  name: string;
+  unit: string;
+  /** Já multiplicado pela quantidade do item no pedido. */
+  quantity: number;
+};
+
+/**
+ * Soma ao que as peças pedem (a receita) os materiais das VARIAÇÕES escolhidas no pedido (ex.: a
+ * alça). Só entram as variações lançadas naquele pedido, nunca as outras opções da peça. O mesmo
+ * material (mesmo nome e unidade) vira uma linha só.
+ */
+export function mergeMaterialNeeds(
+  base: ProductionListEntry[],
+  extras: VariantMaterialNeed[],
+): ProductionListEntry[] {
+  const merged = new Map<string, ProductionListEntry>();
+
+  for (const entry of base) merged.set(`${entry.name}__${entry.unit}`, { ...entry });
+
+  for (const extra of extras) {
+    if (extra.quantity <= 0) continue;
+    const key = `${extra.name}__${extra.unit}`;
+    const existing = merged.get(key);
+    merged.set(key, {
+      name: extra.name,
+      unit: extra.unit,
+      quantity: Math.round(((existing?.quantity ?? 0) + extra.quantity) * 1000) / 1000,
+      materialId: existing?.materialId ?? extra.materialId,
+    });
+  }
+
+  return [...merged.values()].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+}
+

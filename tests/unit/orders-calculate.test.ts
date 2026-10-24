@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateOrderTotal, calculateProductionList } from "@/lib/orders/calculate";
+import { calculateOrderTotal, calculateProductionList, mergeMaterialNeeds } from "@/lib/orders/calculate";
 
 describe("calculateOrderTotal", () => {
   it("soma quantidade × preço unitário de cada item", () => {
@@ -66,3 +66,33 @@ describe("calculateProductionList", () => {
     expect(result.map((m) => m.name)).toEqual(["Alça", "Zíper"]);
   });
 });
+
+describe("mergeMaterialNeeds", () => {
+  const receita = [{ name: "Fio", unit: "g", quantity: 400, materialId: "fio" }];
+
+  it("soma os materiais das variações escolhidas (ex.: a alça) à receita da peça", () => {
+    const lista = mergeMaterialNeeds(receita, [
+      { materialId: "alca-metal", name: "Alça Metal", unit: "Un", quantity: 2 },
+    ]);
+
+    expect(lista.map((l) => [l.name, l.quantity])).toEqual([
+      ["Alça Metal", 2],
+      ["Fio", 400],
+    ]);
+  });
+
+  it("junta o mesmo material da receita e da variação numa linha só", () => {
+    const lista = mergeMaterialNeeds(receita, [{ materialId: "fio", name: "Fio", unit: "g", quantity: 50 }]);
+
+    expect(lista).toEqual([{ name: "Fio", unit: "g", quantity: 450, materialId: "fio" }]);
+  });
+
+  it("sem variações com material, a lista fica igual à receita", () => {
+    expect(mergeMaterialNeeds(receita, [])).toEqual(receita);
+  });
+
+  it("ignora quantidade zero", () => {
+    expect(mergeMaterialNeeds([], [{ materialId: "x", name: "X", unit: "un", quantity: 0 }])).toEqual([]);
+  });
+});
+

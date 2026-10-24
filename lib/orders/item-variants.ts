@@ -12,6 +12,9 @@ export type VariantRecord = {
   is_required?: boolean;
   /** O grupo aceita mais de uma escolha (duas alças): então não vale a regra de uma por conjunto. */
   allow_multiple?: boolean;
+  /** Material do estoque que a variação usa e quanto (migration 0049). */
+  material_id?: string | null;
+  material_quantity?: number | null;
 };
 
 export type ItemVariantRow = {
@@ -19,6 +22,9 @@ export type ItemVariantRow = {
   name: string;
   variant_group: string | null;
   surcharge: number;
+  /** Copiado no dia do pedido: é o que a baixa de estoque desconta. */
+  material_id: string | null;
+  material_quantity: number;
   sort_order: number;
 };
 
@@ -71,6 +77,8 @@ export function buildItemVariantRows(
       name: record.name.slice(0, 120),
       variant_group: record.variant_group ? record.variant_group.slice(0, 60) : null,
       surcharge,
+      material_id: record.material_id ?? null,
+      material_quantity: record.material_id ? Number(record.material_quantity ?? 1) || 1 : 1,
       sort_order: index,
     });
   }

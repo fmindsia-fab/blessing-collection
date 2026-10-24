@@ -134,10 +134,14 @@ async function prepareItems(
   if (variantIds.length > 0) {
     const { data } = await supabase
       .from("product_variants")
-      .select("id, product_id, name, variant_group, price, status, is_required, allow_multiple")
+      .select("id, product_id, name, variant_group, price, status, is_required, allow_multiple, material_id, material_quantity")
       .in("id", variantIds);
     for (const variant of data ?? []) {
-      records.set(variant.id, { ...variant, price: variant.price === null ? null : Number(variant.price) });
+      records.set(variant.id, {
+        ...variant,
+        price: variant.price === null ? null : Number(variant.price),
+        material_quantity: Number(variant.material_quantity),
+      });
     }
   }
 

@@ -426,6 +426,9 @@ export interface Database {
           variant_group: string | null;
           /** Quanto esta variação somou ao preço da peça no dia do pedido. */
           surcharge: number;
+          /** Material a descontar do estoque por esta variação, copiado no dia do pedido (migration 0049). */
+          material_id: string | null;
+          material_quantity: number;
           sort_order: number;
           created_at: string;
         };
@@ -436,6 +439,8 @@ export interface Database {
           name: string;
           variant_group?: string | null;
           surcharge?: number;
+          material_id?: string | null;
+          material_quantity?: number;
           sort_order?: number;
           created_at?: string;
         };
@@ -445,6 +450,12 @@ export interface Database {
             foreignKeyName: "order_item_variants_order_item_id_fkey";
             columns: ["order_item_id"];
             referencedRelation: "order_items";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "order_item_variants_material_id_fkey";
+            columns: ["material_id"];
+            referencedRelation: "materials";
             referencedColumns: ["id"];
           },
         ];
@@ -846,6 +857,9 @@ export interface Database {
           is_required: boolean;
           /** A cliente pode escolher mais de uma opção deste grupo (migration 0048). */
           allow_multiple: boolean;
+          /** Material do estoque que esta variação usa (migration 0049) e quanto. */
+          material_id: string | null;
+          material_quantity: number;
           sort_order: number;
           created_at: string;
           updated_at: string;
@@ -863,6 +877,8 @@ export interface Database {
           status?: VariantStatus;
           is_required?: boolean;
           allow_multiple?: boolean;
+          material_id?: string | null;
+          material_quantity?: number;
           sort_order?: number;
           created_at?: string;
           updated_at?: string;

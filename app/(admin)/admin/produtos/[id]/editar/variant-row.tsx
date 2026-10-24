@@ -22,6 +22,8 @@ export type Variant = {
   variant_group: string | null;
   is_required: boolean;
   allow_multiple: boolean;
+  material_id: string | null;
+  material_quantity: number;
   size: string | null;
   price: number | null;
   status: VariantStatus;
@@ -97,6 +99,8 @@ export function VariantRow({
               price: variant.price != null ? String(variant.price) : "",
               isRequired: variant.is_required,
               allowMultiple: variant.allow_multiple,
+              materialId: variant.material_id ?? "",
+              materialQuantity: String(variant.material_quantity ?? 1),
             }}
             groupMultiple={groupMultiple}
           />

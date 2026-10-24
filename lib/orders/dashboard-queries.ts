@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { calculateToBuy } from "@/lib/stock/calc";
-import { calculateProductionList } from "@/lib/orders/calculate";
+import { calculateProductionList, mergeMaterialNeeds } from "@/lib/orders/calculate";
+import { getVariantMaterialNeeds } from "@/lib/orders/queries";
 import {
   calculateFinancialSummary,
   calculatePendingPayments,
@@ -223,7 +224,9 @@ export async function getMaterialsToBuy(storeId: string) {
     };
   });
 
-  const needs = calculateProductionList(quantityByProduct, materialInputs);
+  // Mais os materiais das variações escolhidas (ex.: a alça) nesses pedidos confirmados.
+  const variantNeeds = await getVariantMaterialNeeds(supabase, orderIds);
+  const needs = mergeMaterialNeeds(calculateProductionList(quantityByProduct, materialInputs), variantNeeds);
 
   // Cruza com o estoque: só materiais com controle ligado têm saldo conhecido.
   const catalogIds = needs.map((need) => need.materialId).filter((id): id is string => Boolean(id));

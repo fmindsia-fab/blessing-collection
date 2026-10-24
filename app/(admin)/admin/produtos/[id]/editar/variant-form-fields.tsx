@@ -41,7 +41,17 @@ export function VariantFormFields({
   materials: CatalogMaterial[];
   /** Preço base da peça, somado ao do material escolhido. */
   basePrice: number;
-  defaults: { name: string; group: string; colorId: string; price: string; isRequired: boolean; allowMultiple: boolean };
+  defaults: {
+    name: string;
+    group: string;
+    colorId: string;
+    price: string;
+    isRequired: boolean;
+    allowMultiple: boolean;
+    /** Material do estoque que a variação usa (ex.: a alça) e quanto; a baixa de estoque desconta isso. */
+    materialId: string;
+    materialQuantity: string;
+  };
   showHints?: boolean;
   /** Por nome de grupo: o grupo já aceita mais de uma escolha (para o campo vir marcado ao escolher esse grupo). */
   groupMultiple?: Record<string, boolean>;
@@ -49,18 +59,22 @@ export function VariantFormFields({
   const [name, setName] = useState(defaults.name);
   const [price, setPrice] = useState(defaults.price);
   const [group, setGroup] = useState(defaults.group);
-  const [materialId, setMaterialId] = useState("");
+  const [materialId, setMaterialId] = useState(defaults.materialId);
+  const [materialQuantity, setMaterialQuantity] = useState(defaults.materialQuantity);
   const [allowMultiple, setAllowMultiple] = useState(defaults.allowMultiple);
   // Só troca nome/preço sozinho enquanto foram preenchidos pela lista (nunca por cima do que a pessoa digitou).
   const [nameFromMaterial, setNameFromMaterial] = useState(false);
   const [priceFromMaterial, setPriceFromMaterial] = useState(false);
 
   const matches = findMaterialsForVariation(group, materials);
-  const selected = matches.find((material) => material.id === materialId);
+  // O material já ligado à variação aparece mesmo que o nome dele não combine com o grupo.
+  const linked = materials.find((material) => material.id === materialId);
+  const choices = linked && !matches.some((material) => material.id === linked.id) ? [linked, ...matches] : matches;
+  const selected = choices.find((material) => material.id === materialId);
 
   function chooseMaterial(id: string) {
     setMaterialId(id);
-    const material = matches.find((candidate) => candidate.id === id);
+    const material = choices.find((candidate) => candidate.id === id);
 
     if (material) {
       setPrice(priceWithMaterial(basePrice, material.unit_cost).toFixed(2));
@@ -104,7 +118,6 @@ export function VariantFormFields({
           defaultValue={defaults.group}
           onValueChange={(value) => {
             setGroup(value);
-            setMaterialId("");
             // Trocar de grupo traz a regra daquele grupo (ex.: Alça já aceita duas escolhas).
             setAllowMultiple(groupMultiple[value] ?? false);
           }}
@@ -155,38 +168,61 @@ export function VariantFormFields({
         </span>
       </label>
 
-      {matches.length > 0 ? (
+      {choices.length > 0 ? (
         <div className="flex flex-col gap-2 rounded-xl border border-[var(--gold)]/30 bg-[var(--brand-soft)]/60 p-3 sm:col-span-2">
-          <Label htmlFor={`${idPrefix}-material`}>Material cadastrado (opcional)</Label>
+          <Label htmlFor={`${idPrefix}-material`}>Material do estoque (opcional)</Label>
           <NativeSelect
             id={`${idPrefix}-material`}
+            name="materialId"
             value={materialId}
             onChange={(e) => chooseMaterial(e.target.value)}
           >
-            <option value="">Nenhum: vou digitar o preço</option>
-            {matches.map((material) => (
+            <option value="">Nenhum (não desconta do estoque)</option>
+            {choices.map((material) => (
               <option key={material.id} value={material.id}>
                 {material.name} ({formatBRL(material.unit_cost)}
                 {material.unit && material.unit !== "un" ? ` por ${material.unit}` : ""})
               </option>
             ))}
           </NativeSelect>
+
+          {selected ? (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor={`${idPrefix}-material-qty`}>
+                Quanto desse material cada peça usa ({selected.unit})
+              </Label>
+              <Input
+                id={`${idPrefix}-material-qty`}
+                name="materialQuantity"
+                inputMode="decimal"
+                value={materialQuantity}
+                onChange={(e) => setMaterialQuantity(e.target.value.replace(",", "."))}
+                className="max-w-40"
+              />
+            </div>
+          ) : null}
+
           <p className="text-sm text-muted-foreground" aria-live="polite">
             {selected ? (
               <>
-                Preço da peça {formatBRL(basePrice)} + {selected.name} {formatBRL(selected.unit_cost)} ={" "}
-                <strong className="text-foreground">{formatBRL(priceWithMaterial(basePrice, selected.unit_cost))}</strong>.
-                O valor entra no preço abaixo, e você pode ajustar.
+                O preço soma: peça {formatBRL(basePrice)} + {selected.name} {formatBRL(selected.unit_cost)} ={" "}
+                <strong className="text-foreground">{formatBRL(priceWithMaterial(basePrice, selected.unit_cost))}</strong>
+                . Quando um pedido com esta variação entra em produção, o estoque desconta este material.
               </>
             ) : (
               <>
-                Estes são os materiais cujo nome tem &quot;{group}&quot;. Escolha um para somar o preço dele ao
-                preço da peça.
+                Escolha o material (ex.: a alça) para somar o preço dele e descontar do estoque quando esta variação for
+                escolhida num pedido.
               </>
             )}
           </p>
         </div>
-      ) : null}
+      ) : (
+        <>
+          <input type="hidden" name="materialId" value={materialId} />
+          <input type="hidden" name="materialQuantity" value={materialQuantity} />
+        </>
+      )}
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor={`${idPrefix}-color`}>Cor (opcional)</Label>

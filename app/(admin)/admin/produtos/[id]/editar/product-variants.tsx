@@ -81,7 +81,7 @@ export function ProductVariants({
           colors={colors}
           materials={catalogMaterials}
           basePrice={basePrice}
-          defaults={{ name: "", group: "Cor", colorId: "", price: "", isRequired: false, allowMultiple: groupMultiple["Cor"] ?? false }}
+          defaults={{ name: "", group: "Cor", colorId: "", price: "", isRequired: false, allowMultiple: groupMultiple["Cor"] ?? false, materialId: "", materialQuantity: "1" }}
           groupMultiple={groupMultiple}
           showHints
         />
