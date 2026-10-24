@@ -182,7 +182,6 @@ export function ProductPurchase({
                 {group.options.map((option) => {
                   const soldOut = option.status === "sold_out";
                   const isActive = chosen[group.key] === option.id;
-                  const surcharge = variantSurchargeCents(option, basePriceCents);
 
                   return (
                     <button
@@ -217,12 +216,9 @@ export function ProductPurchase({
                           }
                         />
                       ) : null}
+                      {/* O acréscimo de cada opção não aparece ao lado do nome (pedido da dona da loja), mas
+                          continua somado no valor da peça exibido acima. */}
                       {option.name}
-                      {surcharge > 0 ? (
-                        <span className={isActive ? "text-background/70" : "text-muted-foreground"}>
-                          +{formatPrice(toReais(surcharge))}
-                        </span>
-                      ) : null}
                     </button>
                   );
                 })}
