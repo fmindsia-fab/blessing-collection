@@ -53,7 +53,11 @@ export function ProductVariants({
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
         <h2 className="text-xl font-semibold tracking-tight">Variações</h2>
-        <p className="text-sm text-muted-foreground">Cores, tamanhos ou outras variações. Preço opcional substitui o preço base.</p>
+        <p className="text-sm text-muted-foreground">
+          Cores, tamanhos ou outras variações. Preço opcional substitui o preço base. As variações com
+          &quot;Desconta do estoque&quot; usam um material do seu estoque: quando um pedido com essa variação
+          entra em produção, o material é descontado. As demais não descontam nada.
+        </p>
       </div>
 
       {variants.length > 0 ? (

@@ -283,27 +283,48 @@ export async function getVariantMaterialNeeds(
 
   const { data, error } = await supabase
     .from("order_item_variants")
-    .select("material_id, material_quantity, order_items!inner(order_id, quantity), materials(name, unit)")
-    .in("order_items.order_id", orderIds)
-    .not("material_id", "is", null);
+    .select("variant_id, material_id, material_quantity, order_items!inner(order_id, quantity)")
+    .in("order_items.order_id", orderIds);
 
   if (error) {
     console.error("getVariantMaterialNeeds falhou:", error.message);
     return [];
   }
 
-  return (data ?? []).flatMap((row) => {
+  const rows = (data ?? []).flatMap((row) => {
     const item = Array.isArray(row.order_items) ? row.order_items[0] : row.order_items;
-    const material = Array.isArray(row.materials) ? row.materials[0] : row.materials;
-    if (!row.material_id || !item || !material) return [];
-    return [
-      {
-        materialId: row.material_id,
-        name: material.name,
-        unit: material.unit,
-        quantity: Number(row.material_quantity) * Number(item.quantity),
-      },
-    ];
+    return item ? [{ variantId: row.variant_id, materialId: row.material_id, perUnit: Number(row.material_quantity), itemQuantity: Number(item.quantity) }] : [];
+  });
+
+  // Cópia do pedido vazia (variação ligada ao material depois do pedido): usa o vínculo atual da variação.
+  const missingVariantIds = [...new Set(rows.filter((row) => !row.materialId && row.variantId).map((row) => row.variantId as string))];
+  const currentLink = new Map<string, { materialId: string; perUnit: number }>();
+  if (missingVariantIds.length > 0) {
+    const { data: variants } = await supabase
+      .from("product_variants")
+      .select("id, material_id, material_quantity")
+      .in("id", missingVariantIds)
+      .not("material_id", "is", null);
+    for (const variant of variants ?? []) {
+      if (variant.material_id) currentLink.set(variant.id, { materialId: variant.material_id, perUnit: Number(variant.material_quantity) });
+    }
+  }
+
+  const resolved = rows.flatMap((row) => {
+    const link = row.materialId ? { materialId: row.materialId, perUnit: row.perUnit } : row.variantId ? currentLink.get(row.variantId) : undefined;
+    return link ? [{ materialId: link.materialId, quantity: link.perUnit * row.itemQuantity }] : [];
+  });
+  if (resolved.length === 0) return [];
+
+  const { data: materials } = await supabase
+    .from("materials")
+    .select("id, name, unit")
+    .in("id", [...new Set(resolved.map((row) => row.materialId))]);
+  const materialById = new Map((materials ?? []).map((material) => [material.id, material]));
+
+  return resolved.flatMap((row) => {
+    const material = materialById.get(row.materialId);
+    return material ? [{ materialId: row.materialId, name: material.name, unit: material.unit, quantity: row.quantity }] : [];
   });
 }
 

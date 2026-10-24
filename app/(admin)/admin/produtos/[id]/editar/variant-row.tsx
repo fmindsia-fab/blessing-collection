@@ -130,6 +130,7 @@ export function VariantRow({
             {variant.variant_group ? `${variant.variant_group} · ` : ""}
             {variant.is_required ? "Escolha obrigatória · " : ""}
             {variant.allow_multiple ? "Pode escolher mais de uma · " : ""}
+            {variant.material_id ? `Desconta do estoque: ${materials.find((material) => material.id === variant.material_id)?.name ?? "material"} · ` : ""}
             {variant.price ? formatPrice(variant.price) : "Preço base"} ·{" "}
             {variant.status === "available" ? "Disponível" : "Esgotado"}
             {color ? ` · ${color.name}` : ""}
