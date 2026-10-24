@@ -5,7 +5,7 @@ import { InfoIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { calculateInstallmentOptions, type PaymentMethod } from "@/lib/pricing/calculate";
 import { toCents, toReais } from "@/lib/pricing/money";
-import { isPriceVariable, priceLabel, PRICE_VARIATION_NOTICE } from "@/lib/pricing/price-display";
+import { isPriceVariable, priceLabel, priceVariationNotice } from "@/lib/pricing/price-display";
 import {
   describeSelection,
   groupVariants,
@@ -42,7 +42,7 @@ function formatPrice(price: number) {
  * Preço, variações e ações da peça, num componente só.
  *
  * As escolhas atualizam o preço, o parcelamento, a mensagem do WhatsApp e o
- * item da seleção. Como tudo depende do mesmo estado, ele vive aqui — separado,
+ * item da sacola. Como tudo depende do mesmo estado, ele vive aqui — separado,
  * cada parte mostraria um valor diferente.
  *
  * Uma escolha por grupo, várias no total: cor e alça convivem, duas cores não.
@@ -80,6 +80,11 @@ export function ProductPurchase({
       !chosen[group.name] &&
       group.options.some((option) => variantSurchargeCents(option, basePriceCents) > 0),
   );
+
+  // Opções ainda sem escolha (ignora grupos em que tudo está esgotado, que a cliente nem pode escolher).
+  const missingGroups = groups
+    .filter((group) => !chosen[group.name] && group.options.some((option) => option.status !== "sold_out"))
+    .map((group) => group.name);
 
   const variable = isPriceVariable(status);
   const selectionLabel = describeSelection(selected);
@@ -147,12 +152,14 @@ export function ProductPurchase({
       />
 
       {variable ? (
-        <div className="flex max-w-prose gap-2.5 rounded-[var(--radius)] border border-[var(--gold)]/70 bg-[var(--gold)]/[0.14] p-4">
-          <InfoIcon className="mt-0.5 size-4 shrink-0 text-[var(--gold)]" aria-hidden />
-          <p className="text-[0.8125rem] font-medium leading-relaxed text-foreground">
-            {PRICE_VARIATION_NOTICE}
-          </p>
-        </div>
+        <details className="group max-w-prose rounded-[var(--radius)] border border-[var(--gold)]/70 bg-[var(--gold)]/[0.14] px-4 py-3">
+          <summary className="flex cursor-pointer list-none items-center gap-2.5 text-sm font-medium text-foreground outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)] [&::-webkit-details-marker]:hidden">
+            <InfoIcon className="size-4 shrink-0 text-[var(--gold)]" aria-hidden />
+            Peça sob encomenda: o valor pode variar
+            <span className="ml-auto text-xs underline underline-offset-4 group-open:hidden">Saiba mais</span>
+          </summary>
+          <p className="pt-2 text-[0.8125rem] leading-relaxed text-foreground">{priceVariationNotice(storeName)}</p>
+        </details>
       ) : null}
 
       {groups.length > 0 ? (
@@ -212,9 +219,12 @@ export function ProductPurchase({
             </div>
           ))}
 
-          {pendingPricedGroup ? (
-            <span className="text-xs text-muted-foreground">
-              Escolha as opções para ver o valor exato.
+          {missingGroups.length > 0 ? (
+            <span role="status" className="text-sm leading-relaxed text-muted-foreground">
+              Falta escolher: <strong className="font-medium text-foreground">{missingGroups.join(", ")}</strong>.{" "}
+              {pendingPricedGroup
+                ? "Assim o valor fica exato e a loja já sabe o que você quer."
+                : "Assim a loja já sabe exatamente o que você quer."}
             </span>
           ) : null}
         </div>

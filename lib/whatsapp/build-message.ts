@@ -10,7 +10,7 @@ type BuildWhatsappMessageParams = {
 };
 
 // "Peça" e não "bolsa": o catálogo tem bolsas, pulseiras e acessórios, e o
-// mesmo botão serve a todos. É o termo que a seleção múltipla já usa.
+// mesmo botão serve a todos. É o termo que a sacola (várias peças) já usa.
 const CTA_LABEL: Record<Exclude<ProductStatus, "inactive">, string> = {
   available: "Quero esta peça",
   made_to_order: "Encomendar esta peça",

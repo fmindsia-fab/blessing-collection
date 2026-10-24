@@ -13,6 +13,10 @@ export type ProductListItem = {
   status: (typeof PUBLIC_STATUSES)[number] | "inactive";
   cover_image_url: string | null;
   min_variant_price: number | null;
+  /** Dados do cartão da lista: cores disponíveis, "a partir de" e se tem variações. */
+  swatches?: { hex: string; hexSecondary: string | null; name: string }[];
+  from_price?: boolean;
+  has_variants?: boolean;
 };
 
 async function withCoverImages(
@@ -31,6 +35,86 @@ async function withCoverImages(
     .eq("is_cover", true);
 
   return new Map((images ?? []).map((img) => [img.product_id, img.url]));
+}
+
+type CardExtras = {
+  swatches: { hex: string; hexSecondary: string | null; name: string }[];
+  from_price: boolean;
+  has_variants: boolean;
+};
+
+const NO_EXTRAS: CardExtras = { swatches: [], from_price: false, has_variants: false };
+
+/**
+ * O que o cartão da peça mostra além da foto: as cores disponíveis (variações com cor
+ * cadastrada e não esgotadas), se alguma variação custa mais que o preço base ("a partir de")
+ * e se a peça tem variações (nesse caso o atalho da sacola não aparece, a escolha é na peça).
+ * Duas consultas para a lista inteira, sem uma por peça.
+ */
+async function getCardExtras(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  storeId: string,
+  products: { id: string; price: number }[],
+) {
+  const extras = new Map<string, CardExtras>();
+  if (products.length === 0) return extras;
+
+  const { data: variants } = await supabase
+    .from("product_variants")
+    .select("product_id, color_id, price, status")
+    .in(
+      "product_id",
+      products.map((p) => p.id),
+    )
+    .neq("status", "archived");
+
+  if (!variants || variants.length === 0) return extras;
+
+  const colorIds = [...new Set(variants.map((v) => v.color_id).filter((id): id is string => Boolean(id)))];
+  const colorById = new Map<string, { hex: string; hex_secondary: string | null; name: string }>();
+  if (colorIds.length > 0) {
+    const { data: colors } = await supabase
+      .from("colors")
+      .select("id, name, hex, hex_secondary")
+      .eq("store_id", storeId)
+      .in("id", colorIds);
+    for (const color of colors ?? []) colorById.set(color.id, color);
+  }
+
+  const priceByProduct = new Map(products.map((p) => [p.id, p.price]));
+
+  for (const variant of variants) {
+    const current = extras.get(variant.product_id) ?? { swatches: [], from_price: false, has_variants: true };
+    const basePrice = priceByProduct.get(variant.product_id) ?? 0;
+
+    if (variant.price != null && variant.price > basePrice) current.from_price = true;
+
+    const color = variant.color_id && variant.status === "available" ? colorById.get(variant.color_id) : undefined;
+    if (color && !current.swatches.some((s) => s.hex === color.hex && s.hexSecondary === color.hex_secondary)) {
+      current.swatches.push({ hex: color.hex, hexSecondary: color.hex_secondary, name: color.name });
+    }
+    extras.set(variant.product_id, current);
+  }
+
+  return extras;
+}
+
+/** Foto de capa + dados do cartão, juntos, para todas as listas do catálogo. */
+async function withCardData<T extends { id: string; price: number }>(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  storeId: string,
+  products: T[],
+) {
+  const [covers, extras] = await Promise.all([
+    withCoverImages(supabase, products),
+    getCardExtras(supabase, storeId, products),
+  ]);
+
+  return products.map((p) => ({
+    ...p,
+    cover_image_url: covers.get(p.id) ?? null,
+    ...(extras.get(p.id) ?? NO_EXTRAS),
+  }));
 }
 
 export type ColorFilterOption = {
@@ -173,13 +257,10 @@ export async function listProducts({
     return true;
   });
 
-  const coverByProduct = await withCoverImages(supabase, products);
+  const decorated = await withCardData(supabase, storeId, products);
 
   return {
-    products: products.map((p) => ({
-      ...p,
-      cover_image_url: coverByProduct.get(p.id) ?? null,
-    })) as (ProductListItem & { cover_image_url: string | null })[],
+    products: decorated as unknown as (ProductListItem & { cover_image_url: string | null })[],
     total: count ?? 0,
     hasMore: (count ?? 0) > to + 1,
   };
@@ -197,8 +278,7 @@ export async function getFeaturedProducts(storeId: string) {
     .limit(8);
 
   if (!products) return [];
-  const coverByProduct = await withCoverImages(supabase, products);
-  return products.map((p) => ({ ...p, cover_image_url: coverByProduct.get(p.id) ?? null }));
+  return withCardData(supabase, storeId, products);
 }
 
 export async function getNewArrivals(storeId: string) {
@@ -213,8 +293,7 @@ export async function getNewArrivals(storeId: string) {
     .limit(8);
 
   if (!products) return [];
-  const coverByProduct = await withCoverImages(supabase, products);
-  return products.map((p) => ({ ...p, cover_image_url: coverByProduct.get(p.id) ?? null }));
+  return withCardData(supabase, storeId, products);
 }
 
 /**
@@ -265,8 +344,7 @@ export async function getRelatedProducts(
   const products = [...selected.values()].slice(0, limit);
   if (products.length === 0) return [];
 
-  const coverByProduct = await withCoverImages(supabase, products);
-  return products.map((p) => ({ ...p, cover_image_url: coverByProduct.get(p.id) ?? null }));
+  return withCardData(supabase, storeId, products);
 }
 
 // cache() deduplica a chamada entre generateMetadata e o componente da página.

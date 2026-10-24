@@ -6,7 +6,7 @@ import { XIcon } from "lucide-react";
 import { useSelection } from "@/lib/selection/selection-context";
 import { track } from "@/lib/analytics/track";
 import { buildSelectionWhatsappMessage, buildWhatsappLink } from "@/lib/whatsapp/build-message";
-import { isPriceVariable, PRICE_VARIATION_NOTICE } from "@/lib/pricing/price-display";
+import { isPriceVariable, priceVariationNotice } from "@/lib/pricing/price-display";
 import { ActionButton, ActionLink } from "@/components/ui/action";
 
 type SelectionReviewProps = {
@@ -29,10 +29,10 @@ export function SelectionReview({ storeId, storeName, storeWhatsapp, siteUrl }: 
     return (
       <div className="flex flex-col items-start gap-5 py-16">
         <p className="font-[family-name:var(--font-brand)] text-xl text-muted-foreground">
-          Você ainda não escolheu nenhuma peça.
+          Sua sacola está vazia.
         </p>
         <ActionLink href="/produtos" variant="outline">
-          Ver o catálogo
+          Escolher peças
         </ActionLink>
       </div>
     );
@@ -89,7 +89,7 @@ export function SelectionReview({ storeId, storeName, storeWhatsapp, siteUrl }: 
             <button
               type="button"
               onClick={() => remove(item.productId)}
-              aria-label={`Remover ${item.name} da seleção`}
+              aria-label={`Tirar ${item.name} da sacola`}
               className="p-2 text-muted-foreground transition-colors hover:text-foreground"
             >
               <XIcon className="size-4" />
@@ -100,7 +100,7 @@ export function SelectionReview({ storeId, storeName, storeWhatsapp, siteUrl }: 
 
       <div className="flex flex-col gap-2">
         <span className="kicker">
-          {items.length} {items.length === 1 ? "peça selecionada" : "peças selecionadas"}
+          {items.length} {items.length === 1 ? "peça na sacola" : "peças na sacola"}
         </span>
         <span className="font-[family-name:var(--font-brand)] text-3xl">
           {totalIsFrom ? <span className="kicker mr-2 normal-case">a partir de</span> : null}
@@ -113,12 +113,12 @@ export function SelectionReview({ storeId, storeName, storeWhatsapp, siteUrl }: 
           Condições e frete são combinados diretamente pelo WhatsApp.
         </span>
 
-        {/* Uma ressalva para a seleção inteira: a lista já marca quais peças
+        {/* Uma ressalva para a sacola inteira: a lista já marca quais peças
             são sob encomenda, e repeti-la por item tornaria a tela ilegível. */}
         {hasMadeToOrder ? (
           <div className="mt-1 max-w-md rounded-[var(--radius)] border border-[var(--gold)]/40 bg-[var(--gold)]/[0.07] p-4">
             <p className="text-[0.8125rem] leading-relaxed text-foreground/85">
-              {PRICE_VARIATION_NOTICE}
+              {priceVariationNotice(storeName)}
             </p>
           </div>
         ) : null}
@@ -126,10 +126,10 @@ export function SelectionReview({ storeId, storeName, storeWhatsapp, siteUrl }: 
 
       <div className="flex flex-wrap items-center gap-5">
         <ActionLink href={whatsappHref} external variant="solid" onClick={handleSend}>
-          Enviar seleção pelo WhatsApp
+          Enviar minha sacola pelo WhatsApp
         </ActionLink>
         <ActionButton type="button" variant="ghost" onClick={clear}>
-          Limpar seleção
+          Esvaziar sacola
         </ActionButton>
       </div>
     </div>

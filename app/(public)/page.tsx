@@ -12,6 +12,7 @@ import { SectionHeading } from "@/components/catalog/section-heading";
 import { ActionLink } from "@/components/ui/action";
 import { MarketingHome } from "@/app/(marketing)/marketing-home";
 import type { Metadata } from "next";
+import { HowToBuy } from "@/components/catalog/how-to-buy";
 
 // A capa é sorteada a cada visita: sem isto o Next poderia servir uma versão
 // em cache e todo mundo veria a mesma peça. Hoje a rota já é dinâmica porque o
@@ -190,6 +191,10 @@ export default async function HomePage() {
             <div className="grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] lg:gap-x-8">
               {newArrivals.map((product, index) => (
                 <ProductCard
+                  productId={product.id}
+                  fromPrice={product.from_price}
+                  hasVariants={product.has_variants}
+                  swatches={product.swatches}
                   key={product.id}
                   index={index}
                   slug={product.slug}
@@ -211,6 +216,10 @@ export default async function HomePage() {
             <div className="grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] lg:gap-x-8">
               {featured.map((product, index) => (
                 <ProductCard
+                  productId={product.id}
+                  fromPrice={product.from_price}
+                  hasVariants={product.has_variants}
+                  swatches={product.swatches}
                   key={product.id}
                   index={index}
                   slug={product.slug}
@@ -223,6 +232,8 @@ export default async function HomePage() {
             </div>
           </section>
         ) : null}
+
+        <HowToBuy />
 
         <div className="flex justify-center border-t border-border pt-14">
           <ActionLink href="/produtos" variant="underline" arrow>

@@ -150,7 +150,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
         items: [
           "Cookies essenciais de sessão, necessários para você entrar no painel e permanecer logada.",
           "Verificação de segurança (Cloudflare Turnstile) nas telas de login, cadastro e recuperação de senha.",
-          "No catálogo, a lista de peças que a visitante escolhe em 'Minha seleção' fica guardada no próprio navegador dela (armazenamento local) e não é enviada para nós.",
+          "No catálogo, a lista de peças que a visitante escolhe em 'Minha sacola' fica guardada no próprio navegador dela (armazenamento local) e não é enviada para nós.",
         ],
       },
       { type: "p", text: "Não usamos cookies de publicidade nem ferramentas de rastreamento de terceiros." },

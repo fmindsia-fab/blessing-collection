@@ -92,13 +92,13 @@ describe("absoluteUrl", () => {
 });
 
 describe("robots", () => {
-  it("bloqueia painel, login e a página de seleção", async () => {
+  it("bloqueia painel, login e a página da sacola", async () => {
     const result = await robots();
     const disallow = result.rules as { disallow: string[] };
 
     expect(disallow.disallow).toContain("/admin");
     expect(disallow.disallow).toContain("/login");
-    expect(disallow.disallow).toContain("/selecao");
+    expect(disallow.disallow).toContain("/sacola");
   });
 
   it("libera o catálogo público", async () => {

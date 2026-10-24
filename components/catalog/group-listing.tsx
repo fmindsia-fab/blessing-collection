@@ -13,6 +13,9 @@ type ListedProduct = {
   price: number;
   status: ProductStatus;
   cover_image_url: string | null;
+  from_price?: boolean;
+  has_variants?: boolean;
+  swatches?: { hex: string; hexSecondary: string | null; name: string }[];
 };
 
 // Página de uma categoria ou de uma coleção. Antes tinha um visual à parte (cinzas fixos, sem a
@@ -76,6 +79,10 @@ export function GroupListing({
         <div className="grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] lg:gap-x-8">
           {products.map((product, index) => (
             <ProductCard
+              productId={product.id}
+              fromPrice={product.from_price}
+              hasVariants={product.has_variants}
+              swatches={product.swatches}
               key={product.id}
               anchorId={`peca-${index}`}
               index={Math.max(0, index - previousCount)}

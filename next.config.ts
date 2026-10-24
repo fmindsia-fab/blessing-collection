@@ -13,6 +13,10 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // A página de várias peças se chamava /selecao; quem tiver o endereço salvo cai na sacola.
+  async redirects() {
+    return [{ source: "/selecao", destination: "/sacola", permanent: true }];
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

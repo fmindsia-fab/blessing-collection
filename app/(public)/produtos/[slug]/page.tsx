@@ -152,6 +152,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <div className="grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] lg:gap-x-8">
             {related.map((item, index) => (
               <ProductCard
+                productId={item.id}
+                fromPrice={item.from_price}
+                hasVariants={item.has_variants}
+                swatches={item.swatches}
                 key={item.id}
                 index={index}
                 slug={item.slug}

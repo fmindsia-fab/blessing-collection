@@ -20,8 +20,10 @@ export function priceLabel(status: ProductStatus): string {
   return isPriceVariable(status) ? "Valor de referência" : "Valor da peça";
 }
 
-export const PRICE_VARIATION_NOTICE =
-  "Por se tratar de uma peça produzida sob encomenda, o valor pode sofrer alterações conforme a disponibilidade e o custo dos materiais utilizados na produção. Consulte a Blessing para confirmar o valor vigente antes de finalizar o pedido.";
+/** Aviso da peça sob encomenda, com o nome da loja que está vendendo. */
+export function priceVariationNotice(storeName: string): string {
+  return `Por se tratar de uma peça produzida sob encomenda, o valor pode sofrer alterações conforme a disponibilidade e o custo dos materiais utilizados na produção. Consulte ${storeName} para confirmar o valor vigente antes de finalizar o pedido.`;
+}
 
 /** Versão curta, para a mensagem do WhatsApp. */
 export const PRICE_VARIATION_WHATSAPP_NOTE =

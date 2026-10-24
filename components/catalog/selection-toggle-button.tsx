@@ -29,7 +29,7 @@ export function SelectionToggleButton({ item, className }: SelectionToggleButton
       )}
     >
       {selected ? <CheckIcon className="size-4" /> : <PlusIcon className="size-4" />}
-      {selected ? "Na minha seleção" : "Adicionar à seleção"}
+      {selected ? "Na minha sacola" : "Adicionar à sacola"}
     </button>
   );
 }

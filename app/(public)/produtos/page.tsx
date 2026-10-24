@@ -150,6 +150,10 @@ export default async function ProductsPage({
         <div className="grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] lg:gap-x-8">
           {products.map((product, index) => (
             <ProductCard
+              productId={product.id}
+              fromPrice={product.from_price}
+              hasVariants={product.has_variants}
+              swatches={product.swatches}
               key={product.id}
               anchorId={`peca-${index}`}
               // A cascata de entrada conta a partir da primeira peça recém

@@ -10,9 +10,9 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
       allow: "/",
       // Painel e login não têm valor de busca e não devem aparecer em
       // resultados. Não é controle de acesso — isso é a RLS; é só higiene
-      // de indexação. /selecao depende do localStorage do visitante, então
+      // de indexação. /sacola depende do localStorage do visitante, então
       // indexá-la traria uma página sempre vazia.
-      disallow: ["/admin", "/admin/", "/login", "/selecao"],
+      disallow: ["/admin", "/admin/", "/login", "/sacola", "/selecao"],
     },
     sitemap: siteUrl ? `${siteUrl.replace(/\/+$/, "")}/sitemap.xml` : undefined,
   };

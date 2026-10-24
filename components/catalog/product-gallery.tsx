@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ExpandIcon, PlayIcon } from "lucide-react";
 import { MediaLightbox, type LightboxItem } from "./media-lightbox";
 
@@ -36,6 +36,8 @@ export function ProductGallery({
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+  // Gesto de deslizar no celular: guarda onde o dedo encostou para comparar ao soltar.
+  const touchStartX = useRef<number | null>(null);
 
   const items: LightboxItem[] = [
     ...images.map((image, index) => ({
@@ -53,13 +55,30 @@ export function ProductGallery({
 
   if (!active) return null;
 
+  const goTo = (index: number) => setActiveIndex((index + items.length) % items.length);
+
+  function handleTouchEnd(endX: number) {
+    const startX = touchStartX.current;
+    touchStartX.current = null;
+    if (startX === null || items.length < 2) return;
+
+    const distance = endX - startX;
+    // Só conta como deslizar acima de 40 px; abaixo disso é um toque (que amplia a foto).
+    if (Math.abs(distance) < 40) return;
+    goTo(activeIndex + (distance < 0 ? 1 : -1));
+  }
+
   return (
     <div className="flex flex-col gap-3">
       <button
         type="button"
         onClick={() => setIsOpen(true)}
+        onTouchStart={(event) => {
+          touchStartX.current = event.touches[0]?.clientX ?? null;
+        }}
+        onTouchEnd={(event) => handleTouchEnd(event.changedTouches[0]?.clientX ?? 0)}
         aria-label={active.type === "video" ? `Ver vídeo de ${productName}` : `Ampliar foto de ${productName}`}
-        className="group relative aspect-[4/5] w-full cursor-zoom-in overflow-hidden rounded-[var(--radius-image)] bg-secondary shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-4 focus-visible:ring-offset-background"
+        className="group relative aspect-[4/5] w-full touch-pan-y cursor-zoom-in overflow-hidden rounded-[var(--radius-image)] bg-secondary shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-4 focus-visible:ring-offset-background"
       >
         <Image
           src={active.type === "video" ? video?.posterUrl || images[0]?.url || "" : active.url}
@@ -74,8 +93,30 @@ export function ProductGallery({
         </span>
       </button>
 
+      {/* Celular: bolinhas de posição (as miniaturas ficam para telas maiores). */}
       {items.length > 1 ? (
-        <div className="grid grid-cols-4 gap-3">
+        <div className="flex items-center justify-center gap-2 sm:hidden" role="group" aria-label="Fotos da peça">
+          {items.map((item, index) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setActiveIndex(index)}
+              aria-label={`Ver foto ${index + 1} de ${items.length}`}
+              aria-current={index === activeIndex}
+              className="flex size-6 items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
+            >
+              <span
+                className={`block rounded-full transition-all duration-200 ${
+                  index === activeIndex ? "size-2.5 bg-foreground" : "size-2 bg-foreground/30"
+                }`}
+              />
+            </button>
+          ))}
+        </div>
+      ) : null}
+
+      {items.length > 1 ? (
+        <div className="hidden grid-cols-4 gap-3 sm:grid">
           {items.map((item, index) => (
             <button
               key={item.id}
