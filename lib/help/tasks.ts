@@ -79,6 +79,16 @@ export const HELP_TASKS: HelpTask[] = [
     ],
   },
   {
+    id: "duplicar-peca",
+    title: "Duplicar uma peça parecida com outra",
+    keywords: ["duplicar", "duplicar peca", "copiar peca", "copiar produto", "peca parecida", "clonar", "cadastrar parecido", "fazer copia", "outra cor parecida"],
+    steps: [
+      { text: 'Abra "Produtos" no menu.', href: "/admin/produtos", target: nav("/admin/produtos") },
+      { text: "Clique no ícone de duas folhinhas (Duplicar) na peça que é parecida com a nova.", target: '[data-help="product-duplicate"]' },
+      { text: 'A cópia abre para edição, inativa e sem fotos. Mude o nome e o que for diferente, envie as fotos e troque o Status para Disponível. Depois clique em "Salvar alterações".', target: '[data-help="save"]' },
+    ],
+  },
+  {
     id: "esconder-peca",
     title: "Tirar uma peça do catálogo (sem apagar)",
     keywords: ["esconder peca", "tirar do catalogo", "desativar", "desativar peca", "ocultar", "pausar peca", "peca esgotada", "excluir produto", "apagar peca", "remover peca", "reativar"],

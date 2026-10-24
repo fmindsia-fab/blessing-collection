@@ -7,6 +7,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { slugify } from "@/lib/utils";
 import { getNotOwnerError } from "@/lib/store/ownership";
+import { nextCopyIdentity } from "@/lib/products/duplicate";
 
 // slugify vem de lib/utils: o componente ProductSlug usa a mesma função para
 // prever a URL no client, e duas implementações divergiriam com o tempo.
@@ -346,4 +347,94 @@ export async function restoreProduct(productId: string) {
     .eq("id", productId)
     .eq("store_id", store.id);
   revalidatePath("/admin/produtos");
+}
+
+/**
+ * Duplica uma peça parecida com uma que já existe: copia os dados, as variações e os
+ * materiais da formação de preço, e abre a cópia para edição.
+ *
+ * A cópia nasce INATIVA (fora do catálogo até a pessoa conferir) e SEM fotos nem vídeo:
+ * as fotos pertencem a cada peça (excluir uma não pode apagar a foto da outra) e peças
+ * parecidas quase nunca têm as mesmas fotos. Destaque e lançamento também não são copiados.
+ */
+export async function duplicateProduct(productId: string): Promise<ProductFormState> {
+  const store = await getActiveStore();
+  const notOwnerError = await getNotOwnerError(store);
+  if (notOwnerError) return { error: notOwnerError };
+  const supabase = await createServerSupabaseClient();
+
+  const { data: original } = await supabase
+    .from("products")
+    .select("*")
+    .eq("id", productId)
+    .eq("store_id", store.id)
+    .maybeSingle();
+
+  if (!original) return { error: "Peça não encontrada." };
+
+  // Endereços já usados na loja (inclusive de peças arquivadas): o slug é único por loja.
+  const { data: slugRows } = await supabase.from("products").select("slug").eq("store_id", store.id);
+  const identity = nextCopyIdentity(original.name, (slugRows ?? []).map((row) => row.slug));
+
+  const { data: copy, error } = await supabase
+    .from("products")
+    .insert({
+      store_id: store.id,
+      category_id: original.category_id,
+      collection_id: original.collection_id,
+      model_id: original.model_id,
+      name: identity.name,
+      slug: identity.slug,
+      description: original.description,
+      price: original.price,
+      materials: original.materials,
+      weight_kg: original.weight_kg,
+      length_cm: original.length_cm,
+      width_cm: original.width_cm,
+      height_cm: original.height_cm,
+      production_hours: original.production_hours,
+      other_costs: original.other_costs,
+      pricing_method: original.pricing_method,
+      pricing_rate_percent: original.pricing_rate_percent,
+      status: "inactive",
+      is_featured: false,
+      is_new_arrival: false,
+    })
+    .select("id")
+    .single();
+
+  if (error || !copy) {
+    console.error("[duplicateProduct]", error?.code, error?.message);
+    return { error: "Não foi possível duplicar a peça. Tente novamente." };
+  }
+
+  const [{ data: variants }, { data: pricingMaterials }] = await Promise.all([
+    supabase
+      .from("product_variants")
+      .select("name, color, color_id, variant_group, size, price, status, sort_order")
+      .eq("product_id", original.id)
+      .neq("status", "archived"),
+    supabase
+      .from("product_materials")
+      .select("material_id, description, quantity, unit, unit_cost, sort_order")
+      .eq("product_id", original.id),
+  ]);
+
+  // Se uma das cópias falhar, a peça já existe (inativa) e a pessoa confere na edição;
+  // não apagamos nada (regra do projeto: sem exclusão definitiva).
+  if (variants && variants.length > 0) {
+    const { error: variantsError } = await supabase
+      .from("product_variants")
+      .insert(variants.map((variant) => ({ ...variant, product_id: copy.id })));
+    if (variantsError) console.error("[duplicateProduct] variações", variantsError.code, variantsError.message);
+  }
+  if (pricingMaterials && pricingMaterials.length > 0) {
+    const { error: materialsError } = await supabase
+      .from("product_materials")
+      .insert(pricingMaterials.map((row) => ({ ...row, product_id: copy.id })));
+    if (materialsError) console.error("[duplicateProduct] materiais", materialsError.code, materialsError.message);
+  }
+
+  revalidatePath("/admin/produtos");
+  redirect(`/admin/produtos/${copy.id}/editar?copia=1`);
 }

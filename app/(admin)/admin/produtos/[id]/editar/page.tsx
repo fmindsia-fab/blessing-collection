@@ -15,6 +15,7 @@ import {
 import { ProductForm } from "../../product-form";
 import { PageHeading } from "@/components/admin/page-heading";
 import { PageSection } from "@/components/admin/page-section";
+import { DuplicateProductButton } from "../../duplicate-product-button";
 import { ProductImages } from "./product-images";
 import { ProductVideo } from "./product-video";
 import { ProductSlug } from "./product-slug";
@@ -29,8 +30,15 @@ const SECTION_LINKS = [
   { id: "preco", label: "Formação de preço" },
 ];
 
-export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EditProductPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ copia?: string }>;
+}) {
   const { id } = await params;
+  const { copia } = await searchParams;
   const store = await getActiveStore();
 
   const [
@@ -63,7 +71,22 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
 
   return (
     <div className="flex max-w-2xl flex-col gap-6">
-      <PageHeading kicker="Catálogo" title="Editar peça" description={product.name} />
+      <PageHeading
+        kicker="Catálogo"
+        title="Editar peça"
+        description={product.name}
+        action={<DuplicateProductButton productId={product.id} productName={product.name} variant="text" />}
+      />
+
+      {copia === "1" ? (
+        <p
+          role="status"
+          className="rounded-xl border border-[var(--gold)]/40 bg-[var(--brand-soft)] px-4 py-3 text-sm font-medium"
+        >
+          Cópia criada. Ela está <strong>Inativa</strong> (não aparece no catálogo) e sem fotos. Ajuste o nome e os
+          dados, envie as fotos e, quando estiver pronta, mude o Status para Disponível e salve.
+        </p>
+      ) : null}
 
       <nav aria-label="Seções da peça" className="flex flex-wrap gap-2">
         {SECTION_LINKS.map((link) => (

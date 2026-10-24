@@ -6,6 +6,7 @@ import Link from "next/link";
 import { GripVerticalIcon, ImageIcon } from "lucide-react";
 import { deactivateProduct, restoreProduct, moveProduct } from "@/lib/products/actions";
 import { Button } from "@/components/ui/button";
+import { DuplicateProductButton } from "./duplicate-product-button";
 import { StatusPill } from "@/components/admin/status-pill";
 import { ReorderButtons } from "@/components/admin/reorder-buttons";
 import { cn } from "@/lib/utils";
@@ -111,7 +112,8 @@ export function ProductRow({ product, statusLabel, isFirst, isLast, drag }: Prod
         </div>
       </div>
 
-      <div className="flex w-full shrink-0 items-center justify-end gap-2 border-t border-border/60 pt-3 lg:w-auto lg:border-t-0 lg:pt-0">
+      <div className="flex w-full shrink-0 flex-wrap items-center justify-end gap-2 border-t border-border/60 pt-3 lg:w-auto lg:border-t-0 lg:pt-0">
+        <DuplicateProductButton productId={product.id} productName={product.name} />
         <Button
           type="button"
           variant="outline"
