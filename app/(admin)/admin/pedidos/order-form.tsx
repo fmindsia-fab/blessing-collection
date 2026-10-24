@@ -328,6 +328,18 @@ export function OrderForm({
                     <p className="text-sm text-muted-foreground">
                       O preço do item soma o acréscimo de cada variação escolhida. Você pode ajustar o valor abaixo.
                     </p>
+                    <p className="text-sm text-muted-foreground">
+                      Precisa de duas opções do mesmo tipo (por exemplo, uma alça obrigatória e outra alça de
+                      complemento)? Marque quais são de <strong className="text-foreground">escolha obrigatória</strong> na
+                      peça, em{" "}
+                      <Link
+                        href={`/admin/produtos/${product.id}/editar#variacoes`}
+                        className="font-medium underline underline-offset-4 hover:text-[var(--gold)]"
+                      >
+                        Variações
+                      </Link>
+                      . As demais passam a aparecer como complementos, num seletor à parte.
+                    </p>
                   </fieldset>
                 ) : null}
 
