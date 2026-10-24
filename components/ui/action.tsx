@@ -12,7 +12,7 @@ import { Arrow } from "./arrow";
  * sólido escuro (critério de acessibilidade do PRD seção 15).
  */
 const actionVariants = cva(
-  "group inline-flex items-center justify-center gap-2.5 whitespace-nowrap rounded-full text-[0.6875rem] uppercase tracking-[0.18em] transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-4 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-45",
+  "group inline-flex items-center justify-center gap-2.5 whitespace-nowrap rounded-full text-xs uppercase tracking-[0.18em] transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-4 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-45",
   {
     variants: {
       variant: {

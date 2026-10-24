@@ -16,6 +16,7 @@ type WhatsappButtonProps = {
   status: ProductStatus;
   variantLabel?: string | null;
   className?: string;
+  tabIndex?: number;
 };
 
 export function WhatsappButton({
@@ -28,6 +29,7 @@ export function WhatsappButton({
   status,
   variantLabel,
   className,
+  tabIndex,
 }: WhatsappButtonProps) {
   const message = buildWhatsappMessage({
     storeName,
@@ -43,6 +45,7 @@ export function WhatsappButton({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
+      tabIndex={tabIndex}
       onClick={() => track({ storeId, eventType: "whatsapp_click", productId })}
       className={cn(actionVariants({ variant: "solid" }), className)}
     >

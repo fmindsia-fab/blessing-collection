@@ -33,7 +33,7 @@ function SocialLink({
         {icon}
       </span>
       <span className="flex flex-col leading-tight">
-        <span className="text-[0.6875rem] uppercase tracking-[0.16em]">{label}</span>
+        <span className="text-xs uppercase tracking-[0.16em]">{label}</span>
         <span className="text-xs text-muted-foreground">{hint}</span>
       </span>
     </a>
@@ -63,7 +63,7 @@ export function SiteFooter({ storeName, instagramUrl, whatsappNumber, siteUrl }:
           <span className="mt-1">
             <OwnerAccess />
           </span>
-          <span className="pt-1 text-[0.6875rem] uppercase tracking-[0.18em] text-muted-foreground">
+          <span className="pt-1 text-xs uppercase tracking-[0.18em] text-muted-foreground">
             Bolsas e acessórios artesanais
           </span>
         </div>
@@ -92,7 +92,7 @@ export function SiteFooter({ storeName, instagramUrl, whatsappNumber, siteUrl }:
         </div>
 
         <div className="flex w-full justify-center border-t border-border pt-8">
-          <span className="text-[0.6875rem] text-muted-foreground">
+          <span className="text-xs text-muted-foreground">
             © {year} {storeName}. Todos os direitos reservados.
           </span>
         </div>

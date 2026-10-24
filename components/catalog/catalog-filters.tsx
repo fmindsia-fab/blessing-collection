@@ -25,6 +25,8 @@ type CatalogFiltersProps = {
   activeModel?: string;
   activeCategory?: string;
   search?: string;
+  /** Ordem escolhida pela cliente: os filtros não podem descartá-la. */
+  activeSort?: string;
   /** Some da barra quando a página já é de uma categoria específica. */
   hideCategory?: boolean;
 };
@@ -177,6 +179,7 @@ export function CatalogFilters({
   activeModel,
   activeCategory,
   search,
+  activeSort,
   hideCategory = false,
 }: CatalogFiltersProps) {
   const current: FilterParams = {
@@ -185,6 +188,7 @@ export function CatalogFilters({
     modelo: activeModel,
     cor: activeColor,
     disponibilidade: activeAvailability,
+    ordem: activeSort,
   };
 
   const selectedCategory = categories.find((c) => c.slug === activeCategory);
@@ -325,8 +329,8 @@ export function CatalogFilters({
           ) : null}
 
           <Link
-            href={buildFilterHref(basePath, { busca: search })}
-            className="ml-1 text-[0.6875rem] uppercase tracking-[0.16em] text-muted-foreground underline underline-offset-4 outline-none transition-colors hover:text-foreground focus-visible:text-foreground"
+            href={buildFilterHref(basePath, { busca: search, ordem: activeSort })}
+            className="ml-1 text-xs uppercase tracking-[0.16em] text-muted-foreground underline underline-offset-4 outline-none transition-colors hover:text-foreground focus-visible:text-foreground"
           >
             Limpar
           </Link>

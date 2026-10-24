@@ -4,6 +4,7 @@ export type FilterParams = {
   modelo?: string;
   cor?: string;
   disponibilidade?: string;
+  ordem?: string;
 };
 
 /**
@@ -25,6 +26,7 @@ export function buildFilterHref(basePath: string, params: FilterParams): string 
   if (params.modelo) query.set("modelo", params.modelo);
   if (params.cor) query.set("cor", params.cor);
   if (params.disponibilidade) query.set("disponibilidade", params.disponibilidade);
+  if (params.ordem) query.set("ordem", params.ordem);
 
   const queryString = query.toString();
   return queryString ? `${basePath}?${queryString}` : basePath;

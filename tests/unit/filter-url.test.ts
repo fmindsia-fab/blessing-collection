@@ -50,4 +50,11 @@ describe("buildFilterHref", () => {
 
     expect(href).not.toContain("page");
   });
+
+  it("mantém a ordem escolhida junto dos filtros e a omite quando não há", () => {
+    expect(buildFilterHref("/produtos", { categoria: "bolsas", ordem: "menor-preco" })).toBe(
+      "/produtos?categoria=bolsas&ordem=menor-preco",
+    );
+    expect(buildFilterHref("/produtos", { ordem: undefined })).toBe("/produtos");
+  });
 });

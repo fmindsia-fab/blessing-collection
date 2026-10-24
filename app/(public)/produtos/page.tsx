@@ -6,6 +6,8 @@ import { ProductCard } from "@/components/catalog/product-card";
 import { CatalogFilters } from "@/components/catalog/catalog-filters";
 import { BackLink } from "@/components/shared/back-link";
 import { ActionLink } from "@/components/ui/action";
+import { SortSelect } from "@/components/catalog/sort-select";
+import { parseCatalogSort } from "@/lib/catalog/sort";
 import type { Metadata } from "next";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -27,9 +29,11 @@ export default async function ProductsPage({
     disponibilidade?: string;
     modelo?: string;
     categoria?: string;
+    ordem?: string;
   }>;
 }) {
-  const { page: pageParam, busca, cor, disponibilidade, modelo, categoria } = await searchParams;
+  const { page: pageParam, busca, cor, disponibilidade, modelo, categoria, ordem } = await searchParams;
+  const sort = parseCatalogSort(ordem);
   const page = Math.max(1, Number(pageParam) || 1);
 
   const store = await getActiveStore();
@@ -54,6 +58,7 @@ export default async function ProductsPage({
     availability: disponibilidade,
     modelId: activeModelId,
     categoryId: activeCategoryId,
+    sort,
   });
 
   const isEmpty = products.length === 0;
@@ -69,6 +74,7 @@ export default async function ProductsPage({
   if (disponibilidade) nextPageQuery.set("disponibilidade", disponibilidade);
   if (modelo) nextPageQuery.set("modelo", modelo);
   if (categoria) nextPageQuery.set("categoria", categoria);
+  if (sort) nextPageQuery.set("ordem", sort);
 
   return (
     <main className="flex flex-1 flex-col gap-10 px-6 py-12 sm:px-10 lg:px-16">
@@ -91,6 +97,7 @@ export default async function ProductsPage({
         {disponibilidade ? (
           <input type="hidden" name="disponibilidade" value={disponibilidade} />
         ) : null}
+        {sort ? <input type="hidden" name="ordem" value={sort} /> : null}
         <label htmlFor="busca" className="sr-only">
           Buscar peças por nome
         </label>
@@ -114,11 +121,21 @@ export default async function ProductsPage({
         activeModel={modelo}
         activeCategory={categoria}
         search={busca}
+        activeSort={sort}
       />
 
-      <p className="text-center text-xs uppercase tracking-[0.16em] text-muted-foreground">
+      <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 sm:justify-between">
+              <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
         {total} {total === 1 ? "peça encontrada" : "peças encontradas"}
       </p>
+        {total > 1 ? (
+          <SortSelect
+            basePath="/produtos"
+            params={{ busca, categoria, modelo, cor, disponibilidade }}
+            active={sort}
+          />
+        ) : null}
+      </div>
 
       {isEmpty ? (
         <div className="flex flex-col items-center gap-3 py-24 text-center">
@@ -160,7 +177,7 @@ export default async function ProductsPage({
           >
             Carregar mais
           </ActionLink>
-          <span className="text-[0.6875rem] uppercase tracking-[0.16em] text-muted-foreground">
+          <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
             {products.length} de {total}
           </span>
         </div>

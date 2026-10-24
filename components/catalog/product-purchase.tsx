@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { InfoIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { calculateInstallmentOptions, type PaymentMethod } from "@/lib/pricing/calculate";
@@ -83,6 +83,33 @@ export function ProductPurchase({
 
   const variable = isPriceVariable(status);
   const selectionLabel = describeSelection(selected);
+
+  // Barra fixa (só no celular) com preço e botão do WhatsApp: aparece quando os botões da
+  // própria página saem da tela, e some quando eles voltam ou quando se chega ao rodapé.
+  const actionsRef = useRef<HTMLDivElement>(null);
+  const [actionsVisible, setActionsVisible] = useState(true);
+  const [footerVisible, setFooterVisible] = useState(false);
+
+  useEffect(() => {
+    const actions = actionsRef.current;
+    if (!actions || typeof IntersectionObserver === "undefined") return;
+
+    const actionsObserver = new IntersectionObserver(([entry]) => setActionsVisible(entry.isIntersecting));
+    actionsObserver.observe(actions);
+
+    const footer = document.querySelector("footer");
+    const footerObserver = footer
+      ? new IntersectionObserver(([entry]) => setFooterVisible(entry.isIntersecting))
+      : null;
+    if (footer) footerObserver?.observe(footer);
+
+    return () => {
+      actionsObserver.disconnect();
+      footerObserver?.disconnect();
+    };
+  }, []);
+
+  const showStickyBar = !actionsVisible && !footerVisible;
 
   function choose(groupName: string, optionId: string) {
     setChosen((current) => {
@@ -193,7 +220,7 @@ export function ProductPurchase({
         </div>
       ) : null}
 
-      <div className="flex flex-wrap gap-3 pt-2">
+      <div ref={actionsRef} className="flex flex-wrap gap-3 pt-2">
         <WhatsappButton
           storeId={storeId}
           storeName={storeName}
@@ -222,6 +249,34 @@ export function ProductPurchase({
           message={`Olha essa ${productName}${selectionLabel ? ` (${selectionLabel})` : ""} que eu encontrei!`}
           label="Compartilhar"
           variant="outline"
+        />
+      </div>
+
+      {/* Barra fixa do celular: preço atual + botão do WhatsApp sempre à mão. */}
+      <div
+        aria-hidden={!showStickyBar}
+        className={cn(
+          "fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-3 border-t border-border bg-background/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_-12px_oklch(0.25_0.02_45/0.25)] backdrop-blur transition-transform duration-300 motion-reduce:transition-none lg:hidden",
+          showStickyBar ? "translate-y-0" : "pointer-events-none translate-y-full",
+        )}
+      >
+        <p className="flex min-w-0 flex-col leading-tight">
+          <span className="truncate text-xs text-muted-foreground">
+            {pendingPricedGroup ? "a partir de" : "à vista"}
+          </span>
+          <span className="text-lg font-medium">{formatPrice(toReais(currentCents))}</span>
+        </p>
+        <WhatsappButton
+          storeId={storeId}
+          storeName={storeName}
+          storeWhatsapp={storeWhatsapp}
+          productId={productId}
+          productName={productName}
+          productUrl={productUrl}
+          status={status}
+          variantLabel={selectionLabel}
+          className="h-11 shrink-0 px-5"
+          tabIndex={showStickyBar ? 0 : -1}
         />
       </div>
     </>

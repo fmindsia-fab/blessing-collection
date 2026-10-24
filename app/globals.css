@@ -169,7 +169,7 @@
      Só o catálogo público ((public)) usa esta classe — o admin usa
      .admin-kicker, tipografia neutra sem versalete (ver reforma visual). */
   .kicker {
-    @apply text-[0.6875rem] font-medium uppercase tracking-[0.22em] text-muted-foreground;
+    @apply text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground;
   }
 
   /* Rótulo de seção do painel administrativo — mesmo papel do .kicker do

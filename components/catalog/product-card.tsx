@@ -61,7 +61,7 @@ export function ProductCard({
         )}
 
         {badge ? (
-          <span className="absolute left-2.5 top-2.5 rounded-full bg-background/92 px-2.5 py-1 text-[0.5625rem] font-medium uppercase tracking-[0.08em] text-foreground shadow-sm backdrop-blur-sm">
+          <span className="absolute left-2.5 top-2.5 rounded-full bg-background/92 px-2.5 py-1 text-xs font-medium uppercase tracking-[0.08em] text-foreground shadow-sm backdrop-blur-sm">
             {badge}
           </span>
         ) : null}
@@ -74,7 +74,7 @@ export function ProductCard({
         />
         <span
           aria-hidden
-          className="absolute bottom-3 left-1/2 -translate-x-1/2 translate-y-3 rounded-full bg-background/95 px-4 py-2 text-[0.625rem] uppercase tracking-[0.16em] text-foreground opacity-0 shadow-md backdrop-blur-sm transition-all duration-400 ease-out group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100"
+          className="absolute bottom-3 left-1/2 -translate-x-1/2 translate-y-3 rounded-full bg-background/95 px-4 py-2 text-xs uppercase tracking-[0.16em] text-foreground opacity-0 shadow-md backdrop-blur-sm transition-all duration-400 ease-out group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100"
         >
           Ver peça
         </span>

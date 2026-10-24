@@ -69,7 +69,7 @@ export function ShareButton({
       type="button"
       onClick={handleShare}
       className={cn(
-        "group inline-flex items-center justify-center gap-2.5 whitespace-nowrap text-[0.6875rem] uppercase tracking-[0.16em] outline-none transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-4 focus-visible:ring-offset-background",
+        "group inline-flex items-center justify-center gap-2.5 whitespace-nowrap text-xs uppercase tracking-[0.16em] outline-none transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-4 focus-visible:ring-offset-background",
         VARIANTS[variant],
         className,
       )}

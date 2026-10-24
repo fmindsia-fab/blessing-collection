@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import type { CatalogSort } from "@/lib/catalog/sort";
 
 const PUBLIC_STATUSES = ["available", "made_to_order", "sold_out"] as const;
 export const PAGE_SIZE = 12;
@@ -98,6 +99,7 @@ export async function listProducts({
   search,
   colorId,
   availability,
+  sort,
 }: {
   storeId: string;
   page?: number;
@@ -107,6 +109,8 @@ export async function listProducts({
   search?: string;
   colorId?: string;
   availability?: string;
+  /** Sem valor: a ordem definida pela dona no painel. */
+  sort?: CatalogSort;
 }) {
   const supabase = await createServerSupabaseClient();
   // "Carregar mais" acumula: a página 2 traz as 24 primeiras peças, não as 12
@@ -124,10 +128,20 @@ export async function listProducts({
   let query = supabase
     .from("products")
     .select(selectClause, { count: "exact" })
-    .eq("store_id", storeId)
-    .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: false })
-    .range(from, to);
+    .eq("store_id", storeId);
+
+  // Ordem pedida pela cliente; sem pedido, a ordem da loja (sort_order) com as mais novas primeiro.
+  // Desempate por data para a paginação nunca repetir nem pular peças de mesmo preço.
+  if (sort === "menor-preco") {
+    query = query.order("price", { ascending: true }).order("created_at", { ascending: false });
+  } else if (sort === "maior-preco") {
+    query = query.order("price", { ascending: false }).order("created_at", { ascending: false });
+  } else if (sort === "novidades") {
+    query = query.order("created_at", { ascending: false });
+  } else {
+    query = query.order("sort_order", { ascending: true }).order("created_at", { ascending: false });
+  }
+  query = query.range(from, to);
 
   // Disponibilidade é um subconjunto dos status públicos — nunca amplia o que
   // o visitante enxerga.

@@ -29,7 +29,7 @@ export function ProductDetails({ weightKg, lengthCm, widthCm, heightCm }: Produc
 
   return (
     <details className="group border-y border-border">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-3.5 text-[0.6875rem] uppercase tracking-[0.16em] outline-none transition-colors hover:text-[var(--gold)] focus-visible:text-[var(--gold)] [&::-webkit-details-marker]:hidden">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-3.5 text-xs uppercase tracking-[0.16em] outline-none transition-colors hover:text-[var(--gold)] focus-visible:text-[var(--gold)] [&::-webkit-details-marker]:hidden">
         Mais detalhes
         <span
           aria-hidden
@@ -42,7 +42,7 @@ export function ProductDetails({ weightKg, lengthCm, widthCm, heightCm }: Produc
       <dl className="flex flex-col divide-y divide-border/60 pb-2">
         {rows.map((row) => (
           <div key={row.label} className="flex gap-6 py-2.5">
-            <dt className="w-28 shrink-0 text-[0.6875rem] uppercase tracking-[0.14em] text-muted-foreground">
+            <dt className="w-28 shrink-0 text-xs uppercase tracking-[0.14em] text-muted-foreground">
               {row.label}
             </dt>
             <dd className="text-sm tabular-nums text-muted-foreground">{row.value}</dd>

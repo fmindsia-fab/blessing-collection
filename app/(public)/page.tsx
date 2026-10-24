@@ -128,7 +128,7 @@ export default async function HomePage() {
               <span className="font-[family-name:var(--font-brand)] text-lg text-background">
                 {heroProduct.name}
               </span>
-              <span className="text-[0.625rem] uppercase tracking-[0.18em] text-background/85">Ver peça</span>
+              <span className="text-xs uppercase tracking-[0.18em] text-background/85">Ver peça</span>
             </div>
           </Link>
         ) : null}

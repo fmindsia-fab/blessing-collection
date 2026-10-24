@@ -119,7 +119,7 @@ export function MediaLightbox({
       </div>
 
       {items.length > 1 ? (
-        <span className="absolute bottom-6 text-[0.6875rem] uppercase tracking-[0.16em] text-background/80">
+        <span className="absolute bottom-6 text-xs uppercase tracking-[0.16em] text-background/80">
           {activeIndex + 1} / {items.length}
         </span>
       ) : null}

@@ -57,7 +57,7 @@ export function InstallmentOptions({
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex w-fit items-center gap-2 text-[0.6875rem] uppercase tracking-[0.16em] text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:text-foreground"
+        className="flex w-fit items-center gap-2 text-xs uppercase tracking-[0.16em] text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:text-foreground"
       >
         {open ? "Ocultar parcelamento" : "Ver parcelamento"}
         <ChevronDownIcon
