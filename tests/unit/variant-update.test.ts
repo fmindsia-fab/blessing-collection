@@ -15,7 +15,10 @@ const { state, COLOR_ID, OTHER_COLOR_ID } = vi.hoisted(() => {
       product: { id: "p1" } as { id: string } | null,
       /** null simula cor de outra loja. */
       color: { id: COLOR_ID } as { id: string } | null,
+      /** Primeira gravação (a da própria variação). */
       updated: null as Record<string, unknown> | null,
+      /** Todas as gravações, na ordem (a segunda propaga "pode escolher mais de uma" ao grupo). */
+      updates: [] as Record<string, unknown>[],
       /** Colunas usadas no .eq() do update — a âncora no produto importa. */
       filters: [] as [string, string][],
     },
@@ -42,10 +45,15 @@ vi.mock("@/lib/supabase/server", () => ({
           if (payload) state.filters.push([column, value]);
           return chain;
         },
+        neq: () => chain,
+        is: () => chain,
         maybeSingle: () =>
           Promise.resolve({ data: table === "colors" ? state.color : state.product }),
         then: (resolve: (r: { error: null }) => void) => {
-          if (payload) state.updated = payload;
+          if (payload) {
+            state.updates.push(payload);
+            state.updated = state.updates[0];
+          }
           return Promise.resolve(resolve({ error: null }));
         },
       };
@@ -66,6 +74,7 @@ beforeEach(() => {
   state.product = { id: "p1" };
   state.color = { id: COLOR_ID };
   state.updated = null;
+  state.updates = [];
   state.filters = [];
 });
 
@@ -146,4 +155,21 @@ describe("updateVariant", () => {
     expect(state.filters).toContainEqual(["id", "v1"]);
     expect(state.filters).toContainEqual(["product_id", "p1"]);
   });
+
+  // "Pode escolher mais de uma" vale para o grupo inteiro da peça: depois de salvar a variação, a
+  // escolha é copiada para as outras do mesmo grupo (senão uma alça aceitaria duas e outra não).
+  it("propaga 'pode escolher mais de uma' para o grupo da peça", async () => {
+    await updateVariant("p1", "v1", {}, form({ name: "Alça Duo", variantGroup: "Alça", allowMultiple: "on" }));
+
+    expect(state.updated).toMatchObject({ allow_multiple: true });
+    expect(state.updates[1]).toEqual({ allow_multiple: true });
+    expect(state.filters).toContainEqual(["variant_group", "Alça"]);
+  });
+
+  it("desmarcar também vale para o grupo todo", async () => {
+    await updateVariant("p1", "v1", {}, form({ name: "Alça Duo", variantGroup: "Alça" }));
+
+    expect(state.updates[1]).toEqual({ allow_multiple: false });
+  });
 });
+
