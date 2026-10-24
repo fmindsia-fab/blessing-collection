@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { getNotOwnerError } from "@/lib/store/ownership";
+import { purchasePaymentSchema } from "@/lib/finance/schema";
 import { adjustStockSchema, minStockSchema, purchaseSchema } from "./schema";
 
 export type StockFormState = { error?: string; success?: boolean };
@@ -13,6 +14,9 @@ function revalidateStock() {
   revalidatePath("/admin/estoque");
   revalidatePath("/admin/compras");
   revalidatePath("/admin/materiais");
+  // A compra gera (ou cancela) contas a pagar.
+  revalidatePath("/admin/contas-a-pagar");
+  revalidatePath("/admin/fluxo-de-caixa");
 }
 
 // Mensagens que as funções do banco levantam de propósito (raise exception) são em português e
@@ -40,6 +44,13 @@ export async function createPurchase(_prev: StockFormState, formData: FormData):
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
+  const payment = purchasePaymentSchema.safeParse({
+    mode: formData.get("paymentMode") || "paid",
+    firstDue: formData.get("firstDue") || undefined,
+    installments: formData.get("installments") || 1,
+  });
+  if (!payment.success) return { error: payment.error.issues[0].message };
+
   const store = await getActiveStore();
   const notOwnerError = await getNotOwnerError(store);
   if (notOwnerError) return { error: notOwnerError };
@@ -57,6 +68,9 @@ export async function createPurchase(_prev: StockFormState, formData: FormData):
       total_cost: item.totalCost,
       update_cost: item.updateCost,
     })),
+    p_payment_mode: payment.data.mode,
+    p_first_due: payment.data.mode === "later" ? (payment.data.firstDue ?? null) : null,
+    p_installments: payment.data.mode === "later" ? payment.data.installments : 1,
   });
 
   if (error || !purchaseId) {

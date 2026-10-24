@@ -4,6 +4,8 @@ import {
   ChartColumnIcon,
   FolderTreeIcon,
   GemIcon,
+  HandCoinsIcon,
+  LandmarkIcon,
   LayersIcon,
   LayoutDashboardIcon,
   PackageIcon,
@@ -59,6 +61,13 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     items: [
       { href: "/admin/estoque", label: "Estoque", icon: WarehouseIcon },
       { href: "/admin/compras", label: "Compras", icon: ReceiptTextIcon },
+    ],
+  },
+  {
+    label: "Financeiro",
+    items: [
+      { href: "/admin/contas-a-pagar", label: "Contas a pagar", icon: HandCoinsIcon },
+      { href: "/admin/fluxo-de-caixa", label: "Fluxo de caixa", icon: LandmarkIcon },
     ],
   },
   {

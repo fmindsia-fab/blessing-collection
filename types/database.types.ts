@@ -10,6 +10,7 @@ export type StoreStatus = "active" | "suspended" | "archived";
 /** MEI não entra como percentual: o DAS é custo fixo mensal (migration 0014). */
 export type TaxRegime = "none" | "mei" | "simples" | "other";
 export type PricingMethodValue = "margin" | "markup";
+export type PayableCategory = "supplies" | "packaging" | "shipping" | "fees" | "marketing" | "other";
 /**
  * Valor da lista curada em `lib/store/fonts.ts`. Deixou de ser union fechada
  * na migration 0010: a lista cresce sem migration, e o check do banco saiu.
@@ -157,12 +158,17 @@ export interface Database {
           tax_percent: number;
           default_pricing_method: PricingMethodValue;
           default_margin_percent: number;
+          /** Saldo inicial do caixa (migration 0051) e a data a partir da qual ele vale. */
+          cash_opening_balance: number;
+          cash_opening_date: string | null;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           store_id: string;
           pix_key?: string | null;
+          cash_opening_balance?: number;
+          cash_opening_date?: string | null;
           monthly_pay?: number;
           monthly_fixed_cost?: number;
           productive_hours_per_month?: number;
@@ -489,6 +495,68 @@ export interface Database {
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["purchases"]["Insert"]>;
+        Relationships: [];
+      };
+      /** Contas a pagar (migration 0051). */
+      payables: {
+        Row: {
+          id: string;
+          store_id: string;
+          description: string;
+          category: PayableCategory;
+          supplier: string | null;
+          due_date: string;
+          amount: number;
+          paid_at: string | null;
+          recurrence: "none" | "monthly";
+          next_generated: boolean;
+          purchase_id: string | null;
+          status: "active" | "cancelled";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          store_id: string;
+          description: string;
+          category?: PayableCategory;
+          supplier?: string | null;
+          due_date: string;
+          amount: number;
+          paid_at?: string | null;
+          recurrence?: "none" | "monthly";
+          next_generated?: boolean;
+          purchase_id?: string | null;
+          status?: "active" | "cancelled";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["payables"]["Insert"]>;
+        Relationships: [];
+      };
+      /** Outras entradas avulsas do caixa (migration 0051). */
+      cash_incomes: {
+        Row: {
+          id: string;
+          store_id: string;
+          description: string;
+          amount: number;
+          received_at: string;
+          status: "active" | "cancelled";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          store_id: string;
+          description: string;
+          amount: number;
+          received_at: string;
+          status?: "active" | "cancelled";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["cash_incomes"]["Insert"]>;
         Relationships: [];
       };
       purchase_items: {
@@ -961,8 +1029,17 @@ export interface Database {
           p_freight: number;
           p_notes: string | null;
           p_items: { material_id: string; quantity: number; total_cost: number; update_cost: boolean }[];
+          /** 'paid' = pago na hora; 'later' = a prazo, em parcelas mensais (migration 0051). */
+          p_payment_mode?: "paid" | "later";
+          p_first_due?: string | null;
+          p_installments?: number;
         };
         Returns: string;
+      };
+      /** Dá baixa numa conta a pagar; se repete todo mês, cria a do mês seguinte (migration 0051). */
+      pay_payable: {
+        Args: { p_store_id: string; p_payable_id: string; p_paid_at: string };
+        Returns: undefined;
       };
       /** Troca a situação do pedido e baixa/devolve o estoque na mesma transação (migration 0045). */
       set_order_status: {

@@ -53,6 +53,8 @@ export function PurchaseForm({
   const [items, setItems] = useState<ItemDraft[]>([emptyItem(1)]);
   const [nextKey, setNextKey] = useState(2);
   const [freight, setFreight] = useState("");
+  const [paymentMode, setPaymentMode] = useState<"paid" | "later">("paid");
+  const [installments, setInstallments] = useState("1");
 
   const materialById = useMemo(() => new Map(materials.map((material) => [material.id, material])), [materials]);
 
@@ -311,6 +313,60 @@ export function PurchaseForm({
         <p className="text-base sm:col-span-2">
           Total da compra: <strong className="text-lg tabular-nums">{formatMoney(total)}</strong>
         </p>
+      </section>
+
+      <section className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <h2 className="text-lg font-semibold tracking-tight">Como você pagou?</h2>
+        <input type="hidden" name="paymentMode" value={paymentMode} />
+        <div role="group" aria-label="Como você pagou" className="flex flex-wrap gap-2">
+          {[
+            { value: "paid" as const, label: "Já paguei" },
+            { value: "later" as const, label: "Vou pagar depois (a prazo ou parcelado)" },
+          ].map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              aria-pressed={paymentMode === option.value}
+              onClick={() => setPaymentMode(option.value)}
+              className={cn(
+                "rounded-full border px-4 py-2 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--gold)]",
+                paymentMode === option.value
+                  ? "border-[var(--gold)] bg-[var(--gold)] text-primary-foreground"
+                  : "border-border text-muted-foreground hover:border-[var(--gold)] hover:text-foreground",
+              )}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+
+        {paymentMode === "later" ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="firstDue">Vencimento da 1ª parcela</Label>
+              <Input id="firstDue" name="firstDue" type="date" min={today} required />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="installments">Em quantas parcelas</Label>
+              <Input
+                id="installments"
+                name="installments"
+                inputMode="numeric"
+                value={installments}
+                onChange={(event) => setInstallments(event.target.value.replace(/\D/g, "").slice(0, 2))}
+                className="max-w-32"
+              />
+            </div>
+            <p className="text-sm text-muted-foreground sm:col-span-2">
+              Cada parcela vira uma conta em <strong>Contas a pagar</strong>, com o aviso de quando vence.
+              {Number(installments) > 1 && total > 0 ? ` Parcelas de cerca de ${formatMoney(total / Number(installments))}.` : ""}
+            </p>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            O valor sai do caixa na data da compra e fica registrado em <strong>Contas a pagar</strong> como paga.
+          </p>
+        )}
       </section>
 
       <FormFooter sticky isPending={isPending} error={state.error} submitLabel="Registrar compra" pendingLabel="Registrando..." />
