@@ -72,7 +72,7 @@ export function SelectionReview({ storeId, storeName, storeWhatsapp, siteUrl }: 
             <div className="flex flex-1 flex-col gap-1">
               <Link
                 href={`/produtos/${item.slug}`}
-                className="font-[family-name:var(--font-brand)] text-base transition-colors hover:text-[var(--gold)]"
+                className="font-[family-name:var(--font-brand)] text-base transition-colors hover:text-[var(--gold-text,var(--gold))]"
               >
                 {item.name}
               </Link>
@@ -81,7 +81,7 @@ export function SelectionReview({ storeId, storeName, storeWhatsapp, siteUrl }: 
                 {formatPrice(item.price)}
               </span>
               {item.status && item.status !== "available" ? (
-                <span className="kicker text-[var(--gold)]">
+                <span className="kicker text-[var(--gold-text,var(--gold))]">
                   {item.status === "sold_out" ? "Esgotada" : "Sob encomenda"}
                 </span>
               ) : null}

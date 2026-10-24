@@ -766,6 +766,11 @@ export interface Database {
           interest_rate: number;
         }[];
       };
+      /** Vitrine pública (migration 0043) — só IDs de peças públicas, na ordem de procura, sem contagens. */
+      get_popular_product_ids: {
+        Args: { p_store_id: string; p_days?: number; p_limit?: number };
+        Returns: { product_id: string }[];
+      };
       get_category_rankings: {
         Args: { p_store_id: string; p_days?: number | null };
         Returns: { category_id: string; category_name: string; views: number }[];

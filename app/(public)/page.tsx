@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getActiveStore, getSiteUrl, isPlatformRequest } from "@/lib/store/get-active-store";
-import { getFeaturedProducts, getNewArrivals } from "@/lib/products/queries";
+import { getFeaturedProducts, getNewArrivals, getPopularProducts } from "@/lib/products/queries";
 import { listCategories } from "@/lib/categories/queries";
 import { listCollections } from "@/lib/collections/queries";
 import { pickHeroProduct } from "@/lib/catalog/hero";
@@ -65,6 +65,9 @@ export default async function HomePage() {
       pickCategoryCovers(store.id),
       pickCollectionCovers(store.id),
     ]);
+
+  // "Mais procuradas": sem repetir as peças que já aparecem em Lançamentos e Destaques.
+  const popular = await getPopularProducts(store.id, [...newArrivals, ...featured].map((product) => product.id));
 
   // Só entram na vitrine as categorias/coleções com pelo menos uma peça
   // pública com foto de capa — sem isso o card cairia no fallback sem
@@ -215,6 +218,29 @@ export default async function HomePage() {
                 cards até metade da tela, mantendo a proporção editorial. */}
             <div className="grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] lg:gap-x-8">
               {featured.map((product, index) => (
+                <ProductCard
+                  productId={product.id}
+                  fromPrice={product.from_price}
+                  hasVariants={product.has_variants}
+                  swatches={product.swatches}
+                  key={product.id}
+                  index={index}
+                  slug={product.slug}
+                  name={product.name}
+                  price={product.price}
+                  status={product.status}
+                  coverImageUrl={product.cover_image_url}
+                />
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {popular.length > 0 ? (
+          <section className="flex flex-col gap-8">
+            <SectionHeading kicker="O que está em alta" title="Mais procuradas" href="/produtos" />
+            <div className="grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] lg:gap-x-8">
+              {popular.map((product, index) => (
                 <ProductCard
                   productId={product.id}
                   fromPrice={product.from_price}

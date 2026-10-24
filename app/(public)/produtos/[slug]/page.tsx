@@ -95,7 +95,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         >
           <div className="flex flex-col gap-3">
             {product.status !== "available" ? (
-              <span className="kicker text-[var(--gold)]">{STATUS_LABEL[product.status]}</span>
+              <span className="kicker text-[var(--gold-text,var(--gold))]">{STATUS_LABEL[product.status]}</span>
             ) : null}
             <h1 className="font-[family-name:var(--font-brand)] text-[2.5rem] leading-[1.05] tracking-tight sm:text-5xl">
               {product.name}

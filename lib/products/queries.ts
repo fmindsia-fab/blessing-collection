@@ -343,6 +343,47 @@ export async function getNewArrivals(storeId: string) {
 }
 
 /**
+ * "Mais procuradas": as peças com mais cliques no WhatsApp e visualizações nos últimos 30 dias,
+ * decididas no banco por get_popular_product_ids (migration 0043), que devolve só os IDs de peças
+ * públicas, sem números. Exclui as que já aparecem em outras seções da página e só mostra a
+ * seção com pelo menos 2 peças. Se a função ainda não existir ou falhar, devolve vazio: a seção
+ * some, e o resto da página segue normal.
+ */
+export async function getPopularProducts(storeId: string, excludeIds: string[] = [], limit = 4) {
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase.rpc("get_popular_product_ids", {
+    p_store_id: storeId,
+    p_days: 30,
+    p_limit: 12,
+  });
+  if (error || !data) {
+    console.warn("[catálogo] mais procuradas indisponível:", error?.message);
+    return [];
+  }
+
+  const ids = data
+    .map((row) => row.product_id)
+    .filter((id) => !excludeIds.includes(id))
+    .slice(0, limit);
+  if (ids.length < 2) return [];
+
+  const { data: products } = await supabase
+    .from("products")
+    .select("id, name, slug, price, status")
+    .eq("store_id", storeId)
+    .in("id", ids)
+    .in("status", PUBLIC_STATUSES);
+  if (!products || products.length < 2) return [];
+
+  // Mantém a ordem de procura devolvida pelo banco.
+  const byId = new Map(products.map((product) => [product.id, product]));
+  const ordered = ids.map((id) => byId.get(id)).filter((product): product is (typeof products)[number] => Boolean(product));
+
+  return withCardData(supabase, storeId, ordered);
+}
+
+/**
  * Peças relacionadas para a página de produto (PRD 3.4).
  *
  * Relevância por proximidade: mesma categoria primeiro, depois mesma coleção,

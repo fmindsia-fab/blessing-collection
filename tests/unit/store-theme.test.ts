@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildStoreTheme, contrastRatio, isDarkEnoughForText, isLight } from "@/lib/store/theme";
+import { buildStoreTheme, contrastRatio, ensureContrast, isDarkEnoughForText, isLight } from "@/lib/store/theme";
 
 type Theme = Record<string, string>;
 
@@ -96,5 +96,49 @@ describe("contraste", () => {
   it("isLight identifica fundos claros", () => {
     expect(isLight("#FAF8F5")).toBe(true);
     expect(isLight("#1C1917")).toBe(false);
+  });
+});
+
+describe("contraste de leitura das cores da loja", () => {
+  it("o tom de texto do acento sempre alcança 4.5:1 contra o fundo escolhido", () => {
+    const palettes = [
+      ["#1C1917", "#FAF8F5", "#C9A227"],
+      ["#92AC95", "#F8F4EB", "#9691B3"],
+      ["#3A2E39", "#EDE7F6", "#D7A9E3"],
+    ];
+
+    for (const brand_colors of palettes) {
+      const theme = buildStoreTheme({ brand_colors }) as Theme;
+      const ratio = contrastRatio(theme["--gold-text"]!, theme["--background"]!);
+      expect(ratio).not.toBeNull();
+      expect(ratio!).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it("não mexe no acento decorativo (fios e foco seguem na cor escolhida)", () => {
+    const theme = buildStoreTheme({ brand_colors: ["#1C1917", "#FAF8F5", "#C9A227"] }) as Theme;
+    expect(theme["--gold"]).toBe("#C9A227");
+  });
+
+  it("o texto principal tem 4.5:1 contra o fundo mesmo com fundo colorido", () => {
+    const theme = buildStoreTheme({ brand_colors: ["#4A4A68", "#C7C0E0", "#C9A227"] }) as Theme;
+    const foreground = theme["--foreground"] ?? "#1C1917";
+    expect(contrastRatio(foreground, theme["--background"]!)!).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+describe("ensureContrast", () => {
+  it("deixa como está a cor que já passa", () => {
+    expect(ensureContrast("#1C1917", "#FAF8F5", 4.5)).toBe("#1C1917");
+  });
+
+  it("escurece só o necessário, sem trocar de matiz para cinza", () => {
+    const result = ensureContrast("#C9A227", "#FAF8F5", 4.5);
+    expect(result).not.toBe("#C9A227");
+    expect(contrastRatio(result, "#FAF8F5")!).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("não altera valores que não são hex", () => {
+    expect(ensureContrast("oklch(0.685 0.085 78)", "#FAF8F5", 4.5)).toBe("oklch(0.685 0.085 78)");
   });
 });

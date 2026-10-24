@@ -1,5 +1,5 @@
 import { resolveBrandColors } from "./branding";
-import { ensureLightEnough } from "./color-harmony";
+import { ensureLightEnough, hexToHsl, hslToHex } from "./color-harmony";
 
 /**
  * Converte a paleta da loja em variáveis CSS do tema.
@@ -31,17 +31,29 @@ export function buildStoreTheme(store: {
   vars["--brand-secondary"] = background ?? primary;
   vars["--brand-accent"] = accent ?? primary;
 
+  // Fundo real da página: o contraste do texto e do acento é medido contra ele (e não contra o
+  // branco), porque a proprietária escolhe a cor de fundo.
+  const backgroundHex = background ? ensureLightEnough(background) : DEFAULT_BACKGROUND_HEX;
+
   // O acento aparece em fios finos, focos e hovers — se for claro demais,
   // some contra o fundo. Preferimos a cor de destaque, mas caímos para a mais
   // saturada e escura da paleta quando ela não tem presença suficiente.
-  vars["--gold"] = pickAccent(palette, accent);
+  const accentColor = pickAccent(palette, accent);
+  vars["--gold"] = accentColor;
+
+  // Quando o acento vira TEXTO (rótulos como "Sob encomenda", links), precisa de contraste de
+  // leitura (4.5:1) contra o fundo. O acento decorativo (fios, foco) continua com a cor
+  // escolhida; só o texto usa este tom, escurecido o mínimo necessário.
+  vars["--gold-text"] = ensureContrast(accentColor, backgroundHex, 4.5);
 
   // A primária é usada em títulos e CTAs sólidos. Só sobrescreve o texto se a
   // cor for escura o bastante para manter contraste sobre o fundo claro —
-  // uma primária pastel como texto deixaria a leitura ilegível.
+  // uma primária pastel como texto deixaria a leitura ilegível. Mesmo escura, é
+  // escurecida se não alcançar 4.5:1 contra o fundo escolhido.
   if (primary && isDarkEnoughForText(primary)) {
-    vars["--foreground"] = primary;
-    vars["--primary"] = primary;
+    const readable = ensureContrast(primary, backgroundHex, 4.5);
+    vars["--foreground"] = readable;
+    vars["--primary"] = readable;
   }
 
   // A segunda cor é o fundo real da página (pedido do usuário) — antes só
@@ -61,6 +73,33 @@ export function buildStoreTheme(store: {
   if (support2) vars["--brand-support"] = support2;
 
   return vars as React.CSSProperties;
+}
+
+// Fundo padrão do catálogo (pergaminho) quando a loja não escolheu um.
+const DEFAULT_BACKGROUND_HEX = "#FAF8F5";
+
+/**
+ * Escurece a cor, mantendo o matiz, até ela ter o contraste mínimo contra o fundo. Cores que já
+ * passam ficam exatamente como estão; valores que não são hex (ex.: o dourado padrão em oklch)
+ * não são alterados.
+ */
+export function ensureContrast(hex: string, againstHex: string, minRatio: number): string {
+  const current = contrastRatio(hex, againstHex);
+  if (current === null || current >= minRatio) return hex;
+
+  const hsl = hexToHsl(hex);
+  if (!hsl) return hex;
+
+  let lightness = hsl.l;
+  let candidate = hex;
+  while (lightness > 0.05) {
+    lightness = Math.max(0.05, lightness - 0.02);
+    candidate = hslToHex({ ...hsl, l: lightness });
+    const ratio = contrastRatio(candidate, againstHex);
+    if (ratio !== null && ratio >= minRatio) return candidate;
+    if (lightness <= 0.05) break;
+  }
+  return candidate;
 }
 
 /**

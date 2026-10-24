@@ -132,7 +132,7 @@ export function ProductPurchase({
   return (
     <>
       <div className="flex flex-col gap-1">
-        <span className={cn("kicker", variable && "font-semibold tracking-[0.16em] text-[var(--gold)]")}>
+        <span className={cn("kicker", variable && "font-semibold tracking-[0.16em] text-[var(--gold-text,var(--gold))]")}>
           {priceLabel(status)}
         </span>
         <p className="flex items-baseline gap-2 text-xl">
@@ -154,7 +154,7 @@ export function ProductPurchase({
       {variable ? (
         <details className="group max-w-prose rounded-[var(--radius)] border border-[var(--gold)]/70 bg-[var(--gold)]/[0.14] px-4 py-3">
           <summary className="flex cursor-pointer list-none items-center gap-2.5 text-sm font-medium text-foreground outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)] [&::-webkit-details-marker]:hidden">
-            <InfoIcon className="size-4 shrink-0 text-[var(--gold)]" aria-hidden />
+            <InfoIcon className="size-4 shrink-0 text-[var(--gold-text,var(--gold))]" aria-hidden />
             Peça sob encomenda: o valor pode variar
             <span className="ml-auto text-xs underline underline-offset-4 group-open:hidden">Saiba mais</span>
           </summary>

@@ -29,7 +29,7 @@ export function ProductDetails({ weightKg, lengthCm, widthCm, heightCm }: Produc
 
   return (
     <details className="group border-y border-border">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-3.5 text-xs uppercase tracking-[0.16em] outline-none transition-colors hover:text-[var(--gold)] focus-visible:text-[var(--gold)] [&::-webkit-details-marker]:hidden">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-3.5 text-xs uppercase tracking-[0.16em] outline-none transition-colors hover:text-[var(--gold-text,var(--gold))] focus-visible:text-[var(--gold-text,var(--gold))] [&::-webkit-details-marker]:hidden">
         Mais detalhes
         <span
           aria-hidden
