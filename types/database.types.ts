@@ -415,6 +415,40 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["materials"]["Insert"]>;
         Relationships: [];
       };
+      /** Variações escolhidas em cada item do pedido (migration 0046): nenhuma, uma ou várias. */
+      order_item_variants: {
+        Row: {
+          id: string;
+          order_item_id: string;
+          variant_id: string | null;
+          /** Cópia do nome no dia do pedido (não muda se a variação for renomeada). */
+          name: string;
+          variant_group: string | null;
+          /** Quanto esta variação somou ao preço da peça no dia do pedido. */
+          surcharge: number;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          order_item_id: string;
+          variant_id?: string | null;
+          name: string;
+          variant_group?: string | null;
+          surcharge?: number;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["order_item_variants"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "order_item_variants_order_item_id_fkey";
+            columns: ["order_item_id"];
+            referencedRelation: "order_items";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       /** Compras de insumos (migration 0044). */
       purchases: {
         Row: {

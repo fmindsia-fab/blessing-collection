@@ -23,6 +23,12 @@ export default async function EditOrderPage({ params }: { params: Promise<{ id: 
     <div className="flex max-w-2xl flex-col gap-8">
       <BackLink href={`/admin/pedidos/${id}`}>Pedido</BackLink>
       <PageHeading kicker="Encomendas" title="Editar pedido" />
+      {result.order.stock_consumed_at ? (
+        <p role="note" className="rounded-xl border border-[var(--gold)]/40 bg-[var(--brand-soft)] px-4 py-3 text-sm">
+          Este pedido já descontou materiais do estoque. Se você trocar as peças ou as quantidades, o estoque{" "}
+          <strong>não é refeito sozinho</strong>: use <strong>Ajustar</strong> na tela de Estoque, se precisar.
+        </p>
+      ) : null}
       <OrderForm
         products={products}
         customers={customers}

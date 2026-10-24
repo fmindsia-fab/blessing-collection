@@ -7,6 +7,7 @@ import { BackLink } from "@/components/shared/back-link";
 import { ShareButton } from "@/components/shared/share-button";
 import { ThankYouCard } from "./thank-you-card";
 import { getStorePrivate } from "@/lib/store/private";
+import { describeItemVariants } from "@/lib/orders/item-variants";
 
 // Fontes fixas do cartão, independentes da fonte da marca configurada pela
 // loja: o cartão é uma peça editorial própria (pergaminho/dourado/cursiva),
@@ -54,7 +55,7 @@ export default async function OrderThankYouPage({ params }: { params: Promise<{ 
         customerName={order.customer?.name ?? "Cliente"}
         items={items.map((item) => ({
           name: item.product?.name ?? item.custom_name ?? "Item",
-          variantName: item.variant?.name ?? null,
+          variantName: describeItemVariants(item.variants),
           coverImageUrl: item.coverImageUrl,
         }))}
         couponCode={order.customer?.name ?? "Cliente"}

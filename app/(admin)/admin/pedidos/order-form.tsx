@@ -13,12 +13,23 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { NativeSelect } from "@/components/ui/native-select";
 import { FormFooter } from "@/components/admin/form-footer";
+import { groupVariants, priceWithVariants, variantSurchargeCents, type VariantOption } from "@/lib/pricing/variants";
+import { toCents, toReais } from "@/lib/pricing/money";
 
 type ProductOption = {
   id: string;
   name: string;
   price: number;
-  variants: { id: string; product_id: string; name: string; color: string | null; size: string | null; price: number | null }[];
+  variants: {
+    id: string;
+    product_id: string;
+    name: string;
+    color: string | null;
+    size: string | null;
+    price: number | null;
+    variant_group: string | null;
+    status: string;
+  }[];
 };
 
 type CustomerOption = { id: string; name: string; phone: string | null };
@@ -27,7 +38,8 @@ type PaymentMethodOption = { id: string; label: string };
 type ItemRow = {
   key: string;
   productId: string;
-  variantId: string;
+  /** Variações escolhidas (nenhuma, uma ou várias; uma de cada grupo). */
+  variantIds: string[];
   customName: string;
   customDescription: string;
   quantity: string;
@@ -38,7 +50,7 @@ function emptyItem(): ItemRow {
   return {
     key: crypto.randomUUID(),
     productId: "",
-    variantId: "",
+    variantIds: [],
     customName: "",
     customDescription: "",
     quantity: "1",
@@ -75,6 +87,8 @@ export function OrderForm({
   items?: {
     product_id: string | null;
     variant_id: string | null;
+    /** Todas as variações do item, quando já salvas. */
+    variants?: { id: string | null }[];
     custom_name: string | null;
     custom_description: string | null;
     quantity: number;
@@ -92,7 +106,9 @@ export function OrderForm({
       return initialItems.map((item) => ({
         key: crypto.randomUUID(),
         productId: item.product_id ?? "",
-        variantId: item.variant_id ?? "",
+        variantIds: (item.variants?.map((variant) => variant.id) ?? [item.variant_id]).filter(
+          (id): id is string => Boolean(id),
+        ),
         customName: item.custom_name ?? "",
         customDescription: item.custom_description ?? "",
         quantity: String(item.quantity),
@@ -120,18 +136,25 @@ export function OrderForm({
     const product = products.find((p) => p.id === productId);
     updateItem(key, {
       productId,
-      variantId: "",
+      variantIds: [],
       unitPrice: product ? String(product.price) : "",
     });
   }
 
-  function selectVariant(key: string, item: ItemRow, variantId: string) {
+  // Escolhe (ou tira) a variação de UM grupo, mantendo as dos outros grupos, e recalcula o preço do
+  // item: preço da peça + o acréscimo de cada variação (mesma conta do catálogo). O preço continua
+  // editável depois.
+  function chooseVariant(key: string, item: ItemRow, groupVariantIds: string[], variantId: string) {
     const product = products.find((p) => p.id === item.productId);
-    const variant = product?.variants.find((v) => v.id === variantId);
-    updateItem(key, {
-      variantId,
-      unitPrice: variant?.price != null ? String(variant.price) : item.unitPrice,
-    });
+    if (!product) return;
+
+    const kept = item.variantIds.filter((id) => !groupVariantIds.includes(id));
+    const variantIds = variantId ? [...kept, variantId] : kept;
+
+    const selected = product.variants.filter((variant) => variantIds.includes(variant.id)) as VariantOption[];
+    const price = toReais(priceWithVariants(toCents(product.price), selected));
+
+    updateItem(key, { variantIds, unitPrice: String(price) });
   }
 
   return (
@@ -239,26 +262,47 @@ export function OrderForm({
                   </button>
                 </div>
 
+                {/* Variações: nenhuma, uma ou várias, uma opção de cada grupo (como a cliente escolhe no
+                    catálogo). Escolher recalcula o preço do item; o preço continua editável. */}
+                <input type="hidden" name={`items[${index}].variantIds`} value={item.variantIds.join(",")} />
                 {!isCustom && product && product.variants.length > 0 ? (
-                  <NativeSelect
-                    name={`items[${index}].variantId`}
-                    value={item.variantId}
-                    onChange={(e) => selectVariant(item.key, item, e.target.value)}
-                    aria-label="Variação"
-                    className="mt-3"
-                  >
-                    <option value="">Sem variação específica</option>
-                    {product.variants.map((v) => (
-                      <option key={v.id} value={v.id}>
-                        {v.name}
-                        {v.color ? ` — ${v.color}` : ""}
-                        {v.size ? ` — ${v.size}` : ""}
-                      </option>
-                    ))}
-                  </NativeSelect>
-                ) : (
-                  <input type="hidden" name={`items[${index}].variantId`} value="" />
-                )}
+                  <fieldset className="mt-3 flex flex-col gap-3 rounded-xl bg-secondary/40 p-3">
+                    <legend className="px-1 text-sm font-semibold">Variações escolhidas (opcional)</legend>
+                    {groupVariants(product.variants as VariantOption[]).map((group, groupIndex) => {
+                      const groupIds = group.options.map((option) => option.id);
+                      const chosenId = item.variantIds.find((id) => groupIds.includes(id)) ?? "";
+                      const selectId = `variant-${item.key}-${groupIndex}`;
+
+                      return (
+                        <div key={group.name} className="flex flex-col gap-1.5">
+                          <Label htmlFor={selectId} className="text-sm font-medium">
+                            {group.name}
+                          </Label>
+                          <NativeSelect
+                            id={selectId}
+                            value={chosenId}
+                            onChange={(e) => chooseVariant(item.key, item, groupIds, e.target.value)}
+                          >
+                            <option value="">Nenhuma</option>
+                            {group.options.map((option) => {
+                              const surcharge = variantSurchargeCents(option, toCents(product.price));
+                              return (
+                                <option key={option.id} value={option.id}>
+                                  {option.name}
+                                  {surcharge > 0 ? ` (+${formatBRL(toReais(surcharge))})` : ""}
+                                  {option.status === "sold_out" ? " — esgotada" : ""}
+                                </option>
+                              );
+                            })}
+                          </NativeSelect>
+                        </div>
+                      );
+                    })}
+                    <p className="text-sm text-muted-foreground">
+                      O preço do item soma o acréscimo de cada variação escolhida. Você pode ajustar o valor abaixo.
+                    </p>
+                  </fieldset>
+                ) : null}
 
                 {isCustom ? (
                   <div className="mt-3 grid gap-3">

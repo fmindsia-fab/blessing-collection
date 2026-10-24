@@ -96,7 +96,7 @@ export async function listProductsForOrderPicker(storeId: string) {
 
   const { data: variants } = await supabase
     .from("product_variants")
-    .select("id, product_id, name, color, size, price")
+    .select("id, product_id, name, color, size, price, variant_group, status")
     .in(
       "product_id",
       products.map((p) => p.id),
@@ -216,18 +216,36 @@ export async function getOrder(storeId: string, orderId: string) {
   const { data: items, error: itemsError } = await supabase
     .from("order_items")
     .select(
-      "id, product_id, variant_id, custom_name, custom_description, quantity, unit_price, sort_order, product:products(id, name), variant:product_variants(id, name, color, size)",
+      "id, product_id, variant_id, custom_name, custom_description, quantity, unit_price, sort_order, product:products(id, name), variant:product_variants(id, name, color, size), item_variants:order_item_variants(id, variant_id, name, variant_group, surcharge, sort_order)",
     )
     .eq("order_id", orderId)
     .order("sort_order", { ascending: true });
 
   if (itemsError) console.error("getOrder (itens) falhou:", itemsError.message);
 
-  const resolvedItems = (items ?? []).map((item) => ({
-    ...item,
-    product: Array.isArray(item.product) ? (item.product[0] ?? null) : item.product,
-    variant: Array.isArray(item.variant) ? (item.variant[0] ?? null) : item.variant,
-  }));
+  const resolvedItems = (items ?? []).map((item) => {
+    const legacyVariant = Array.isArray(item.variant) ? (item.variant[0] ?? null) : item.variant;
+    const saved = [...(item.item_variants ?? [])].sort((a, b) => a.sort_order - b.sort_order);
+
+    return {
+      ...item,
+      product: Array.isArray(item.product) ? (item.product[0] ?? null) : item.product,
+      variant: legacyVariant,
+      // Todas as variações do item (nenhuma, uma ou várias). Pedido antigo sem linhas na tabela nova
+      // cai na variação única que ele já tinha.
+      variants:
+        saved.length > 0
+          ? saved.map((variant) => ({
+              id: variant.variant_id,
+              name: variant.name,
+              variantGroup: variant.variant_group,
+              surcharge: Number(variant.surcharge),
+            }))
+          : legacyVariant
+            ? [{ id: legacyVariant.id as string | null, name: legacyVariant.name, variantGroup: null as string | null, surcharge: 0 }]
+            : [],
+    };
+  });
 
   const productIds = [...new Set(resolvedItems.map((item) => item.product?.id).filter((id): id is string => Boolean(id)))];
   const { data: covers } =

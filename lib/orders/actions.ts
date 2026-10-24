@@ -8,6 +8,12 @@ import { getActiveStore } from "@/lib/store/get-active-store";
 import { calculateOrderTotal } from "@/lib/orders/calculate";
 import type { OrderStatus } from "@/types/database.types";
 import { getNotOwnerError } from "@/lib/store/ownership";
+import {
+  buildItemVariantRows,
+  parseVariantIds,
+  type ItemVariantRow,
+  type VariantRecord,
+} from "@/lib/orders/item-variants";
 
 export type OrderFormState = {
   error?: string;
@@ -27,7 +33,13 @@ const optionalDate = z
 
 const itemSchema = z.object({
   productId: z.string().uuid().optional().or(z.literal("")),
-  variantId: z.string().uuid().optional().or(z.literal("")),
+  // Ids separados por vírgula: nenhuma, uma ou várias variações (uma de cada grupo).
+  variantIds: z
+    .string()
+    .optional()
+    .default("")
+    .transform((value) => parseVariantIds(value))
+    .pipe(z.array(z.string().uuid("Variação inválida.")).max(12, "Variações demais num item.")),
   customName: z.string().trim().max(120).optional().default(""),
   customDescription: z.string().trim().max(2000).optional().default(""),
   quantity: z.coerce.number().positive("A quantidade precisa ser maior que zero").max(9_999),
@@ -55,7 +67,7 @@ function parseItemsFromFormData(formData: FormData) {
   for (let i = 0; i < count; i++) {
     items.push({
       productId: formData.get(`items[${i}].productId`) ?? "",
-      variantId: formData.get(`items[${i}].variantId`) ?? "",
+      variantIds: formData.get(`items[${i}].variantIds`) ?? "",
       customName: formData.get(`items[${i}].customName`) ?? "",
       customDescription: formData.get(`items[${i}].customDescription`) ?? "",
       quantity: formData.get(`items[${i}].quantity`) ?? "1",
@@ -96,6 +108,91 @@ async function assertCustomerBelongsToStore(
   return data !== null;
 }
 
+type ParsedItem = z.infer<typeof itemSchema>;
+
+/**
+ * Confere, antes de gravar, que as peças do pedido são da loja e que as variações escolhidas
+ * existem, são da peça e não repetem grupo. Devolve as linhas de variação de cada item (na mesma
+ * ordem dos itens).
+ */
+async function prepareItems(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  storeId: string,
+  items: ParsedItem[],
+): Promise<{ rowsByItem: ItemVariantRow[][] } | { error: string }> {
+  const productIds = [...new Set(items.map((item) => item.productId).filter((id): id is string => Boolean(id)))];
+
+  const prices = new Map<string, number>();
+  if (productIds.length > 0) {
+    const { data } = await supabase.from("products").select("id, price").eq("store_id", storeId).in("id", productIds);
+    for (const product of data ?? []) prices.set(product.id, Number(product.price));
+    if (prices.size !== productIds.length) return { error: "Uma das peças do pedido não foi encontrada." };
+  }
+
+  const variantIds = [...new Set(items.flatMap((item) => item.variantIds))];
+  const records = new Map<string, VariantRecord>();
+  if (variantIds.length > 0) {
+    const { data } = await supabase
+      .from("product_variants")
+      .select("id, product_id, name, variant_group, price, status")
+      .in("id", variantIds);
+    for (const variant of data ?? []) {
+      records.set(variant.id, { ...variant, price: variant.price === null ? null : Number(variant.price) });
+    }
+  }
+
+  const rowsByItem: ItemVariantRow[][] = [];
+  for (const item of items) {
+    if (!item.productId) {
+      if (item.variantIds.length > 0) return { error: "Item avulso não tem variações do catálogo." };
+      rowsByItem.push([]);
+      continue;
+    }
+    const built = buildItemVariantRows(prices.get(item.productId) ?? 0, item.variantIds, records, item.productId);
+    if ("error" in built) return built;
+    rowsByItem.push(built.rows);
+  }
+
+  return { rowsByItem };
+}
+
+/** Grava os itens do pedido e as variações de cada um. Devolve a mensagem de erro, ou null se deu certo. */
+async function saveOrderItems(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  orderId: string,
+  items: ParsedItem[],
+  rowsByItem: ItemVariantRow[][],
+): Promise<string | null> {
+  const { data: inserted, error } = await supabase
+    .from("order_items")
+    .insert(
+      items.map((item, index) => ({
+        order_id: orderId,
+        product_id: item.productId || null,
+        // Compatibilidade: a coluna antiga guarda a primeira variação; a lista completa fica em order_item_variants.
+        variant_id: rowsByItem[index]?.[0]?.variant_id ?? null,
+        custom_name: item.productId ? null : item.customName.trim(),
+        custom_description: item.productId ? null : item.customDescription.trim() || null,
+        quantity: item.quantity,
+        unit_price: item.unitPrice,
+        sort_order: index,
+      })),
+    )
+    .select("id, sort_order");
+
+  if (error || !inserted) return error?.message ?? "sem itens gravados";
+
+  const variantRows = inserted.flatMap((row) =>
+    (rowsByItem[row.sort_order] ?? []).map((variant) => ({ order_item_id: row.id, ...variant })),
+  );
+  if (variantRows.length > 0) {
+    const { error: variantsError } = await supabase.from("order_item_variants").insert(variantRows);
+    if (variantsError) return variantsError.message;
+  }
+
+  return null;
+}
+
 export async function createOrder(
   _prevState: OrderFormState,
   formData: FormData,
@@ -120,6 +217,9 @@ export async function createOrder(
   if (!(await assertCustomerBelongsToStore(supabase, store.id, data.customerId))) {
     return { error: "Cliente não encontrada." };
   }
+
+  const prepared = await prepareItems(supabase, store.id, data.items);
+  if ("error" in prepared) return { error: prepared.error };
 
   const totalAmount = calculateOrderTotal(data.items);
 
@@ -148,21 +248,10 @@ export async function createOrder(
     return { error: "Não foi possível criar o pedido." };
   }
 
-  const { error: itemsError } = await supabase.from("order_items").insert(
-    data.items.map((item, index) => ({
-      order_id: order.id,
-      product_id: item.productId || null,
-      variant_id: item.variantId || null,
-      custom_name: item.productId ? null : item.customName.trim(),
-      custom_description: item.productId ? null : item.customDescription.trim() || null,
-      quantity: item.quantity,
-      unit_price: item.unitPrice,
-      sort_order: index,
-    })),
-  );
+  const itemsError = await saveOrderItems(supabase, order.id, data.items, prepared.rowsByItem);
 
   if (itemsError) {
-    console.error("createOrder (itens) falhou:", itemsError.message);
+    console.error("createOrder (itens) falhou:", itemsError);
     // Sem itens, o pedido fica órfão — melhor desfazer do que deixar um
     // registro inconsistente no painel.
     await supabase.from("orders").delete().eq("id", order.id).eq("store_id", store.id);
@@ -206,6 +295,9 @@ export async function updateOrder(
     return { error: "Cliente não encontrada." };
   }
 
+  const prepared = await prepareItems(supabase, store.id, data.items);
+  if ("error" in prepared) return { error: prepared.error };
+
   const totalAmount = calculateOrderTotal(data.items);
 
   const { error } = await supabase
@@ -232,20 +324,12 @@ export async function updateOrder(
   // Reescreve todos os itens: mais simples e seguro que diffar item a item
   // num formulário onde linhas podem ser adicionadas/removidas livremente.
   await supabase.from("order_items").delete().eq("order_id", orderId);
-  const { error: itemsError } = await supabase.from("order_items").insert(
-    data.items.map((item, index) => ({
-      order_id: orderId,
-      product_id: item.productId || null,
-      variant_id: item.variantId || null,
-      custom_name: item.productId ? null : item.customName.trim(),
-      custom_description: item.productId ? null : item.customDescription.trim() || null,
-      quantity: item.quantity,
-      unit_price: item.unitPrice,
-      sort_order: index,
-    })),
-  );
+  const itemsError = await saveOrderItems(supabase, orderId, data.items, prepared.rowsByItem);
 
-  if (itemsError) return { error: "Não foi possível salvar os itens do pedido." };
+  if (itemsError) {
+    console.error("updateOrder (itens) falhou:", itemsError);
+    return { error: "Não foi possível salvar os itens do pedido." };
+  }
 
   revalidatePath("/admin/pedidos");
   revalidatePath(`/admin/pedidos/${orderId}`);

@@ -12,6 +12,7 @@ import { InvoiceButton } from "./invoice-button";
 import { getStorePrivate } from "@/lib/store/private";
 import { OrderCostSection } from "./order-cost-section"
 import { StatusPill } from "@/components/admin/status-pill";
+import { describeItemVariants } from "@/lib/orders/item-variants";
 
 function PaymentCard({ label, amount, paidAt }: { label: string; amount: string; paidAt: string | null }) {
   return (
@@ -112,7 +113,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 <div className="flex min-w-0 flex-col">
                   <span className="truncate text-sm">
                     {item.product?.name ?? item.custom_name}
-                    {item.variant ? ` — ${item.variant.name}` : ""}
+                    {describeItemVariants(item.variants) ? ` — ${describeItemVariants(item.variants)}` : ""}
                   </span>
                   {item.custom_description ? (
                     <span className="text-xs text-muted-foreground">{item.custom_description}</span>
