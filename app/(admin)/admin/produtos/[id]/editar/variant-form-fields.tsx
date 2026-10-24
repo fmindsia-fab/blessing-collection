@@ -33,6 +33,7 @@ export function VariantFormFields({
   basePrice,
   defaults,
   showHints = false,
+  groupMultiple = {},
 }: {
   idPrefix: string;
   groupOptions: string[];
@@ -40,13 +41,16 @@ export function VariantFormFields({
   materials: CatalogMaterial[];
   /** Preço base da peça, somado ao do material escolhido. */
   basePrice: number;
-  defaults: { name: string; group: string; colorId: string; price: string; isRequired: boolean };
+  defaults: { name: string; group: string; colorId: string; price: string; isRequired: boolean; allowMultiple: boolean };
   showHints?: boolean;
+  /** Por nome de grupo: o grupo já aceita mais de uma escolha (para o campo vir marcado ao escolher esse grupo). */
+  groupMultiple?: Record<string, boolean>;
 }) {
   const [name, setName] = useState(defaults.name);
   const [price, setPrice] = useState(defaults.price);
   const [group, setGroup] = useState(defaults.group);
   const [materialId, setMaterialId] = useState("");
+  const [allowMultiple, setAllowMultiple] = useState(defaults.allowMultiple);
   // Só troca nome/preço sozinho enquanto foram preenchidos pela lista (nunca por cima do que a pessoa digitou).
   const [nameFromMaterial, setNameFromMaterial] = useState(false);
   const [priceFromMaterial, setPriceFromMaterial] = useState(false);
@@ -101,6 +105,8 @@ export function VariantFormFields({
           onValueChange={(value) => {
             setGroup(value);
             setMaterialId("");
+            // Trocar de grupo traz a regra daquele grupo (ex.: Alça já aceita duas escolhas).
+            setAllowMultiple(groupMultiple[value] ?? false);
           }}
         />
         {showHints ? (
@@ -127,6 +133,24 @@ export function VariantFormFields({
             obrigatórias desta variação para comprar a peça (ex.: o tipo de alça da bolsa). Deixe desmarcado para
             um <strong className="text-foreground">complemento</strong>, que ela escolhe só se quiser (ex.: um tiracolo
             extra).
+          </span>
+        </span>
+      </label>
+
+      <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-card px-4 py-3 sm:col-span-2">
+        <input
+          type="checkbox"
+          name="allowMultiple"
+          checked={allowMultiple}
+          onChange={(event) => setAllowMultiple(event.target.checked)}
+          className="mt-1 size-5 shrink-0 accent-[var(--gold)]"
+        />
+        <span className="flex flex-col gap-0.5">
+          <span className="text-sm font-semibold">Pode escolher mais de uma</span>
+          <span className="text-sm text-muted-foreground">
+            Marque quando a cliente pode levar <strong className="text-foreground">duas ou mais</strong> opções deste grupo
+            (ex.: duas alças). Vale para todas as opções do grupo{group ? ` "${group}"` : ""}. Deixe desmarcado
+            quando só faz sentido uma (ex.: cor).
           </span>
         </span>
       </label>

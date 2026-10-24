@@ -22,6 +22,8 @@ const variantSchema = z.object({
   // Escolha obrigatória: a cliente precisa escolher uma das obrigatórias do grupo (migration 0047).
   // Desmarcado = complemento, opcional.
   isRequired: z.boolean().default(false),
+  // A cliente pode escolher mais de uma opção deste grupo (migration 0048). Vale para o grupo todo.
+  allowMultiple: z.boolean().default(false),
   status: z.enum(["available", "sold_out"]),
 });
 
@@ -68,6 +70,25 @@ async function colorBelongsToStore(
   return data !== null;
 }
 
+// "Pode escolher mais de uma opção" vale para o GRUPO inteiro da peça (todas as alças, por exemplo):
+// ao salvar uma variação, a escolha é copiada para as outras do mesmo grupo, para nunca ficarem
+// desencontradas (uma alça aceitando duas escolhas e outra não).
+async function syncGroupMultiple(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  productId: string,
+  group: string | null,
+  value: boolean,
+) {
+  let query = supabase
+    .from("product_variants")
+    .update({ allow_multiple: value })
+    .eq("product_id", productId)
+    .neq("status", "archived");
+  query = group ? query.eq("variant_group", group) : query.is("variant_group", null);
+  const { error } = await query;
+  if (error) console.error("[variantes] sincronizar 'pode escolher mais de uma'", error.message);
+}
+
 export async function createVariant(
   productId: string,
   _prevState: VariantFormState,
@@ -82,6 +103,7 @@ export async function createVariant(
     size: formData.get("size") ?? "",
     price: formData.get("price") || undefined,
     isRequired: formData.get("isRequired") === "on",
+    allowMultiple: formData.get("allowMultiple") === "on",
     status: formData.get("status"),
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -106,10 +128,13 @@ export async function createVariant(
     size: parsed.data.size || null,
     price: parsed.data.price || null,
     is_required: parsed.data.isRequired,
+    allow_multiple: parsed.data.allowMultiple,
     status: parsed.data.status,
   });
 
   if (error) return { error: "Não foi possível adicionar a variação." };
+
+  await syncGroupMultiple(supabase, productId, parsed.data.variantGroup || null, parsed.data.allowMultiple);
 
   revalidatePath(`/admin/produtos/${productId}/editar`);
   return {};
@@ -139,6 +164,7 @@ export async function updateVariant(
     size: formData.get("size") ?? "",
     price: formData.get("price") || undefined,
     isRequired: formData.get("isRequired") === "on",
+    allowMultiple: formData.get("allowMultiple") === "on",
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
@@ -163,6 +189,7 @@ export async function updateVariant(
       size: parsed.data.size || null,
       price: parsed.data.price || null,
       is_required: parsed.data.isRequired,
+      allow_multiple: parsed.data.allowMultiple,
     })
     .eq("id", variantId)
     // Ancora no produto já validado: sem isto, um id de variação de outra loja
@@ -170,6 +197,8 @@ export async function updateVariant(
     .eq("product_id", productId);
 
   if (error) return { error: "Não foi possível salvar a variação." };
+
+  await syncGroupMultiple(supabase, productId, parsed.data.variantGroup || null, parsed.data.allowMultiple);
 
   revalidatePath(`/admin/produtos/${productId}/editar`);
   revalidatePath("/produtos");

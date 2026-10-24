@@ -62,14 +62,15 @@ export function ProductPurchase({
   coverImageUrl,
   paymentMethods,
 }: Props) {
-  // Uma entrada por conjunto de escolha (chave do grupo): {"Cor::complemento": "id-marrom", "Alça::obrigatoria": "id-metal"}.
-  const [chosen, setChosen] = useState<Record<string, string>>({});
+  // Opções escolhidas por conjunto (chave do grupo): {"Cor::complemento": ["id-marrom"], "Alça::obrigatoria": ["id-metal", "id-duo"]}.
+  // A maioria dos grupos aceita uma só; os marcados "pode escolher mais de uma" (ex.: alças) aceitam várias.
+  const [chosen, setChosen] = useState<Record<string, string[]>>({});
 
   const groups = groupVariants(variants);
   const basePriceCents = toCents(basePrice);
 
   const selected = groups
-    .map((group) => group.options.find((option) => option.id === chosen[group.key]))
+    .flatMap((group) => group.options.filter((option) => (chosen[group.key] ?? []).includes(option.id)))
     .filter((option): option is VariantOption => option != null);
 
   const currentCents = priceWithVariants(basePriceCents, selected);
@@ -78,7 +79,7 @@ export function ProductPurchase({
   // ainda pode subir — daí o "a partir de".
   const pendingPricedGroup = groups.some(
     (group) =>
-      !chosen[group.key] &&
+      (chosen[group.key]?.length ?? 0) === 0 &&
       group.options.some((option) => variantSurchargeCents(option, basePriceCents) > 0),
   );
 
@@ -119,17 +120,25 @@ export function ProductPurchase({
 
   const showStickyBar = !actionsVisible && !footerVisible;
 
-  function choose(groupKey: string, optionId: string, required: boolean) {
+  function choose(groupKey: string, optionId: string, required: boolean, multiple: boolean) {
     setChosen((current) => {
-      // Clicar na opção ativa desmarca, para a cliente voltar atrás sem recarregar a página.
+      const list = current[groupKey] ?? [];
+
+      // Grupo que aceita várias escolhas (ex.: duas alças): clicar liga ou desliga aquela opção.
+      if (multiple) {
+        const next = list.includes(optionId) ? list.filter((id) => id !== optionId) : [...list, optionId];
+        return { ...current, [groupKey]: next };
+      }
+
+      // Uma só: clicar na opção ativa desmarca, para a cliente voltar atrás sem recarregar a página.
       // Na escolha obrigatória não desmarca: só troca por outra opção.
-      if (current[groupKey] === optionId) {
+      if (list[0] === optionId) {
         if (required) return current;
         const rest = { ...current };
         delete rest[groupKey];
         return rest;
       }
-      return { ...current, [groupKey]: optionId };
+      return { ...current, [groupKey]: [optionId] };
     });
   }
 
@@ -173,7 +182,11 @@ export function ProductPurchase({
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 <span className="kicker">{group.label}</span>
                 {group.required ? (
-                  <span className="text-xs font-medium text-[var(--gold-text,var(--gold))]">Escolha uma opção</span>
+                  <span className="text-xs font-medium text-[var(--gold-text,var(--gold))]">
+                    {group.multiple ? "Escolha ao menos uma (pode mais de uma)" : "Escolha uma opção"}
+                  </span>
+                ) : group.multiple ? (
+                  <span className="text-xs text-muted-foreground">Pode escolher mais de uma</span>
                 ) : group.label.endsWith("complementos") ? (
                   <span className="text-xs text-muted-foreground">Opcional</span>
                 ) : null}
@@ -181,7 +194,7 @@ export function ProductPurchase({
               <div className="flex flex-wrap gap-2">
                 {group.options.map((option) => {
                   const soldOut = option.status === "sold_out";
-                  const isActive = chosen[group.key] === option.id;
+                  const isActive = (chosen[group.key] ?? []).includes(option.id);
 
                   return (
                     <button
@@ -189,7 +202,7 @@ export function ProductPurchase({
                       type="button"
                       disabled={soldOut}
                       aria-pressed={isActive}
-                      onClick={() => choose(group.key, option.id, group.required)}
+                      onClick={() => choose(group.key, option.id, group.required, group.multiple)}
                       className={cn(
                         "inline-flex items-baseline gap-1.5 rounded-full border px-4 py-2 text-xs tracking-wide outline-none transition-all duration-300 focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                         soldOut

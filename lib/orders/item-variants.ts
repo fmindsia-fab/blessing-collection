@@ -10,6 +10,8 @@ export type VariantRecord = {
   status: string;
   /** Escolha obrigatória (conjunto separado dos complementos do mesmo grupo). */
   is_required?: boolean;
+  /** O grupo aceita mais de uma escolha (duas alças): então não vale a regra de uma por conjunto. */
+  allow_multiple?: boolean;
 };
 
 export type ItemVariantRow = {
@@ -34,7 +36,8 @@ export function parseVariantIds(raw: string | null | undefined): string[] {
  *
  * Regras (as mesmas do catálogo): toda variação precisa ser da peça do item e não estar
  * arquivada; só uma opção por conjunto (alça obrigatória OU outra alça obrigatória, não as duas;
- * um complemento do mesmo grupo pode vir junto). O acréscimo é a diferença
+ * um complemento do mesmo grupo pode vir junto), exceto nos grupos que aceitam mais de uma
+ * escolha ("pode escolher mais de uma", ex.: duas alças). O acréscimo é a diferença
  * do preço da variação para o preço base da peça, nunca negativo, em reais com 2 casas.
  */
 export function buildItemVariantRows(
@@ -55,7 +58,7 @@ export function buildItemVariantRows(
     const group = record.variant_group?.trim() || DEFAULT_GROUP;
     // Obrigatórias e complementos do mesmo grupo são conjuntos separados: pode uma de cada.
     const setKey = `${group}::${record.is_required ? "obrigatoria" : "complemento"}`;
-    if (groupsSeen.has(setKey)) {
+    if (groupsSeen.has(setKey) && !record.allow_multiple) {
       return { error: `Escolha só uma opção de "${group}${record.is_required ? "" : " (complementos)"}" por item.` };
     }
     groupsSeen.add(setKey);

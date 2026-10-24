@@ -148,13 +148,38 @@ describe("escolha obrigatória e complementos", () => {
     const grupos = groupVariants(alcas);
     expect(missingRequiredGroups(grupos, {}).map((g) => g.name)).toEqual(["Alça"]);
 
-    const escolhida = { [grupos[0].key]: "Alça Metal" };
+    const escolhida = { [grupos[0].key]: ["Alça Metal"] };
     expect(missingRequiredGroups(grupos, escolhida)).toEqual([]);
   });
 
   it("obrigatória com todas as opções esgotadas não trava a compra", () => {
     const grupos = groupVariants([required("Alça Metal", 409.9, "Alça"), required("Alça Madeira", 450, "Alça")].map((v) => ({ ...v, status: "sold_out" })));
     expect(missingRequiredGroups(grupos, {})).toEqual([]);
+  });
+});
+
+describe("grupo que aceita mais de uma escolha", () => {
+  const multi = (name: string, group: string, price: number | null = null): VariantOption => ({
+    ...variant(name, price, group),
+    allow_multiple: true,
+  });
+
+  it("marca como múltiplo só o conjunto cujas variações têm a opção ligada", () => {
+    const grupos = groupVariants([multi("Alça Tiracolo", "Alça", 475), multi("Alça Duo", "Alça", 519), variant("Marrom", null, "Cor")]);
+
+    expect(grupos.find((g) => g.name === "Alça")?.multiple).toBe(true);
+    expect(grupos.find((g) => g.name === "Cor")?.multiple).toBe(false);
+  });
+
+  it("obrigatória e múltipla pede ao menos uma escolha", () => {
+    const grupos = groupVariants([
+      { ...required("Alça Metal", 409.9), allow_multiple: true },
+      { ...required("Alça Madeira", 450), allow_multiple: true },
+    ]);
+
+    expect(grupos[0].required && grupos[0].multiple).toBe(true);
+    expect(missingRequiredGroups(grupos, {}).length).toBe(1);
+    expect(missingRequiredGroups(grupos, { [grupos[0].key]: ["Alça Metal", "Alça Madeira"] })).toEqual([]);
   });
 });
 

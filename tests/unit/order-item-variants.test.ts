@@ -110,3 +110,24 @@ describe("obrigatórias e complementos do mesmo grupo", () => {
     expect("error" in twoOptional && twoOptional.error).toContain("complementos");
   });
 });
+
+describe("grupo que aceita mais de uma escolha", () => {
+  const multi = new Map<string, VariantRecord>(
+    [
+      record("tiracolo", "Alça", 475, { allow_multiple: true }),
+      record("duo", "Alça", 519, { allow_multiple: true }),
+      record("cor1", "Cor", null),
+      record("cor2", "Cor", null),
+    ].map((r) => [r.id, r]),
+  );
+
+  it("aceita duas alças quando o grupo permite", () => {
+    const result = buildItemVariantRows(409.9, ["tiracolo", "duo"], multi, PRODUCT);
+    expect("rows" in result && result.rows.length).toBe(2);
+  });
+
+  it("continua recusando duas opções de um grupo que não permite (cor)", () => {
+    expect("error" in buildItemVariantRows(409.9, ["cor1", "cor2"], multi, PRODUCT)).toBe(true);
+  });
+});
+

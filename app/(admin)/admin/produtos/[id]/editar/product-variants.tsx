@@ -36,6 +36,12 @@ export function ProductVariants({
   // repetir. O catálogo é a fonte principal (pedido do usuário: gerenciar os
   // grupos numa tela própria); os já usados na peça cobrem um grupo digitado
   // antes de existir uma tela de catálogo, ou já arquivado nela.
+  // Por nome de grupo: algum variação do grupo aceita mais de uma escolha.
+  const groupMultiple: Record<string, boolean> = {};
+  for (const variant of variants) {
+    if (variant.variant_group && variant.allow_multiple) groupMultiple[variant.variant_group] = true;
+  }
+
   const existingGroups = [
     ...new Set([
       ...catalogGroups,
@@ -61,6 +67,7 @@ export function ProductVariants({
               groups={existingGroups}
               materials={catalogMaterials}
               basePrice={basePrice}
+              groupMultiple={groupMultiple}
             />
           ))}
         </div>
@@ -74,7 +81,8 @@ export function ProductVariants({
           colors={colors}
           materials={catalogMaterials}
           basePrice={basePrice}
-          defaults={{ name: "", group: "Cor", colorId: "", price: "", isRequired: false }}
+          defaults={{ name: "", group: "Cor", colorId: "", price: "", isRequired: false, allowMultiple: groupMultiple["Cor"] ?? false }}
+          groupMultiple={groupMultiple}
           showHints
         />
         <input type="hidden" name="status" value="available" />

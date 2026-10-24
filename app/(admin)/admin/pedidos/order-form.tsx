@@ -36,6 +36,7 @@ type ProductOption = {
     variant_group: string | null;
     status: string;
     is_required: boolean;
+    allow_multiple: boolean;
   }[];
 };
 
@@ -151,17 +152,26 @@ export function OrderForm({
   // Escolhe (ou tira) a variação de UM grupo, mantendo as dos outros grupos, e recalcula o preço do
   // item: preço da peça + o acréscimo de cada variação (mesma conta do catálogo). O preço continua
   // editável depois.
-  function chooseVariant(key: string, item: ItemRow, groupVariantIds: string[], variantId: string) {
-    const product = products.find((p) => p.id === item.productId);
+  function applyVariantIds(key: string, productId: string, variantIds: string[]) {
+    const product = products.find((p) => p.id === productId);
     if (!product) return;
-
-    const kept = item.variantIds.filter((id) => !groupVariantIds.includes(id));
-    const variantIds = variantId ? [...kept, variantId] : kept;
 
     const selected = product.variants.filter((variant) => variantIds.includes(variant.id)) as VariantOption[];
     const price = toReais(priceWithVariants(toCents(product.price), selected));
 
     updateItem(key, { variantIds, unitPrice: String(price) });
+  }
+
+  // Grupo de uma escolha só: troca a opção (ou tira, escolhendo "Nenhuma"), mantendo os outros grupos.
+  function chooseVariant(key: string, item: ItemRow, groupVariantIds: string[], variantId: string) {
+    const kept = item.variantIds.filter((id) => !groupVariantIds.includes(id));
+    applyVariantIds(key, item.productId, variantId ? [...kept, variantId] : kept);
+  }
+
+  // Grupo que aceita várias escolhas (ex.: duas alças): liga ou desliga uma opção.
+  function toggleVariant(key: string, item: ItemRow, variantId: string, checked: boolean) {
+    const without = item.variantIds.filter((id) => id !== variantId);
+    applyVariantIds(key, item.productId, checked ? [...without, variantId] : without);
   }
 
   return (
@@ -280,39 +290,65 @@ export function OrderForm({
                       const chosenId = item.variantIds.find((id) => groupIds.includes(id)) ?? "";
                       const selectId = `variant-${item.key}-${groupIndex}`;
 
+                      const optionLabel = (option: (typeof group.options)[number]) => {
+                        const surcharge = variantSurchargeCents(option, toCents(product.price));
+                        return `${option.name}${surcharge > 0 ? ` (+${formatBRL(toReais(surcharge))})` : ""}${
+                          option.status === "sold_out" ? " — esgotada" : ""
+                        }`;
+                      };
+
                       return (
                         <div key={group.key} className="flex flex-col gap-1.5">
-                          <Label htmlFor={selectId} className="text-sm font-medium">
+                          <Label htmlFor={group.multiple ? undefined : selectId} className="text-sm font-medium">
                             {group.label}
                             {group.required ? (
                               <span className="font-normal text-muted-foreground"> · escolha obrigatória</span>
                             ) : null}
+                            {group.multiple ? (
+                              <span className="font-normal text-muted-foreground"> · pode escolher mais de uma</span>
+                            ) : null}
                           </Label>
-                          <NativeSelect
-                            id={selectId}
-                            value={chosenId}
-                            onChange={(e) => chooseVariant(item.key, item, groupIds, e.target.value)}
-                          >
-                            <option value="">{group.required ? "Escolha uma opção…" : "Nenhuma"}</option>
-                            {group.options.map((option) => {
-                              const surcharge = variantSurchargeCents(option, toCents(product.price));
-                              return (
+
+                          {group.multiple ? (
+                            <div className="flex flex-col gap-1.5" role="group" aria-label={group.label}>
+                              {group.options.map((option) => (
+                                <label
+                                  key={option.id}
+                                  className="flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 text-sm"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={item.variantIds.includes(option.id)}
+                                    onChange={(e) => toggleVariant(item.key, item, option.id, e.target.checked)}
+                                    className="size-5 shrink-0 accent-[var(--gold)]"
+                                  />
+                                  <span>{optionLabel(option)}</span>
+                                </label>
+                              ))}
+                            </div>
+                          ) : (
+                            <NativeSelect
+                              id={selectId}
+                              value={chosenId}
+                              onChange={(e) => chooseVariant(item.key, item, groupIds, e.target.value)}
+                            >
+                              <option value="">{group.required ? "Escolha uma opção…" : "Nenhuma"}</option>
+                              {group.options.map((option) => (
                                 <option key={option.id} value={option.id}>
-                                  {option.name}
-                                  {surcharge > 0 ? ` (+${formatBRL(toReais(surcharge))})` : ""}
-                                  {option.status === "sold_out" ? " — esgotada" : ""}
+                                  {optionLabel(option)}
                                 </option>
-                              );
-                            })}
-                          </NativeSelect>
+                              ))}
+                            </NativeSelect>
+                          )}
                         </div>
                       );
                     })}
                     {(() => {
-                      const chosenByKey: Record<string, string> = {};
+                      const chosenByKey: Record<string, string[]> = {};
                       for (const group of groupVariants(product.variants as VariantOption[])) {
-                        const id = item.variantIds.find((candidate) => group.options.some((option) => option.id === candidate));
-                        if (id) chosenByKey[group.key] = id;
+                        chosenByKey[group.key] = item.variantIds.filter((candidate) =>
+                          group.options.some((option) => option.id === candidate),
+                        );
                       }
                       const missing = missingRequiredGroups(
                         groupVariants(product.variants as VariantOption[]),

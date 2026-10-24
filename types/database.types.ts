@@ -844,6 +844,8 @@ export interface Database {
           status: VariantStatus;
           /** Escolha obrigatória (migration 0047): a cliente precisa escolher uma das obrigatórias do grupo. */
           is_required: boolean;
+          /** A cliente pode escolher mais de uma opção deste grupo (migration 0048). */
+          allow_multiple: boolean;
           sort_order: number;
           created_at: string;
           updated_at: string;
@@ -860,6 +862,7 @@ export interface Database {
           price?: number | null;
           status?: VariantStatus;
           is_required?: boolean;
+          allow_multiple?: boolean;
           sort_order?: number;
           created_at?: string;
           updated_at?: string;

@@ -21,6 +21,7 @@ export type Variant = {
   color_id: string | null;
   variant_group: string | null;
   is_required: boolean;
+  allow_multiple: boolean;
   size: string | null;
   price: number | null;
   status: VariantStatus;
@@ -54,6 +55,7 @@ export function VariantRow({
   groups,
   materials,
   basePrice,
+  groupMultiple,
 }: {
   productId: string;
   variant: Variant;
@@ -62,6 +64,7 @@ export function VariantRow({
   groups: string[];
   materials: CatalogMaterial[];
   basePrice: number;
+  groupMultiple: Record<string, boolean>;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -93,7 +96,9 @@ export function VariantRow({
               colorId: variant.color_id ?? "",
               price: variant.price != null ? String(variant.price) : "",
               isRequired: variant.is_required,
+              allowMultiple: variant.allow_multiple,
             }}
+            groupMultiple={groupMultiple}
           />
         </div>
 
@@ -120,6 +125,7 @@ export function VariantRow({
           <span className="text-xs text-muted-foreground">
             {variant.variant_group ? `${variant.variant_group} · ` : ""}
             {variant.is_required ? "Escolha obrigatória · " : ""}
+            {variant.allow_multiple ? "Pode escolher mais de uma · " : ""}
             {variant.price ? formatPrice(variant.price) : "Preço base"} ·{" "}
             {variant.status === "available" ? "Disponível" : "Esgotado"}
             {color ? ` · ${color.name}` : ""}

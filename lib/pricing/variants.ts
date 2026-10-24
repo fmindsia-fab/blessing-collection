@@ -8,6 +8,8 @@ export type VariantOption = {
   variant_group: string | null;
   /** Escolha obrigatória: a cliente precisa escolher uma das obrigatórias do grupo. Ausente/false = complemento. */
   is_required?: boolean;
+  /** A cliente pode escolher mais de uma opção do grupo (igual em todas as variações do grupo). */
+  allow_multiple?: boolean;
   /** Tom da cor cadastrada (a bolinha no catálogo); ausente quando a variação não tem cor. */
   color_hex?: string | null;
   color_hex_secondary?: string | null;
@@ -20,8 +22,10 @@ export type VariantGroup = {
   name: string;
   /** Título para mostrar: "Alça", ou "Alça · complementos" quando o grupo também tem opções obrigatórias. */
   label: string;
-  /** Conjunto de escolha obrigatória: a cliente precisa escolher uma opção. */
+  /** Conjunto de escolha obrigatória: a cliente precisa escolher ao menos uma opção. */
   required: boolean;
+  /** Pode escolher mais de uma opção deste conjunto (ex.: duas alças). Falso = só uma (ex.: cor). */
+  multiple: boolean;
   options: VariantOption[];
 };
 
@@ -50,10 +54,11 @@ export function groupVariants(variants: VariantOption[]): VariantGroup[] {
 
     const existing = sets.get(key);
     if (existing) existing.options.push(variant);
-    else sets.set(key, { key, name, label: name, required, options: [variant] });
+    else sets.set(key, { key, name, label: name, required, multiple: false, options: [variant] });
   }
 
   const all = [...sets.values()];
+  for (const group of all) group.multiple = group.options.some((option) => Boolean(option.allow_multiple));
   const namesWithRequired = new Set(all.filter((group) => group.required).map((group) => group.name));
 
   for (const group of all) {
@@ -65,10 +70,12 @@ export function groupVariants(variants: VariantOption[]): VariantGroup[] {
 }
 
 /** Nomes dos conjuntos obrigatórios que ainda não têm escolha (ignora os que só têm opção esgotada). */
-export function missingRequiredGroups(groups: VariantGroup[], chosenByKey: Record<string, string>): VariantGroup[] {
+export function missingRequiredGroups(groups: VariantGroup[], chosenByKey: Record<string, string[]>): VariantGroup[] {
   return groups.filter(
     (group) =>
-      group.required && !chosenByKey[group.key] && group.options.some((option) => option.status !== "sold_out"),
+      group.required &&
+      (chosenByKey[group.key]?.length ?? 0) === 0 &&
+      group.options.some((option) => option.status !== "sold_out"),
   );
 }
 
