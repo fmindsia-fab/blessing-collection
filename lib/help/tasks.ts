@@ -91,10 +91,19 @@ export const HELP_TASKS: HelpTask[] = [
   {
     id: "esconder-peca",
     title: "Tirar uma peça do catálogo (sem apagar)",
-    keywords: ["esconder peca", "tirar do catalogo", "desativar", "desativar peca", "ocultar", "pausar peca", "peca esgotada", "excluir produto", "apagar peca", "remover peca", "reativar"],
+    keywords: ["esconder peca", "tirar do catalogo", "desativar", "desativar peca", "ocultar", "pausar peca", "peca esgotada", "reativar"],
     steps: [
       { text: 'Abra "Produtos" no menu.', href: "/admin/produtos", target: nav("/admin/produtos") },
       { text: 'Clique em "Desativar" na peça. Ela some do catálogo, mas continua guardada. Para voltar, clique em "Reativar".', target: '[data-help="product-toggle"]' },
+    ],
+  },
+  {
+    id: "excluir-peca",
+    title: "Excluir uma peça de vez",
+    keywords: ["excluir peca", "excluir produto", "apagar peca", "apagar produto", "remover peca", "remover produto", "excluir definitivamente", "apagar para sempre", "deletar peca", "nao quero mais a peca"],
+    steps: [
+      { text: 'Abra "Produtos" no menu e clique em "Editar" na peça que você quer excluir.', href: "/admin/produtos", target: '[data-help="product-edit"]' },
+      { text: 'Role até o fim da página, na parte "Excluir esta peça", e clique em "Excluir peça para sempre". Confirme na janela. Não dá para desfazer; se só quer esconder, use o Status Inativo.', target: "#excluir" },
     ],
   },
   {

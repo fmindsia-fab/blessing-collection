@@ -16,6 +16,7 @@ import { ProductForm } from "../../product-form";
 import { PageHeading } from "@/components/admin/page-heading";
 import { PageSection } from "@/components/admin/page-section";
 import { DuplicateProductButton } from "../../duplicate-product-button";
+import { DeleteProductSection } from "./delete-product-section";
 import { ProductImages } from "./product-images";
 import { ProductVideo } from "./product-video";
 import { ProductSlug } from "./product-slug";
@@ -154,6 +155,8 @@ export default async function EditProductPage({
           hasLaborConfigured={pricing.rates.totalPerHourCents > 0}
         />
       </PageSection>
+
+      <DeleteProductSection productId={product.id} productName={product.name} />
     </div>
   );
 }

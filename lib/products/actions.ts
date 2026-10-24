@@ -438,3 +438,83 @@ export async function duplicateProduct(productId: string): Promise<ProductFormSt
   revalidatePath("/admin/produtos");
   redirect(`/admin/produtos/${copy.id}/editar?copia=1`);
 }
+
+const PRODUCT_IMAGES_BUCKET = "product-images";
+const PRODUCT_VIDEOS_BUCKET = "product-videos";
+
+function storagePathFromUrl(url: string | null | undefined, bucket: string): string | null {
+  if (!url) return null;
+  return url.split(`/${bucket}/`)[1] ?? null;
+}
+
+/**
+ * Exclusão DEFINITIVA de uma peça (exceção consciente à regra "sem DELETE": pedido explícito
+ * do dono; ver CLAUDE.md). O comum continua sendo Desativar, que só esconde a peça.
+ *
+ * Apaga junto, por cascata do banco, as fotos (registros), variações e materiais da peça, e
+ * depois remove os arquivos de foto e vídeo do armazenamento. As visualizações e cliques
+ * antigos ficam como contagem anônima (sem a peça).
+ *
+ * Peça que está em algum pedido NÃO pode ser excluída: o histórico do pedido depende dela
+ * (o banco também recusaria). Nesse caso a orientação é Desativar.
+ */
+export async function deleteProductPermanently(productId: string): Promise<ProductFormState> {
+  const store = await getActiveStore();
+  const notOwnerError = await getNotOwnerError(store);
+  if (notOwnerError) return { error: notOwnerError };
+  const supabase = await createServerSupabaseClient();
+
+  const { data: product } = await supabase
+    .from("products")
+    .select("id, video_url, video_poster_url")
+    .eq("id", productId)
+    .eq("store_id", store.id)
+    .maybeSingle();
+
+  if (!product) return { error: "Peça não encontrada." };
+
+  const { count: orderCount, error: countError } = await supabase
+    .from("order_items")
+    .select("id", { count: "exact", head: true })
+    .eq("product_id", product.id);
+
+  if (countError) {
+    console.error("[deleteProductPermanently] contagem de pedidos", countError.code, countError.message);
+    return { error: "Não foi possível conferir os pedidos desta peça. Tente novamente." };
+  }
+  if ((orderCount ?? 0) > 0) {
+    return {
+      error: `Esta peça está em ${orderCount} ${orderCount === 1 ? "pedido" : "pedidos"} e o histórico deles precisa dela, então não dá para excluir. Use "Desativar" para tirá-la do catálogo.`,
+    };
+  }
+
+  // Caminhos dos arquivos, lidos ANTES de apagar (as linhas das fotos somem por cascata).
+  const { data: images } = await supabase.from("product_images").select("url").eq("product_id", product.id);
+  const imagePaths = (images ?? [])
+    .map((image) => storagePathFromUrl(image.url, PRODUCT_IMAGES_BUCKET))
+    .filter((path): path is string => Boolean(path));
+  const videoPaths = [product.video_url, product.video_poster_url]
+    .map((url) => storagePathFromUrl(url, PRODUCT_VIDEOS_BUCKET))
+    .filter((path): path is string => Boolean(path));
+
+  const { error } = await supabase.from("products").delete().eq("id", product.id).eq("store_id", store.id);
+  if (error) {
+    console.error("[deleteProductPermanently]", error.code, error.message);
+    return { error: "Não foi possível excluir a peça. Tente novamente." };
+  }
+
+  // Limpeza dos arquivos: se falhar, a peça já foi excluída; só sobram arquivos soltos.
+  if (imagePaths.length > 0) {
+    const { error: storageError } = await supabase.storage.from(PRODUCT_IMAGES_BUCKET).remove(imagePaths);
+    if (storageError) console.error("[deleteProductPermanently] fotos", storageError.message);
+  }
+  if (videoPaths.length > 0) {
+    const { error: storageError } = await supabase.storage.from(PRODUCT_VIDEOS_BUCKET).remove(videoPaths);
+    if (storageError) console.error("[deleteProductPermanently] vídeo", storageError.message);
+  }
+
+  revalidatePath("/admin/produtos");
+  revalidatePath("/produtos");
+  revalidatePath("/");
+  redirect("/admin/produtos");
+}
