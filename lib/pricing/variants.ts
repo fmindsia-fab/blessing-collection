@@ -6,6 +6,9 @@ export type VariantOption = {
   price: number | null;
   status: string;
   variant_group: string | null;
+  /** Tom da cor cadastrada (a bolinha no catálogo); ausente quando a variação não tem cor. */
+  color_hex?: string | null;
+  color_hex_secondary?: string | null;
 };
 
 export type VariantGroup = {

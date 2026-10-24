@@ -155,6 +155,23 @@ export function ProductPurchase({
                             : "border-foreground/25 text-foreground hover:border-foreground hover:bg-secondary",
                       )}
                     >
+                      {option.color_hex ? (
+                        <span
+                          aria-hidden
+                          className={cn(
+                            "size-4 shrink-0 self-center rounded-full border",
+                            isActive ? "border-background/60" : "border-foreground/20",
+                            soldOut && "opacity-50",
+                          )}
+                          style={
+                            option.color_hex_secondary
+                              ? {
+                                  background: `linear-gradient(135deg, ${option.color_hex} 50%, ${option.color_hex_secondary} 50%)`,
+                                }
+                              : { backgroundColor: option.color_hex }
+                          }
+                        />
+                      ) : null}
                       {option.name}
                       {surcharge > 0 ? (
                         <span className={isActive ? "text-background/70" : "text-muted-foreground"}>

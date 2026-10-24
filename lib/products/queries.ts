@@ -283,9 +283,24 @@ export const getProductBySlug = cache(async (storeId: string, slug: string) => {
       .order("sort_order", { ascending: true }),
   ]);
 
+  // Tom das cores cadastradas, para a bolinha ao lado da opção. Só as cores usadas por esta peça.
+  const colorIds = [...new Set((variants ?? []).map((v) => v.color_id).filter((id): id is string => Boolean(id)))];
+  const colorById = new Map<string, { hex: string; hex_secondary: string | null }>();
+  if (colorIds.length > 0) {
+    const { data: colors } = await supabase
+      .from("colors")
+      .select("id, hex, hex_secondary")
+      .eq("store_id", storeId)
+      .in("id", colorIds);
+    for (const color of colors ?? []) colorById.set(color.id, color);
+  }
+
   return {
     product,
     images: images ?? [],
-    variants: variants ?? [],
+    variants: (variants ?? []).map((variant) => {
+      const color = variant.color_id ? colorById.get(variant.color_id) : undefined;
+      return { ...variant, color_hex: color?.hex ?? null, color_hex_secondary: color?.hex_secondary ?? null };
+    }),
   };
 });
