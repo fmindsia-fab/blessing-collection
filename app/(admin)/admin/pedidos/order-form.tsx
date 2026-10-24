@@ -13,7 +13,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { NativeSelect } from "@/components/ui/native-select";
 import { FormFooter } from "@/components/admin/form-footer";
-import { groupVariants, priceWithVariants, variantSurchargeCents, type VariantOption } from "@/lib/pricing/variants";
+import {
+  groupVariants,
+  missingRequiredGroups,
+  priceWithVariants,
+  variantSurchargeCents,
+  type VariantOption,
+} from "@/lib/pricing/variants";
 import { toCents, toReais } from "@/lib/pricing/money";
 
 type ProductOption = {
@@ -29,6 +35,7 @@ type ProductOption = {
     price: number | null;
     variant_group: string | null;
     status: string;
+    is_required: boolean;
   }[];
 };
 
@@ -274,16 +281,19 @@ export function OrderForm({
                       const selectId = `variant-${item.key}-${groupIndex}`;
 
                       return (
-                        <div key={group.name} className="flex flex-col gap-1.5">
+                        <div key={group.key} className="flex flex-col gap-1.5">
                           <Label htmlFor={selectId} className="text-sm font-medium">
-                            {group.name}
+                            {group.label}
+                            {group.required ? (
+                              <span className="font-normal text-muted-foreground"> · escolha obrigatória</span>
+                            ) : null}
                           </Label>
                           <NativeSelect
                             id={selectId}
                             value={chosenId}
                             onChange={(e) => chooseVariant(item.key, item, groupIds, e.target.value)}
                           >
-                            <option value="">Nenhuma</option>
+                            <option value="">{group.required ? "Escolha uma opção…" : "Nenhuma"}</option>
                             {group.options.map((option) => {
                               const surcharge = variantSurchargeCents(option, toCents(product.price));
                               return (
@@ -298,6 +308,23 @@ export function OrderForm({
                         </div>
                       );
                     })}
+                    {(() => {
+                      const chosenByKey: Record<string, string> = {};
+                      for (const group of groupVariants(product.variants as VariantOption[])) {
+                        const id = item.variantIds.find((candidate) => group.options.some((option) => option.id === candidate));
+                        if (id) chosenByKey[group.key] = id;
+                      }
+                      const missing = missingRequiredGroups(
+                        groupVariants(product.variants as VariantOption[]),
+                        chosenByKey,
+                      );
+                      return missing.length > 0 ? (
+                        <p role="status" className="rounded-lg bg-[var(--brand-soft)] px-3 py-2 text-sm font-medium">
+                          Falta a escolha obrigatória: {missing.map((group) => group.name).join(", ")}. A cliente precisa
+                          escolher uma opção (você ainda pode salvar o orçamento).
+                        </p>
+                      ) : null;
+                    })()}
                     <p className="text-sm text-muted-foreground">
                       O preço do item soma o acréscimo de cada variação escolhida. Você pode ajustar o valor abaixo.
                     </p>

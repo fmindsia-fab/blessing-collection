@@ -8,6 +8,8 @@ export type VariantRecord = {
   variant_group: string | null;
   price: number | null;
   status: string;
+  /** Escolha obrigatória (conjunto separado dos complementos do mesmo grupo). */
+  is_required?: boolean;
 };
 
 export type ItemVariantRow = {
@@ -31,7 +33,8 @@ export function parseVariantIds(raw: string | null | undefined): string[] {
  * Confere as variações escolhidas para um item e monta as linhas a gravar.
  *
  * Regras (as mesmas do catálogo): toda variação precisa ser da peça do item e não estar
- * arquivada; só uma opção por grupo (alça OU outra alça, não as duas). O acréscimo é a diferença
+ * arquivada; só uma opção por conjunto (alça obrigatória OU outra alça obrigatória, não as duas;
+ * um complemento do mesmo grupo pode vir junto). O acréscimo é a diferença
  * do preço da variação para o preço base da peça, nunca negativo, em reais com 2 casas.
  */
 export function buildItemVariantRows(
@@ -50,10 +53,12 @@ export function buildItemVariantRows(
     }
 
     const group = record.variant_group?.trim() || DEFAULT_GROUP;
-    if (groupsSeen.has(group)) {
-      return { error: `Escolha só uma opção de "${group}" por item.` };
+    // Obrigatórias e complementos do mesmo grupo são conjuntos separados: pode uma de cada.
+    const setKey = `${group}::${record.is_required ? "obrigatoria" : "complemento"}`;
+    if (groupsSeen.has(setKey)) {
+      return { error: `Escolha só uma opção de "${group}${record.is_required ? "" : " (complementos)"}" por item.` };
     }
-    groupsSeen.add(group);
+    groupsSeen.add(setKey);
 
     const surcharge =
       record.price == null ? 0 : Math.max(0, Math.round((Number(record.price) - Number(productPrice)) * 100) / 100);

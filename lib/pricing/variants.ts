@@ -6,13 +6,22 @@ export type VariantOption = {
   price: number | null;
   status: string;
   variant_group: string | null;
+  /** Escolha obrigatória: a cliente precisa escolher uma das obrigatórias do grupo. Ausente/false = complemento. */
+  is_required?: boolean;
   /** Tom da cor cadastrada (a bolinha no catálogo); ausente quando a variação não tem cor. */
   color_hex?: string | null;
   color_hex_secondary?: string | null;
 };
 
 export type VariantGroup = {
+  /** Identifica o conjunto de escolha (nome do grupo + obrigatória ou complemento). Use como chave. */
+  key: string;
+  /** Nome do grupo cadastrado (ex.: "Alça"). */
   name: string;
+  /** Título para mostrar: "Alça", ou "Alça · complementos" quando o grupo também tem opções obrigatórias. */
+  label: string;
+  /** Conjunto de escolha obrigatória: a cliente precisa escolher uma opção. */
+  required: boolean;
   options: VariantOption[];
 };
 
@@ -25,16 +34,42 @@ export const DEFAULT_VARIANT_GROUP = "Opções";
  * Um grupo reúne alternativas entre si — a cliente escolhe uma de cada. Sem
  * isso, escolher "Marrom" desmarcaria "Alça Corrente", quando na verdade ela
  * quer as duas.
+ *
+ * Dentro do mesmo nome de grupo, as variações de escolha obrigatória e os
+ * complementos formam conjuntos SEPARADOS: a cliente escolhe uma alça
+ * obrigatória (madeira ou metal) e, se quiser, um complemento (tiracolo). Os
+ * conjuntos obrigatórios vêm primeiro.
  */
 export function groupVariants(variants: VariantOption[]): VariantGroup[] {
-  const groups = new Map<string, VariantOption[]>();
+  const sets = new Map<string, VariantGroup>();
 
   for (const variant of variants) {
-    const key = variant.variant_group?.trim() || DEFAULT_VARIANT_GROUP;
-    groups.set(key, [...(groups.get(key) ?? []), variant]);
+    const name = variant.variant_group?.trim() || DEFAULT_VARIANT_GROUP;
+    const required = Boolean(variant.is_required);
+    const key = `${name}::${required ? "obrigatoria" : "complemento"}`;
+
+    const existing = sets.get(key);
+    if (existing) existing.options.push(variant);
+    else sets.set(key, { key, name, label: name, required, options: [variant] });
   }
 
-  return [...groups.entries()].map(([name, options]) => ({ name, options }));
+  const all = [...sets.values()];
+  const namesWithRequired = new Set(all.filter((group) => group.required).map((group) => group.name));
+
+  for (const group of all) {
+    if (!group.required && namesWithRequired.has(group.name)) group.label = `${group.name} · complementos`;
+  }
+
+  // Ordenação estável: obrigatórias primeiro, cada bloco na ordem em que foi cadastrado.
+  return [...all.filter((group) => group.required), ...all.filter((group) => !group.required)];
+}
+
+/** Nomes dos conjuntos obrigatórios que ainda não têm escolha (ignora os que só têm opção esgotada). */
+export function missingRequiredGroups(groups: VariantGroup[], chosenByKey: Record<string, string>): VariantGroup[] {
+  return groups.filter(
+    (group) =>
+      group.required && !chosenByKey[group.key] && group.options.some((option) => option.status !== "sold_out"),
+  );
 }
 
 /**

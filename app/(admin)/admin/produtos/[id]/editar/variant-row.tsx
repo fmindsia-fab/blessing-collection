@@ -20,6 +20,7 @@ export type Variant = {
   color: string | null;
   color_id: string | null;
   variant_group: string | null;
+  is_required: boolean;
   size: string | null;
   price: number | null;
   status: VariantStatus;
@@ -91,6 +92,7 @@ export function VariantRow({
               group: variant.variant_group ?? "",
               colorId: variant.color_id ?? "",
               price: variant.price != null ? String(variant.price) : "",
+              isRequired: variant.is_required,
             }}
           />
         </div>
@@ -117,6 +119,7 @@ export function VariantRow({
           <span className="break-words text-sm font-medium">{variant.name}</span>
           <span className="text-xs text-muted-foreground">
             {variant.variant_group ? `${variant.variant_group} · ` : ""}
+            {variant.is_required ? "Escolha obrigatória · " : ""}
             {variant.price ? formatPrice(variant.price) : "Preço base"} ·{" "}
             {variant.status === "available" ? "Disponível" : "Esgotado"}
             {color ? ` · ${color.name}` : ""}

@@ -842,6 +842,8 @@ export interface Database {
           sku: string | null;
           price: number | null;
           status: VariantStatus;
+          /** Escolha obrigatória (migration 0047): a cliente precisa escolher uma das obrigatórias do grupo. */
+          is_required: boolean;
           sort_order: number;
           created_at: string;
           updated_at: string;
@@ -857,6 +859,7 @@ export interface Database {
           sku?: string | null;
           price?: number | null;
           status?: VariantStatus;
+          is_required?: boolean;
           sort_order?: number;
           created_at?: string;
           updated_at?: string;

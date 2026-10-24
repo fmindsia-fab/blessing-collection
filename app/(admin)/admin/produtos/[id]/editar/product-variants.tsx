@@ -74,7 +74,7 @@ export function ProductVariants({
           colors={colors}
           materials={catalogMaterials}
           basePrice={basePrice}
-          defaults={{ name: "", group: "Cor", colorId: "", price: "" }}
+          defaults={{ name: "", group: "Cor", colorId: "", price: "", isRequired: false }}
           showHints
         />
         <input type="hidden" name="status" value="available" />

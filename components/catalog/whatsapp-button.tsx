@@ -17,6 +17,8 @@ type WhatsappButtonProps = {
   variantLabel?: string | null;
   className?: string;
   tabIndex?: number;
+  /** Quando há uma escolha obrigatória pendente: o botão fica desativado e explica o motivo. */
+  disabledReason?: string;
 };
 
 export function WhatsappButton({
@@ -30,6 +32,7 @@ export function WhatsappButton({
   variantLabel,
   className,
   tabIndex,
+  disabledReason,
 }: WhatsappButtonProps) {
   const message = buildWhatsappMessage({
     storeName,
@@ -39,6 +42,21 @@ export function WhatsappButton({
     productUrl,
   });
   const href = buildWhatsappLink(storeWhatsapp, message);
+
+  if (disabledReason) {
+    return (
+      <button
+        type="button"
+        disabled
+        aria-disabled="true"
+        title={disabledReason}
+        tabIndex={tabIndex}
+        className={cn(actionVariants({ variant: "solid" }), "cursor-not-allowed opacity-50", className)}
+      >
+        {getWhatsappCtaLabel(status)}
+      </button>
+    );
+  }
 
   return (
     <a

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   describeSelection,
   groupVariants,
+  missingRequiredGroups,
   priceWithVariants,
   variantSurchargeCents,
   DEFAULT_VARIANT_GROUP,
@@ -15,6 +16,10 @@ function variant(
   status = "available",
 ): VariantOption {
   return { id: name, name, price, status, variant_group: group };
+}
+
+function required(name: string, price: number | null = null, group = "Alça"): VariantOption {
+  return { ...variant(name, price, group), is_required: true };
 }
 
 // O caso real da Clutch Bellagio: base 369,90 e alça de corrente a 409,90.
@@ -113,3 +118,43 @@ describe("describeSelection", () => {
     expect(describeSelection([])).toBeNull();
   });
 });
+
+describe("escolha obrigatória e complementos", () => {
+  const alcas = [
+    variant("Alça Tiracolo", 475, "Alça"),
+    required("Alça Metal", 409.9),
+    required("Alça Madeira", 450),
+    variant("Alça Duo", 519, "Alça"),
+    variant("Marrom", null, "Cor"),
+  ];
+
+  it("separa as obrigatórias dos complementos do mesmo grupo, obrigatórias primeiro", () => {
+    const grupos = groupVariants(alcas);
+
+    expect(grupos.map((g) => [g.label, g.required])).toEqual([
+      ["Alça", true],
+      ["Alça · complementos", false],
+      ["Cor", false],
+    ]);
+    expect(grupos[0].options.map((o) => o.name)).toEqual(["Alça Metal", "Alça Madeira"]);
+    expect(grupos[1].options.map((o) => o.name)).toEqual(["Alça Tiracolo", "Alça Duo"]);
+  });
+
+  it("grupo sem obrigatórias mantém o nome simples (não vira 'complementos')", () => {
+    expect(groupVariants([variant("Marrom", null, "Cor")])[0].label).toBe("Cor");
+  });
+
+  it("aponta as escolhas obrigatórias que faltam", () => {
+    const grupos = groupVariants(alcas);
+    expect(missingRequiredGroups(grupos, {}).map((g) => g.name)).toEqual(["Alça"]);
+
+    const escolhida = { [grupos[0].key]: "Alça Metal" };
+    expect(missingRequiredGroups(grupos, escolhida)).toEqual([]);
+  });
+
+  it("obrigatória com todas as opções esgotadas não trava a compra", () => {
+    const grupos = groupVariants([required("Alça Metal", 409.9, "Alça"), required("Alça Madeira", 450, "Alça")].map((v) => ({ ...v, status: "sold_out" })));
+    expect(missingRequiredGroups(grupos, {})).toEqual([]);
+  });
+});
+

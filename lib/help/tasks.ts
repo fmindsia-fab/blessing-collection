@@ -75,6 +75,7 @@ export const HELP_TASKS: HelpTask[] = [
       { text: 'Abra "Produtos" no menu.', href: "/admin/produtos", target: nav("/admin/produtos") },
       { text: 'Clique em "Editar" na peça.', target: '[data-help="product-edit"]' },
       { text: 'Vá até a parte "Variações", escolha a variação (Cor, Alça…) e dê um nome à opção. Se escolher "Alça", dá para escolher um material cadastrado e o preço dele é somado ao da peça.', target: "#variacoes" },
+      { text: 'Se a cliente precisa escolher uma destas opções para comprar (ex.: o tipo de alça), marque "Escolha obrigatória". Deixe desmarcado para complementos opcionais (ex.: um tiracolo extra).', target: "#variacoes" },
       { text: 'Clique em "Adicionar variação".', target: "#variacoes" },
     ],
   },

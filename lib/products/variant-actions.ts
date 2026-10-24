@@ -19,6 +19,9 @@ const variantSchema = z.object({
   variantGroup: z.string().trim().max(30).optional(),
   size: z.string().optional(),
   price: z.union([z.coerce.number().positive(), z.literal("")]).optional(),
+  // Escolha obrigatória: a cliente precisa escolher uma das obrigatórias do grupo (migration 0047).
+  // Desmarcado = complemento, opcional.
+  isRequired: z.boolean().default(false),
   status: z.enum(["available", "sold_out"]),
 });
 
@@ -78,6 +81,7 @@ export async function createVariant(
     // `z.string().optional()`.
     size: formData.get("size") ?? "",
     price: formData.get("price") || undefined,
+    isRequired: formData.get("isRequired") === "on",
     status: formData.get("status"),
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -101,6 +105,7 @@ export async function createVariant(
     variant_group: parsed.data.variantGroup || null,
     size: parsed.data.size || null,
     price: parsed.data.price || null,
+    is_required: parsed.data.isRequired,
     status: parsed.data.status,
   });
 
@@ -133,6 +138,7 @@ export async function updateVariant(
     // `z.string().optional()`.
     size: formData.get("size") ?? "",
     price: formData.get("price") || undefined,
+    isRequired: formData.get("isRequired") === "on",
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
@@ -156,6 +162,7 @@ export async function updateVariant(
       variant_group: parsed.data.variantGroup || null,
       size: parsed.data.size || null,
       price: parsed.data.price || null,
+      is_required: parsed.data.isRequired,
     })
     .eq("id", variantId)
     // Ancora no produto já validado: sem isto, um id de variação de outra loja

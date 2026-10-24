@@ -88,3 +88,25 @@ describe("describeItemVariants", () => {
     expect(describeItemVariants([])).toBeNull();
   });
 });
+
+describe("obrigatórias e complementos do mesmo grupo", () => {
+  const set = new Map<string, VariantRecord>(
+    [
+      record("madeira", "Alça", 450, { is_required: true }),
+      record("metal", "Alça", 409.9, { is_required: true }),
+      record("tiracolo", "Alça", 475, { is_required: false }),
+      record("duo", "Alça", 519, { is_required: false }),
+    ].map((r) => [r.id, r]),
+  );
+
+  it("aceita uma obrigatória junto com um complemento do mesmo grupo", () => {
+    const result = buildItemVariantRows(409.9, ["metal", "tiracolo"], set, PRODUCT);
+    expect("rows" in result && result.rows.map((row) => row.variant_id)).toEqual(["metal", "tiracolo"]);
+  });
+
+  it("recusa duas obrigatórias ou dois complementos do mesmo grupo", () => {
+    expect("error" in buildItemVariantRows(409.9, ["madeira", "metal"], set, PRODUCT)).toBe(true);
+    const twoOptional = buildItemVariantRows(409.9, ["tiracolo", "duo"], set, PRODUCT);
+    expect("error" in twoOptional && twoOptional.error).toContain("complementos");
+  });
+});

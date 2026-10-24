@@ -9,6 +9,7 @@ import { isPriceVariable, priceLabel, priceVariationNotice } from "@/lib/pricing
 import {
   describeSelection,
   groupVariants,
+  missingRequiredGroups,
   priceWithVariants,
   variantSurchargeCents,
   type VariantOption,
@@ -61,14 +62,14 @@ export function ProductPurchase({
   coverImageUrl,
   paymentMethods,
 }: Props) {
-  // Uma entrada por grupo: {"Cor": "id-marrom", "Alça": "id-corrente"}.
+  // Uma entrada por conjunto de escolha (chave do grupo): {"Cor::complemento": "id-marrom", "Alça::obrigatoria": "id-metal"}.
   const [chosen, setChosen] = useState<Record<string, string>>({});
 
   const groups = groupVariants(variants);
   const basePriceCents = toCents(basePrice);
 
   const selected = groups
-    .map((group) => group.options.find((option) => option.id === chosen[group.name]))
+    .map((group) => group.options.find((option) => option.id === chosen[group.key]))
     .filter((option): option is VariantOption => option != null);
 
   const currentCents = priceWithVariants(basePriceCents, selected);
@@ -77,14 +78,16 @@ export function ProductPurchase({
   // ainda pode subir — daí o "a partir de".
   const pendingPricedGroup = groups.some(
     (group) =>
-      !chosen[group.name] &&
+      !chosen[group.key] &&
       group.options.some((option) => variantSurchargeCents(option, basePriceCents) > 0),
   );
 
-  // Opções ainda sem escolha (ignora grupos em que tudo está esgotado, que a cliente nem pode escolher).
-  const missingGroups = groups
-    .filter((group) => !chosen[group.name] && group.options.some((option) => option.status !== "sold_out"))
-    .map((group) => group.name);
+  // Escolhas OBRIGATÓRIAS que faltam (ex.: o tipo de alça). Enquanto faltar, não dá para enviar pelo
+  // WhatsApp nem pôr na sacola, porque a loja precisa saber qual opção a cliente quer. Em peça
+  // esgotada o botão é só uma consulta, então não exige escolha.
+  const missingRequired = status === "sold_out" ? [] : missingRequiredGroups(groups, chosen);
+  const missingNames = missingRequired.map((group) => group.name).join(", ");
+  const disabledReason = missingRequired.length > 0 ? `Escolha primeiro: ${missingNames}` : undefined;
 
   const variable = isPriceVariable(status);
   const selectionLabel = describeSelection(selected);
@@ -116,16 +119,17 @@ export function ProductPurchase({
 
   const showStickyBar = !actionsVisible && !footerVisible;
 
-  function choose(groupName: string, optionId: string) {
+  function choose(groupKey: string, optionId: string, required: boolean) {
     setChosen((current) => {
-      // Clicar na opção ativa desmarca, para a cliente voltar atrás sem
-      // recarregar a página.
-      if (current[groupName] === optionId) {
+      // Clicar na opção ativa desmarca, para a cliente voltar atrás sem recarregar a página.
+      // Na escolha obrigatória não desmarca: só troca por outra opção.
+      if (current[groupKey] === optionId) {
+        if (required) return current;
         const rest = { ...current };
-        delete rest[groupName];
+        delete rest[groupKey];
         return rest;
       }
-      return { ...current, [groupName]: optionId };
+      return { ...current, [groupKey]: optionId };
     });
   }
 
@@ -165,12 +169,19 @@ export function ProductPurchase({
       {groups.length > 0 ? (
         <div className="flex flex-col gap-5">
           {groups.map((group) => (
-            <div key={group.name} className="flex flex-col gap-3">
-              <span className="kicker">{group.name}</span>
+            <div key={group.key} className="flex flex-col gap-3">
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <span className="kicker">{group.label}</span>
+                {group.required ? (
+                  <span className="text-xs font-medium text-[var(--gold-text,var(--gold))]">Escolha uma opção</span>
+                ) : group.label.endsWith("complementos") ? (
+                  <span className="text-xs text-muted-foreground">Opcional</span>
+                ) : null}
+              </div>
               <div className="flex flex-wrap gap-2">
                 {group.options.map((option) => {
                   const soldOut = option.status === "sold_out";
-                  const isActive = chosen[group.name] === option.id;
+                  const isActive = chosen[group.key] === option.id;
                   const surcharge = variantSurchargeCents(option, basePriceCents);
 
                   return (
@@ -179,7 +190,7 @@ export function ProductPurchase({
                       type="button"
                       disabled={soldOut}
                       aria-pressed={isActive}
-                      onClick={() => choose(group.name, option.id)}
+                      onClick={() => choose(group.key, option.id, group.required)}
                       className={cn(
                         "inline-flex items-baseline gap-1.5 rounded-full border px-4 py-2 text-xs tracking-wide outline-none transition-all duration-300 focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                         soldOut
@@ -219,12 +230,10 @@ export function ProductPurchase({
             </div>
           ))}
 
-          {missingGroups.length > 0 ? (
+          {missingRequired.length > 0 ? (
             <span role="status" className="text-sm leading-relaxed text-muted-foreground">
-              Falta escolher: <strong className="font-medium text-foreground">{missingGroups.join(", ")}</strong>.{" "}
-              {pendingPricedGroup
-                ? "Assim o valor fica exato e a loja já sabe o que você quer."
-                : "Assim a loja já sabe exatamente o que você quer."}
+              Para continuar, escolha: <strong className="font-medium text-foreground">{missingNames}</strong>.{" "}
+              {pendingPricedGroup ? "O valor muda conforme a opção." : "A loja precisa saber qual você quer."}
             </span>
           ) : null}
         </div>
@@ -240,6 +249,7 @@ export function ProductPurchase({
           productUrl={productUrl}
           status={status}
           variantLabel={selectionLabel}
+          disabledReason={disabledReason}
         />
         <SelectionToggleButton
           item={{
@@ -252,6 +262,7 @@ export function ProductPurchase({
             coverImageUrl,
             variantName: selectionLabel,
           }}
+          disabledReason={disabledReason}
         />
         <ShareButton
           url={productUrl}
@@ -272,7 +283,7 @@ export function ProductPurchase({
       >
         <p className="flex min-w-0 flex-col leading-tight">
           <span className="truncate text-xs text-muted-foreground">
-            {pendingPricedGroup ? "a partir de" : "à vista"}
+            {missingRequired.length > 0 ? `Escolha: ${missingNames}` : pendingPricedGroup ? "a partir de" : "à vista"}
           </span>
           <span className="text-lg font-medium">{formatPrice(toReais(currentCents))}</span>
         </p>
@@ -287,6 +298,7 @@ export function ProductPurchase({
           variantLabel={selectionLabel}
           className="h-11 shrink-0 px-5"
           tabIndex={showStickyBar ? 0 : -1}
+          disabledReason={disabledReason}
         />
       </div>
     </>

@@ -40,7 +40,7 @@ export function VariantFormFields({
   materials: CatalogMaterial[];
   /** Preço base da peça, somado ao do material escolhido. */
   basePrice: number;
-  defaults: { name: string; group: string; colorId: string; price: string };
+  defaults: { name: string; group: string; colorId: string; price: string; isRequired: boolean };
   showHints?: boolean;
 }) {
   const [name, setName] = useState(defaults.name);
@@ -112,6 +112,24 @@ export function VariantFormFields({
           </span>
         ) : null}
       </div>
+
+      <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-card px-4 py-3 sm:col-span-2">
+        <input
+          type="checkbox"
+          name="isRequired"
+          defaultChecked={defaults.isRequired}
+          className="mt-1 size-5 shrink-0 accent-[var(--gold)]"
+        />
+        <span className="flex flex-col gap-0.5">
+          <span className="text-sm font-semibold">Escolha obrigatória</span>
+          <span className="text-sm text-muted-foreground">
+            Marque quando a cliente <strong className="text-foreground">precisa escolher uma</strong> das opções
+            obrigatórias desta variação para comprar a peça (ex.: o tipo de alça da bolsa). Deixe desmarcado para
+            um <strong className="text-foreground">complemento</strong>, que ela escolhe só se quiser (ex.: um tiracolo
+            extra).
+          </span>
+        </span>
+      </label>
 
       {matches.length > 0 ? (
         <div className="flex flex-col gap-2 rounded-xl border border-[var(--gold)]/30 bg-[var(--brand-soft)]/60 p-3 sm:col-span-2">

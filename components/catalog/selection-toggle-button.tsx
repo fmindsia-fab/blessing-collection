@@ -7,16 +7,21 @@ import { cn } from "@/lib/utils";
 type SelectionToggleButtonProps = {
   item: SelectedItem;
   className?: string;
+  /** Escolha obrigatória pendente: não dá para pôr na sacola ainda (tirar da sacola sempre pode). */
+  disabledReason?: string;
 };
 
-export function SelectionToggleButton({ item, className }: SelectionToggleButtonProps) {
+export function SelectionToggleButton({ item, className, disabledReason }: SelectionToggleButtonProps) {
   const { isSelected, toggle } = useSelection();
   const selected = isSelected(item.productId);
+  const blocked = Boolean(disabledReason) && !selected;
 
   return (
     <button
       type="button"
       onClick={() => toggle(item)}
+      disabled={blocked}
+      title={blocked ? disabledReason : undefined}
       aria-pressed={selected}
       className={cn(
         // Mesma métrica do actionVariants "outline", mas com estado selecionado
@@ -25,6 +30,7 @@ export function SelectionToggleButton({ item, className }: SelectionToggleButton
         selected
           ? "border-[var(--gold)] bg-[var(--gold)]/12 text-foreground"
           : "border-foreground/30 text-foreground hover:border-foreground hover:bg-foreground hover:text-background",
+        blocked && "cursor-not-allowed opacity-50 hover:border-foreground/30 hover:bg-transparent hover:text-foreground",
         className,
       )}
     >

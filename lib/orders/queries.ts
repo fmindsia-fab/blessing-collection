@@ -96,7 +96,7 @@ export async function listProductsForOrderPicker(storeId: string) {
 
   const { data: variants } = await supabase
     .from("product_variants")
-    .select("id, product_id, name, color, size, price, variant_group, status")
+    .select("id, product_id, name, color, size, price, variant_group, status, is_required")
     .in(
       "product_id",
       products.map((p) => p.id),
