@@ -8,10 +8,8 @@ import {
   type VariantFormState,
 } from "@/lib/products/variant-actions";
 import { Button } from "@/components/ui/button";
-import { VariationTypeField } from "./variation-type-field";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { NativeSelect } from "@/components/ui/native-select";
+import { VariantFormFields } from "./variant-form-fields";
+import type { CatalogMaterial } from "@/lib/products/variation-materials";
 import type { VariantStatus } from "@/types/database.types";
 
 export type StoreColor = { id: string; name: string; hex: string; hex_secondary: string | null };
@@ -53,12 +51,16 @@ export function VariantRow({
   variant,
   colors,
   groups,
+  materials,
+  basePrice,
 }: {
   productId: string;
   variant: Variant;
   colors: StoreColor[];
   /** Variações cadastradas e já usadas na peça, para escolher na lista. */
   groups: string[];
+  materials: CatalogMaterial[];
+  basePrice: number;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -78,52 +80,19 @@ export function VariantRow({
         className="flex flex-col gap-3 rounded-2xl border border-[var(--gold)]/40 bg-card p-4 shadow-sm"
       >
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor={`name-${variant.id}`}>Nome</Label>
-            <Input
-              id={`name-${variant.id}`}
-              name="name"
-              defaultValue={variant.name}
-              required
-              maxLength={60}
-            />
-          </div>
-
-          <VariationTypeField
-            id={`group-${variant.id}`}
-            options={groups}
-            defaultValue={variant.variant_group ?? ""}
+          <VariantFormFields
+            idPrefix={`variant-${variant.id}`}
+            groupOptions={groups}
+            colors={colors}
+            materials={materials}
+            basePrice={basePrice}
+            defaults={{
+              name: variant.name,
+              group: variant.variant_group ?? "",
+              colorId: variant.color_id ?? "",
+              price: variant.price != null ? String(variant.price) : "",
+            }}
           />
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor={`color-${variant.id}`}>Cor</Label>
-            <NativeSelect id={`color-${variant.id}`} name="colorId" defaultValue={variant.color_id ?? ""}>
-              <option value="">Sem cor</option>
-              {colors.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.name}
-                </option>
-              ))}
-            </NativeSelect>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor={`price-${variant.id}`}>Preço total (opcional)</Label>
-            <Input
-              id={`price-${variant.id}`}
-              name="price"
-              type="number"
-              step="0.01"
-              min="0"
-              defaultValue={variant.price ?? ""}
-              placeholder="Preço base"
-            />
-            {/* O catálogo deriva o adicional da diferença para o preço base,
-                então aqui vai o valor cheio da peça com esta variação. */}
-            <span className="text-xs text-muted-foreground">
-              Valor cheio da peça com esta variação, não o acréscimo.
-            </span>
-          </div>
         </div>
 
         {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}

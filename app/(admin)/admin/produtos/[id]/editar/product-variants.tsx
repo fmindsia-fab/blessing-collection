@@ -1,14 +1,11 @@
 "use client";
 
 import { useActionState } from "react";
-import Link from "next/link";
 import { createVariant, type VariantFormState } from "@/lib/products/variant-actions";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { NativeSelect } from "@/components/ui/native-select";
 import { VariantRow, type StoreColor, type Variant } from "./variant-row";
-import { VariationTypeField } from "./variation-type-field";
+import type { CatalogMaterial } from "@/lib/products/variation-materials";
+import { VariantFormFields } from "./variant-form-fields";
 
 type ProductVariantsProps = {
   productId: string;
@@ -16,11 +13,22 @@ type ProductVariantsProps = {
   colors: StoreColor[];
   /** Variações cadastradas em Variações das peças (/admin/grupos-variacao). */
   catalogGroups: string[];
+  /** Materiais do cadastro: sugeridos quando a variação tem o nome deles (ex.: Alça). */
+  catalogMaterials: CatalogMaterial[];
+  /** Preço base da peça, somado ao do material escolhido. */
+  basePrice: number;
 };
 
 const initialState: VariantFormState = {};
 
-export function ProductVariants({ productId, variants, colors, catalogGroups }: ProductVariantsProps) {
+export function ProductVariants({
+  productId,
+  variants,
+  colors,
+  catalogGroups,
+  catalogMaterials,
+  basePrice,
+}: ProductVariantsProps) {
   const createAction = createVariant.bind(null, productId);
   const [state, formAction, isPending] = useActionState(createAction, initialState);
 
@@ -51,48 +59,24 @@ export function ProductVariants({ productId, variants, colors, catalogGroups }: 
               variant={variant}
               colors={colors}
               groups={existingGroups}
+              materials={catalogMaterials}
+              basePrice={basePrice}
             />
           ))}
         </div>
       ) : null}
 
-      <form action={formAction} className="grid gap-3 sm:grid-cols-2">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="variant-name">Nome</Label>
-          <Input id="variant-name" name="name" placeholder="Cor: Caramelo" required />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="variant-price">Preço específico (opcional)</Label>
-          <Input id="variant-price" name="price" type="number" step="0.01" min="0" />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="variant-color">Cor (opcional)</Label>
-          <NativeSelect id="variant-color" name="colorId" defaultValue="">
-            <option value="">Sem cor</option>
-            {colors.map((color) => (
-              <option key={color.id} value={color.id}>
-                {color.name}
-              </option>
-            ))}
-          </NativeSelect>
-          {colors.length === 0 ? (
-            <span className="text-xs text-muted-foreground">
-              Nenhuma cor cadastrada —{" "}
-              <Link href="/admin/cores" className="underline underline-offset-2">
-                cadastrar cores
-              </Link>
-            </span>
-          ) : null}
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <VariationTypeField id="variant-group" options={existingGroups} defaultValue="Cor" />
-          <span className="text-sm text-muted-foreground">
-            A cliente escolhe uma opção de cada variação.{" "}
-            <Link href="/admin/grupos-variacao" className="underline underline-offset-2">
-              Gerenciar variações
-            </Link>
-          </span>
-        </div>
+      {/* key: ao adicionar com sucesso a lista cresce e os campos recomeçam do zero. */}
+      <form key={variants.length} action={formAction} className="grid gap-3 sm:grid-cols-2">
+        <VariantFormFields
+          idPrefix="variant"
+          groupOptions={existingGroups}
+          colors={colors}
+          materials={catalogMaterials}
+          basePrice={basePrice}
+          defaults={{ name: "", group: "Cor", colorId: "", price: "" }}
+          showHints
+        />
         <input type="hidden" name="status" value="available" />
         {state.error ? <p className="sm:col-span-2 text-sm text-destructive">{state.error}</p> : null}
         <Button type="submit" variant="outline" disabled={isPending} className="w-full sm:col-span-2 sm:w-fit">

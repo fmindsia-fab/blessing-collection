@@ -20,11 +20,14 @@ export function VariationTypeField({
   id,
   options,
   defaultValue,
+  onValueChange,
 }: {
   id: string;
   /** Variações cadastradas e já usadas na peça (sem repetir, na ordem em que devem aparecer). */
   options: string[];
   defaultValue: string;
+  /** Chamado com o valor final (já aparado) sempre que a escolha ou o texto muda. */
+  onValueChange?: (value: string) => void;
 }) {
   const choices = [...new Set([...options, ...BASE_OPTIONS, ...(defaultValue ? [defaultValue] : [])])];
 
@@ -36,7 +39,14 @@ export function VariationTypeField({
   return (
     <div className="flex flex-col gap-1.5">
       <Label htmlFor={id}>Variação</Label>
-      <NativeSelect id={id} value={selected} onChange={(e) => setSelected(e.target.value)}>
+      <NativeSelect
+        id={id}
+        value={selected}
+        onChange={(e) => {
+          setSelected(e.target.value);
+          onValueChange?.(e.target.value === OTHER ? custom.trim() : e.target.value);
+        }}
+      >
         <option value="">Nenhuma</option>
         {choices.map((choice) => (
           <option key={choice} value={choice}>
@@ -50,7 +60,10 @@ export function VariationTypeField({
         <Input
           aria-label="Nome da nova variação"
           value={custom}
-          onChange={(e) => setCustom(e.target.value)}
+          onChange={(e) => {
+            setCustom(e.target.value);
+            onValueChange?.(e.target.value.trim());
+          }}
           maxLength={30}
           placeholder="Ex.: Forro"
           autoFocus

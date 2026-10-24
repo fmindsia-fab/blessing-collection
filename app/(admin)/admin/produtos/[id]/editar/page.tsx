@@ -108,6 +108,8 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
           variants={variants}
           colors={colors}
           catalogGroups={variantGroups.map((g) => g.name)}
+          catalogMaterials={catalogMaterials}
+          basePrice={product.price}
         />
       </PageSection>
 
