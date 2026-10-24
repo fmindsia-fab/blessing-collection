@@ -74,3 +74,71 @@ export function costChangePercent(currentCost: number, newUnitCost: number): num
   if (!Number.isFinite(currentCost) || currentCost <= 0 || !Number.isFinite(newUnitCost)) return null;
   return Math.round(((newUnitCost - currentCost) / currentCost) * 100);
 }
+
+export type OrderCostMovement = {
+  materialId: string;
+  materialName: string;
+  unit: string;
+  /** Com sinal: baixa negativa, devolução positiva. */
+  quantity: number;
+  /** Custo da unidade NO DIA do movimento. */
+  unitCost: number | null;
+};
+
+export type OrderCostLine = { materialId: string; name: string; unit: string; used: number; cost: number };
+
+export type OrderCostSummary = {
+  lines: OrderCostLine[];
+  totalCost: number;
+  margin: number;
+  /** Margem sobre o valor do pedido, em %, com 1 casa; null se o pedido não tem valor. */
+  marginPercent: number | null;
+};
+
+/**
+ * Custo real dos insumos de um pedido e a margem sobre o valor dele. Soma baixas e devoluções
+ * por material, cada uma com o custo do dia em que aconteceu (por isso a margem não muda
+ * quando o preço do fio muda depois). Não inclui mão de obra nem outros custos.
+ */
+export function summarizeOrderCost(movements: OrderCostMovement[], orderTotal: number): OrderCostSummary {
+  const byMaterial = new Map<string, OrderCostLine>();
+
+  for (const movement of movements) {
+    const current = byMaterial.get(movement.materialId) ?? {
+      materialId: movement.materialId,
+      name: movement.materialName,
+      unit: movement.unit,
+      used: 0,
+      cost: 0,
+    };
+    current.used += -movement.quantity;
+    current.cost += -movement.quantity * (movement.unitCost ?? 0);
+    byMaterial.set(movement.materialId, current);
+  }
+
+  const lines = [...byMaterial.values()]
+    .map((line) => ({ ...line, used: Math.round(line.used * 1000) / 1000, cost: Math.round(line.cost * 100) / 100 }))
+    .filter((line) => line.used !== 0 || line.cost !== 0)
+    .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+
+  const totalCost = Math.round(lines.reduce((sum, line) => sum + line.cost, 0) * 100) / 100;
+  const margin = Math.round((orderTotal - totalCost) * 100) / 100;
+
+  return {
+    lines,
+    totalCost,
+    margin,
+    marginPercent: orderTotal > 0 ? Math.round((margin / orderTotal) * 1000) / 10 : null,
+  };
+}
+
+/**
+ * Quanto falta comprar de um material: o que os pedidos precisam menos o que já há em estoque.
+ * Material sem controle de estoque (stock = null) não tem saldo conhecido: precisa comprar tudo.
+ * Saldo negativo conta como zero (não "ajuda" a cobrir o pedido).
+ */
+export function calculateToBuy(needed: number, stock: number | null): { stock: number | null; toBuy: number } {
+  if (stock === null) return { stock: null, toBuy: needed };
+  const available = Math.max(0, stock);
+  return { stock, toBuy: Math.max(0, Math.round((needed - available) * 1000) / 1000) };
+}

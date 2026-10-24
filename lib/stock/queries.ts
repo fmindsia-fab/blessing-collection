@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import type { OrderCostMovement } from "./calc";
 
 export type StockRow = {
   id: string;
@@ -228,4 +229,49 @@ export async function listPurchasableMaterials(storeId: string): Promise<Purchas
     unitCost: Number(material.unit_cost),
     tracked: material.track_stock,
   }));
+}
+
+/** Baixas e devoluções de estoque de um pedido, com o custo do dia (base do custo real do pedido). */
+export async function getOrderStockMovements(storeId: string, orderId: string): Promise<OrderCostMovement[]> {
+  const supabase = await createServerSupabaseClient();
+  const { data } = await supabase
+    .from("stock_movements")
+    .select("material_id, quantity, unit_cost, materials(name, unit)")
+    .eq("store_id", storeId)
+    .eq("order_id", orderId)
+    .in("kind", ["consumption", "return"]);
+
+  return (data ?? []).map((row) => {
+    const material = Array.isArray(row.materials) ? row.materials[0] : row.materials;
+    return {
+      materialId: row.material_id,
+      materialName: material?.name ?? "Material",
+      unit: material?.unit ?? "un",
+      quantity: Number(row.quantity),
+      unitCost: row.unit_cost === null ? null : Number(row.unit_cost),
+    };
+  });
+}
+
+/**
+ * Peças ativas sem nenhum material cadastrado na receita: a baixa de estoque não funciona para elas
+ * (não há o que descontar). Serve para a pessoa completar o cadastro.
+ */
+export async function listProductsWithoutMaterials(storeId: string, limit = 12) {
+  const supabase = await createServerSupabaseClient();
+
+  const [{ data: products }, { data: withMaterials }] = await Promise.all([
+    supabase
+      .from("products")
+      .select("id, name")
+      .eq("store_id", storeId)
+      .neq("status", "inactive")
+      .order("name", { ascending: true }),
+    supabase.from("product_materials").select("product_id, products!inner(store_id)").eq("products.store_id", storeId),
+  ]);
+
+  const covered = new Set((withMaterials ?? []).map((row) => row.product_id));
+  const missing = (products ?? []).filter((product) => !covered.has(product.id));
+
+  return { total: missing.length, items: missing.slice(0, limit) };
 }

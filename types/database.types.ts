@@ -567,6 +567,8 @@ export interface Database {
           total_amount: number;
           notes: string | null;
           production_notes: string | null;
+          /** Quando o pedido baixou o estoque de insumos (migration 0045); null = ainda não baixou. */
+          stock_consumed_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -587,6 +589,7 @@ export interface Database {
           total_amount?: number;
           notes?: string | null;
           production_notes?: string | null;
+          stock_consumed_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -904,6 +907,11 @@ export interface Database {
           p_items: { material_id: string; quantity: number; total_cost: number; update_cost: boolean }[];
         };
         Returns: string;
+      };
+      /** Troca a situação do pedido e baixa/devolve o estoque na mesma transação (migration 0045). */
+      set_order_status: {
+        Args: { p_store_id: string; p_order_id: string; p_status: string; p_return_stock?: boolean | null };
+        Returns: { consumed: number; returned: number; shortages: { name: string; unit: string; short: number }[] };
       };
       cancel_purchase: {
         Args: { p_purchase_id: string };

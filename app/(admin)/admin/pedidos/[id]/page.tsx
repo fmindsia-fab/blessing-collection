@@ -10,6 +10,7 @@ import { OrderStatusControl } from "./order-status-control";
 import { CancelOrderButton } from "./cancel-order-button";
 import { InvoiceButton } from "./invoice-button";
 import { getStorePrivate } from "@/lib/store/private";
+import { OrderCostSection } from "./order-cost-section"
 import { StatusPill } from "@/components/admin/status-pill";
 
 function PaymentCard({ label, amount, paidAt }: { label: string; amount: string; paidAt: string | null }) {
@@ -81,7 +82,13 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
       <OrderStatusControl orderId={id} status={order.status} />
 
-      <CancelOrderButton orderId={id} cancelled={order.status === "cancelled"} />
+      <CancelOrderButton
+        orderId={id}
+        cancelled={order.status === "cancelled"}
+        stockConsumed={Boolean(order.stock_consumed_at)}
+      />
+
+      <OrderCostSection storeId={store.id} orderId={id} orderTotal={Number(order.total_amount)} />
 
       <section className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
         <h2 className="text-lg font-semibold tracking-tight">Itens</h2>

@@ -1,6 +1,7 @@
+import Link from "next/link";
 import { PackageOpenIcon } from "lucide-react";
 import { getActiveStore } from "@/lib/store/get-active-store";
-import { listStockOverview } from "@/lib/stock/queries";
+import { listProductsWithoutMaterials, listStockOverview } from "@/lib/stock/queries";
 import { PageHeading } from "@/components/admin/page-heading";
 import { EmptyState } from "@/components/admin/empty-state";
 import { ActionLink } from "@/components/ui/action";
@@ -8,7 +9,10 @@ import { StockList } from "./stock-list";
 
 export default async function StockPage() {
   const store = await getActiveStore();
-  const rows = await listStockOverview(store.id);
+  const [rows, withoutMaterials] = await Promise.all([
+    listStockOverview(store.id),
+    listProductsWithoutMaterials(store.id),
+  ]);
 
   return (
     <div className="flex max-w-3xl flex-col gap-8">
@@ -37,6 +41,37 @@ export default async function StockPage() {
       ) : (
         <StockList rows={rows} />
       )}
+
+      {withoutMaterials.total > 0 ? (
+        <section className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+          <h2 className="text-lg font-semibold tracking-tight">
+            Peças sem materiais cadastrados{" "}
+            <span className="text-sm font-normal text-muted-foreground">({withoutMaterials.total})</span>
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            O estoque só desconta os materiais que estão na receita da peça. Estas peças não têm nenhum material
+            cadastrado, então os pedidos delas não descontam nada. Abra a peça e preencha em &quot;Formação de
+            preço&quot;.
+          </p>
+          <ul className="flex flex-col gap-1.5">
+            {withoutMaterials.items.map((product) => (
+              <li key={product.id}>
+                <Link
+                  href={`/admin/produtos/${product.id}/editar#preco`}
+                  className="text-sm font-medium underline underline-offset-4 hover:text-[var(--gold)]"
+                >
+                  {product.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          {withoutMaterials.total > withoutMaterials.items.length ? (
+            <p className="text-sm text-muted-foreground">
+              E mais {withoutMaterials.total - withoutMaterials.items.length} peças.
+            </p>
+          ) : null}
+        </section>
+      ) : null}
     </div>
   );
 }

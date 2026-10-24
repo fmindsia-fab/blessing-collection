@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  calculateToBuy,
   costChangePercent,
   quantityFromPackages,
   stockLevel,
   summarizeCosts,
+  summarizeOrderCost,
   unitCostFromPurchase,
 } from "@/lib/stock/calc";
 
@@ -65,5 +67,54 @@ describe("costChangePercent", () => {
     expect(costChangePercent(0.1, 0.12)).toBe(20);
     expect(costChangePercent(0.1, 0.08)).toBe(-20);
     expect(costChangePercent(0, 0.12)).toBeNull();
+  });
+});
+
+describe("summarizeOrderCost", () => {
+  it("soma baixas e devoluções por material, com o custo do dia de cada movimento", () => {
+    const summary = summarizeOrderCost(
+      [
+        { materialId: "fio", materialName: "Fio", unit: "g", quantity: -400, unitCost: 0.1 }, // 40,00
+        { materialId: "fecho", materialName: "Fecho", unit: "un", quantity: -2, unitCost: 5 }, // 10,00
+        { materialId: "fio", materialName: "Fio", unit: "g", quantity: 100, unitCost: 0.1 }, // devolveu 100 g
+      ],
+      200,
+    );
+
+    expect(summary.lines).toEqual([
+      { materialId: "fecho", name: "Fecho", unit: "un", used: 2, cost: 10 },
+      { materialId: "fio", name: "Fio", unit: "g", used: 300, cost: 30 },
+    ]);
+    expect(summary.totalCost).toBe(40);
+    expect(summary.margin).toBe(160);
+    expect(summary.marginPercent).toBe(80);
+  });
+
+  it("devolução total zera a linha e o custo", () => {
+    const summary = summarizeOrderCost(
+      [
+        { materialId: "fio", materialName: "Fio", unit: "g", quantity: -400, unitCost: 0.1 },
+        { materialId: "fio", materialName: "Fio", unit: "g", quantity: 400, unitCost: 0.1 },
+      ],
+      100,
+    );
+    expect(summary.lines).toEqual([]);
+    expect(summary.totalCost).toBe(0);
+  });
+
+  it("pedido sem valor não calcula percentual", () => {
+    expect(summarizeOrderCost([], 0).marginPercent).toBeNull();
+  });
+});
+
+describe("calculateToBuy", () => {
+  it("desconta o que já há em estoque", () => {
+    expect(calculateToBuy(500, 200)).toEqual({ stock: 200, toBuy: 300 });
+    expect(calculateToBuy(500, 800)).toEqual({ stock: 800, toBuy: 0 });
+  });
+
+  it("material sem controle: precisa comprar tudo; saldo negativo não ajuda", () => {
+    expect(calculateToBuy(500, null)).toEqual({ stock: null, toBuy: 500 });
+    expect(calculateToBuy(500, -50)).toEqual({ stock: -50, toBuy: 500 });
   });
 });

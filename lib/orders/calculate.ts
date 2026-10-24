@@ -18,12 +18,15 @@ export type ProductMaterialInput = {
   name: string;
   unit: string;
   quantityPerUnit: number;
+  /** Material do catálogo (null/ausente = material avulso, digitado à mão na peça). */
+  materialId?: string | null;
 };
 
 export type ProductionListEntry = {
   name: string;
   unit: string;
   quantity: number;
+  materialId?: string | null;
 };
 
 /**
@@ -50,6 +53,7 @@ export function calculateProductionList(
       name: material.name,
       unit: material.unit,
       quantity: (existing?.quantity ?? 0) + additional,
+      materialId: existing?.materialId ?? material.materialId ?? undefined,
     });
   }
 

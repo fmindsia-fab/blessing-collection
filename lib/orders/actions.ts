@@ -261,27 +261,59 @@ const VALID_STATUSES: OrderStatus[] = [
   "cancelled",
 ];
 
-export async function updateOrderStatus(orderId: string, status: string) {
-  if (!VALID_STATUSES.includes(status as OrderStatus)) return;
+export type OrderStatusResult = {
+  error?: string;
+  /** Quantos materiais foram descontados do estoque nesta troca de situação. */
+  consumed?: number;
+  /** Quantos materiais foram devolvidos ao estoque. */
+  returned?: number;
+  /** Materiais que ficaram com saldo negativo por causa deste pedido (só aviso). */
+  shortages?: { name: string; unit: string; short: number }[];
+};
+
+/**
+ * Troca a situação do pedido. A troca e a baixa/devolução de estoque acontecem na MESMA transação,
+ * dentro da função set_order_status do banco (migration 0045), para os dois nunca ficarem
+ * desencontrados. `delivered_at` também é decidido lá: marca a entrega real ao ir para "Entregue".
+ *
+ * `returnStock` só importa ao cancelar um pedido que já baixou insumos: true devolve ao estoque.
+ */
+export async function updateOrderStatus(
+  orderId: string,
+  status: string,
+  returnStock?: boolean,
+): Promise<OrderStatusResult> {
+  if (!VALID_STATUSES.includes(status as OrderStatus)) return { error: "Situação do pedido inválida." };
 
   const store = await getActiveStore();
+  const notOwnerError = await getNotOwnerError(store);
+  if (notOwnerError) return { error: notOwnerError };
   const supabase = await createServerSupabaseClient();
 
-  const update: { status: OrderStatus; delivered_at?: string | null } = { status: status as OrderStatus };
-  // `delivered_at` marca o momento real da entrega; sai automaticamente do
-  // status "entregue" para não exigir um segundo campo manual no formulário.
-  if (status === "delivered") update.delivered_at = new Date().toISOString();
-  if (status !== "delivered") update.delivered_at = null;
+  const { data, error } = await supabase.rpc("set_order_status", {
+    p_store_id: store.id,
+    p_order_id: orderId,
+    p_status: status,
+    p_return_stock: returnStock ?? null,
+  });
 
-  await supabase.from("orders").update(update).eq("id", orderId).eq("store_id", store.id);
+  if (error) {
+    console.error("[updateOrderStatus]", error.code, error.message);
+    return { error: error.code === "P0001" ? error.message : "Não foi possível mudar a situação do pedido." };
+  }
 
   revalidatePath("/admin/pedidos");
   revalidatePath(`/admin/pedidos/${orderId}`);
+  // Mexer na produção muda o estoque e a lista de materiais a comprar.
+  revalidatePath("/admin/estoque");
+  revalidatePath("/admin/pedidos/dashboard");
+
+  return { consumed: data?.consumed ?? 0, returned: data?.returned ?? 0, shortages: data?.shortages ?? [] };
 }
 
 // Encomenda cancelada não deve mais aparecer nas listas/alertas de trabalho
 // pendente, mas o registro fica no histórico (nunca DELETE, regra do
 // CLAUDE.md) — trocar o status para "cancelled" já cobre isso, sem exclusão.
-export async function cancelOrder(orderId: string) {
-  await updateOrderStatus(orderId, "cancelled");
+export async function cancelOrder(orderId: string, returnStock?: boolean): Promise<OrderStatusResult> {
+  return updateOrderStatus(orderId, "cancelled", returnStock);
 }

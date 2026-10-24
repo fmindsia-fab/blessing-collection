@@ -8,6 +8,7 @@ import {
   ORDER_DASHBOARD_PERIOD_LABEL,
 } from "@/lib/orders/dashboard-queries";
 import { ORDER_STATUS_LABEL, ORDER_STATUS_ORDER, formatBRL } from "@/lib/orders/labels";
+import { formatQuantity } from "@/lib/stock/format";
 import { PageHeading } from "@/components/admin/page-heading";
 import { BackLink } from "@/components/shared/back-link";
 import { PeriodFilter } from "@/components/admin/period-filter";
@@ -174,23 +175,38 @@ export default async function OrdersDashboardPage({
 
       <section className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
         <h2 className="text-lg font-semibold tracking-tight">Materiais a comprar</h2>
-        <p className="text-xs text-muted-foreground">
-          Soma dos materiais cadastrados nas peças de pedidos com status &quot;Confirmado&quot; —
-          não considera período nem outros status.
+        <p className="text-sm text-muted-foreground">
+          O que os pedidos <strong className="text-foreground">Confirmados</strong> vão precisar, menos o que você já
+          tem em estoque (nos materiais com controle). Não considera período nem outras situações.
         </p>
         {materialsToBuy.length > 0 ? (
           <ul className="flex flex-col divide-y divide-border border-y border-border">
             {materialsToBuy.map((material) => (
-              <li key={`${material.name}-${material.unit}`} className="flex items-center justify-between py-2.5 text-sm">
-                <span>{material.name}</span>
-                <span className="tabular-nums text-muted-foreground">
-                  {material.quantity} {material.unit}
+              <li
+                key={`${material.name}-${material.unit}`}
+                className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-3 text-sm"
+              >
+                <span className="font-medium">{material.name}</span>
+                <span className="flex flex-wrap items-center gap-x-3 gap-y-1 tabular-nums text-muted-foreground">
+                  <span>
+                    Precisa {formatQuantity(material.quantity)} {material.unit}
+                  </span>
+                  {material.stock !== null ? (
+                    <span>
+                      Tem {formatQuantity(Math.max(0, material.stock))} {material.unit}
+                    </span>
+                  ) : null}
+                  <strong className={material.toBuy > 0 ? "text-foreground" : "font-medium"}>
+                    {material.toBuy > 0
+                      ? `Comprar ${formatQuantity(material.toBuy)} ${material.unit}`
+                      : "Já tem o suficiente"}
+                  </strong>
                 </span>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Nenhum pedido confirmado com materiais cadastrados no momento.
           </p>
         )}

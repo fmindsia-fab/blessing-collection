@@ -4,7 +4,9 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { PencilIcon } from "lucide-react";
-import { updateOrderStatus } from "@/lib/orders/actions";
+import { updateOrderStatus, type OrderStatusResult } from "@/lib/orders/actions";
+import { StockNotice } from "@/components/admin/stock-notice";
+import { StockDecisionDialog } from "@/components/admin/stock-decision-dialog";
 import { ORDER_STATUS_LABEL, ORDER_STATUS_ORDER, formatBRL, formatOrderDate } from "@/lib/orders/labels";
 import type { OrderKanbanRow } from "@/lib/orders/queries";
 import type { OrderStatus } from "@/types/database.types";
@@ -26,6 +28,9 @@ export function OrdersKanban({ orders }: { orders: OrderKanbanRow[] }) {
   // instante só, depois volta ao normal (senão reanimaria a cada revalidação).
   const [justMovedId, setJustMovedId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  // Resultado da última troca de situação (aviso de estoque) e cancelamento aguardando a escolha de devolver ou não.
+  const [notice, setNotice] = useState<OrderStatusResult | null>(null);
+  const [pendingCancelId, setPendingCancelId] = useState<string | null>(null);
 
   const signature = orders.map((o) => `${o.id}:${o.status}`).join("|");
   const [syncedWith, setSyncedWith] = useState(signature);
@@ -34,7 +39,17 @@ export function OrdersKanban({ orders }: { orders: OrderKanbanRow[] }) {
     setLocalOrders(orders);
   }
 
-  function moveOrder(orderId: string, status: OrderStatus) {
+  // Cancelar pedido que já está (ou esteve) em produção pergunta se os materiais voltam ao estoque.
+  function requestMove(orderId: string, status: OrderStatus) {
+    const order = localOrders.find((o) => o.id === orderId);
+    if (order && status === "cancelled" && ["in_production", "ready", "delivered"].includes(order.status)) {
+      setPendingCancelId(orderId);
+      return;
+    }
+    moveOrder(orderId, status);
+  }
+
+  function moveOrder(orderId: string, status: OrderStatus, returnStock?: boolean) {
     const order = localOrders.find((o) => o.id === orderId);
     if (!order || order.status === status) return;
 
@@ -44,10 +59,15 @@ export function OrdersKanban({ orders }: { orders: OrderKanbanRow[] }) {
     setLocalOrders((current) => current.map((o) => (o.id === orderId ? { ...o, status } : o)));
     setJustMovedId(orderId);
     window.setTimeout(() => setJustMovedId((current) => (current === orderId ? null : current)), 320);
-    startTransition(() => updateOrderStatus(orderId, status));
+    setNotice(null);
+    startTransition(async () => {
+      setNotice(await updateOrderStatus(orderId, status, returnStock));
+    });
   }
 
   return (
+    <div className="flex flex-col gap-4">
+      <StockNotice result={notice} onDismiss={() => setNotice(null)} />
     <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6 lg:-mx-10 lg:px-10">
       {ORDER_STATUS_ORDER.map((status) => {
         const columnOrders = localOrders.filter((o) => o.status === status);
@@ -62,7 +82,7 @@ export function OrdersKanban({ orders }: { orders: OrderKanbanRow[] }) {
             onDragLeave={() => setOverStatus((current) => (current === status ? null : current))}
             onDrop={(e) => {
               e.preventDefault();
-              if (draggingId) moveOrder(draggingId, status);
+              if (draggingId) requestMove(draggingId, status);
               setOverStatus(null);
             }}
             className={`flex w-72 shrink-0 flex-col gap-3 rounded-2xl border-2 border-dashed p-3 transition-all duration-200 ${
@@ -160,6 +180,17 @@ export function OrdersKanban({ orders }: { orders: OrderKanbanRow[] }) {
           </div>
         );
       })}
+    </div>
+      <StockDecisionDialog
+        open={pendingCancelId !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingCancelId(null);
+        }}
+        onChoose={(returnStock) => {
+          if (pendingCancelId) moveOrder(pendingCancelId, "cancelled", returnStock);
+          setPendingCancelId(null);
+        }}
+      />
     </div>
   );
 }

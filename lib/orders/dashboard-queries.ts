@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { calculateToBuy } from "@/lib/stock/calc";
 import { calculateProductionList } from "@/lib/orders/calculate";
 import {
   calculateFinancialSummary,
@@ -218,8 +219,28 @@ export async function getMaterialsToBuy(storeId: string) {
       name: catalogMaterial?.name ?? material.description,
       unit: catalogMaterial?.unit ?? material.unit,
       quantityPerUnit: material.quantity,
+      materialId: material.material_id,
     };
   });
 
-  return calculateProductionList(quantityByProduct, materialInputs);
+  const needs = calculateProductionList(quantityByProduct, materialInputs);
+
+  // Cruza com o estoque: só materiais com controle ligado têm saldo conhecido.
+  const catalogIds = needs.map((need) => need.materialId).filter((id): id is string => Boolean(id));
+  const stockByMaterial = new Map<string, number>();
+  if (catalogIds.length > 0) {
+    const [{ data: tracked }, { data: balances }] = await Promise.all([
+      supabase.from("materials").select("id").eq("store_id", storeId).eq("track_stock", true).in("id", catalogIds),
+      supabase.from("material_stock").select("material_id, stock").eq("store_id", storeId).in("material_id", catalogIds),
+    ]);
+    const trackedIds = new Set((tracked ?? []).map((row) => row.id));
+    for (const balance of balances ?? []) {
+      if (trackedIds.has(balance.material_id)) stockByMaterial.set(balance.material_id, Number(balance.stock));
+    }
+  }
+
+  return needs.map((need) => {
+    const stock = need.materialId ? (stockByMaterial.get(need.materialId) ?? null) : null;
+    return { ...need, ...calculateToBuy(need.quantity, stock) };
+  });
 }

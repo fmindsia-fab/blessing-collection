@@ -191,6 +191,7 @@ export const HELP_TASKS: HelpTask[] = [
     steps: [
       { text: 'Abra "Pedidos" no menu.', href: "/admin/pedidos", target: nav("/admin/pedidos") },
       { text: "Arraste o cartão do pedido para a coluna da nova situação. Ou abra o pedido e clique na situação desejada." },
+      { text: 'Ao colocar o pedido em "Em produção", o sistema desconta do estoque os materiais das peças (só dos materiais com controle de estoque). Se algum material faltar, aparece um aviso, mas a produção continua.' },
     ],
   },
   {
