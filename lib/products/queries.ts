@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { CatalogSort } from "@/lib/catalog/sort";
+import { accentInsensitivePattern, searchTokens } from "@/lib/catalog/search";
 
 const PUBLIC_STATUSES = ["available", "made_to_order", "sold_out"] as const;
 export const PAGE_SIZE = 12;
@@ -203,49 +204,94 @@ export async function listProducts({
   const from = 0;
   const to = page * PAGE_SIZE - 1;
 
-  // Filtro por cor precisa de join com as variantes; sem ele, evitamos o join
-  // para não pagar o custo em toda listagem.
-  const selectClause = colorId
-    ? "id, name, slug, price, status, product_variants!inner(color_id, status)"
-    : "id, name, slug, price, status";
+  const buildQuery = async (searchMode: "full" | "simple") => {
+    // Filtro por cor precisa de join com as variantes; sem ele, evitamos o join
+    // para não pagar o custo em toda listagem.
+    const selectClause = colorId
+      ? "id, name, slug, price, status, product_variants!inner(color_id, status)"
+      : "id, name, slug, price, status";
 
-  let query = supabase
-    .from("products")
-    .select(selectClause, { count: "exact" })
-    .eq("store_id", storeId);
+    let query = supabase
+      .from("products")
+      .select(selectClause, { count: "exact" })
+      .eq("store_id", storeId);
 
-  // Ordem pedida pela cliente; sem pedido, a ordem da loja (sort_order) com as mais novas primeiro.
-  // Desempate por data para a paginação nunca repetir nem pular peças de mesmo preço.
-  if (sort === "menor-preco") {
-    query = query.order("price", { ascending: true }).order("created_at", { ascending: false });
-  } else if (sort === "maior-preco") {
-    query = query.order("price", { ascending: false }).order("created_at", { ascending: false });
-  } else if (sort === "novidades") {
-    query = query.order("created_at", { ascending: false });
-  } else {
-    query = query.order("sort_order", { ascending: true }).order("created_at", { ascending: false });
+    // Ordem pedida pela cliente; sem pedido, a ordem da loja (sort_order) com as mais novas primeiro.
+    // Desempate por data para a paginação nunca repetir nem pular peças de mesmo preço.
+    if (sort === "menor-preco") {
+      query = query.order("price", { ascending: true }).order("created_at", { ascending: false });
+    } else if (sort === "maior-preco") {
+      query = query.order("price", { ascending: false }).order("created_at", { ascending: false });
+    } else if (sort === "novidades") {
+      query = query.order("created_at", { ascending: false });
+    } else {
+      query = query.order("sort_order", { ascending: true }).order("created_at", { ascending: false });
+    }
+    query = query.range(from, to);
+
+    // Disponibilidade é um subconjunto dos status públicos — nunca amplia o que
+    // o visitante enxerga.
+    const isPublicStatus = (value: string): value is (typeof PUBLIC_STATUSES)[number] =>
+      (PUBLIC_STATUSES as readonly string[]).includes(value);
+
+    const statusFilter: readonly (typeof PUBLIC_STATUSES)[number][] =
+      availability && isPublicStatus(availability) ? [availability] : PUBLIC_STATUSES;
+
+    query = query.in("status", statusFilter);
+
+    if (categoryId) query = query.eq("category_id", categoryId);
+    if (collectionId) query = query.eq("collection_id", collectionId);
+    if (modelId) query = query.eq("model_id", modelId);
+    // Busca: cada palavra precisa aparecer no nome, na descrição, nos materiais ou no nome da
+    // categoria/coleção/modelo da peça, com ou sem acento (ver lib/catalog/search.ts).
+    const tokens = searchTokens(search);
+    if (searchMode === "simple" && search) {
+      // Reserva: busca só pelo nome (usada se a busca completa falhar).
+      query = query.ilike("name", `%${search.replace(/[^\p{L}\p{N}\s]/gu, " ").trim()}%`);
+    } else if (tokens.length > 0) {
+      const groupIds = await Promise.all(
+        tokens.map(async (token) => {
+          const pattern = accentInsensitivePattern(token);
+          const [categories, collections, models] = await Promise.all([
+            supabase.from("categories").select("id").eq("store_id", storeId).filter("name", "imatch", pattern),
+            supabase.from("collections").select("id").eq("store_id", storeId).filter("name", "imatch", pattern),
+            supabase.from("models").select("id").eq("store_id", storeId).filter("name", "imatch", pattern),
+          ]);
+          return {
+            pattern,
+            categories: (categories.data ?? []).map((row) => row.id),
+            collections: (collections.data ?? []).map((row) => row.id),
+            models: (models.data ?? []).map((row) => row.id),
+          };
+        }),
+      );
+
+      for (const entry of groupIds) {
+        const conditions = [
+          `name.imatch.${entry.pattern}`,
+          `description.imatch.${entry.pattern}`,
+          `materials.imatch.${entry.pattern}`,
+        ];
+        if (entry.categories.length > 0) conditions.push(`category_id.in.(${entry.categories.join(",")})`);
+        if (entry.collections.length > 0) conditions.push(`collection_id.in.(${entry.collections.join(",")})`);
+        if (entry.models.length > 0) conditions.push(`model_id.in.(${entry.models.join(",")})`);
+        // Um .or() por palavra: todas as palavras precisam casar (E), cada uma em qualquer campo (OU).
+        query = query.or(conditions.join(","));
+      }
+    }
+    if (colorId) {
+      query = query.eq("product_variants.color_id", colorId).neq("product_variants.status", "archived");
+    }
+    return query;
+  };
+
+  let { data, count, error } = await (await buildQuery("full"));
+  if (error && searchTokens(search).length > 0) {
+    // A busca completa falhou (ex.: filtro recusado pelo banco): repete só pelo nome, para a
+    // cliente nunca ficar sem resultado por causa de um erro de busca.
+    console.error("[listProducts] busca completa falhou, usando busca simples:", error.message);
+    ({ data, count, error } = await (await buildQuery("simple")));
   }
-  query = query.range(from, to);
-
-  // Disponibilidade é um subconjunto dos status públicos — nunca amplia o que
-  // o visitante enxerga.
-  const isPublicStatus = (value: string): value is (typeof PUBLIC_STATUSES)[number] =>
-    (PUBLIC_STATUSES as readonly string[]).includes(value);
-
-  const statusFilter: readonly (typeof PUBLIC_STATUSES)[number][] =
-    availability && isPublicStatus(availability) ? [availability] : PUBLIC_STATUSES;
-
-  query = query.in("status", statusFilter);
-
-  if (categoryId) query = query.eq("category_id", categoryId);
-  if (collectionId) query = query.eq("collection_id", collectionId);
-  if (modelId) query = query.eq("model_id", modelId);
-  if (search) query = query.ilike("name", `%${search}%`);
-  if (colorId) {
-    query = query.eq("product_variants.color_id", colorId).neq("product_variants.status", "archived");
-  }
-
-  const { data, count, error } = await query;
   if (error || !data) return { products: [], total: 0, hasMore: false };
 
   // O join do filtro por cor pode repetir o produto quando ele tem mais de uma
