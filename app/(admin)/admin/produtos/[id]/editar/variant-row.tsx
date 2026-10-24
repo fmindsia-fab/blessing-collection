@@ -1,11 +1,10 @@
 "use client";
 
-import { useActionState, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import {
   archiveVariant,
   toggleVariantStatus,
   updateVariant,
-  type VariantFormState,
 } from "@/lib/products/variant-actions";
 import { Button } from "@/components/ui/button";
 import { VariantFormFields } from "./variant-form-fields";
@@ -29,7 +28,6 @@ export type Variant = {
   status: VariantStatus;
 };
 
-const initialState: VariantFormState = {};
 
 function formatPrice(price: number) {
   return price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -71,17 +69,25 @@ export function VariantRow({
   const [isEditing, setIsEditing] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const saveAction = updateVariant.bind(null, productId, variant.id);
-  const [state, formAction, isSaving] = useActionState(saveAction, initialState);
+  // O formulário só fecha DEPOIS de salvar de verdade: se o banco recusar, o erro aparece aqui em vez
+  // de a janela fechar e a pessoa só descobrir ao reabrir que nada foi gravado.
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [isSaving, startSaving] = useTransition();
 
   const color = variant.color_id ? colors.find((c) => c.id === variant.color_id) : undefined;
 
   if (isEditing) {
     return (
       <form
-        action={(formData) => {
-          formAction(formData);
-          setIsEditing(false);
+        onSubmit={(event) => {
+          event.preventDefault();
+          const formData = new FormData(event.currentTarget);
+          setSaveError(null);
+          startSaving(async () => {
+            const result = await updateVariant(productId, variant.id, {}, formData);
+            if (result.error) setSaveError(result.error);
+            else setIsEditing(false);
+          });
         }}
         className="flex flex-col gap-3 rounded-2xl border border-[var(--gold)]/40 bg-card p-4 shadow-sm"
       >
@@ -106,7 +112,11 @@ export function VariantRow({
           />
         </div>
 
-        {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
+        {saveError ? (
+          <p role="alert" className="rounded-xl bg-destructive/10 px-3 py-2.5 text-sm font-medium text-destructive">
+            {saveError}
+          </p>
+        ) : null}
 
         <div className="flex gap-2">
           <Button type="submit" size="xs" disabled={isSaving}>

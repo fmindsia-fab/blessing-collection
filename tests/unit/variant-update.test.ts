@@ -171,5 +171,38 @@ describe("updateVariant", () => {
 
     expect(state.updates[1]).toEqual({ allow_multiple: false });
   });
+
+  // A baixa de estoque depende de este vínculo ficar gravado.
+  it("grava o material do estoque ligado à variação e a quantidade", async () => {
+    const MATERIAL_ID = "33333333-3333-4333-8333-333333333333";
+    const result = await updateVariant(
+      "p1",
+      "v1",
+      {},
+      form({ name: "Alça Metal", variantGroup: "Alça", materialId: MATERIAL_ID, materialQuantity: "2" }),
+    );
+
+    expect(result.error).toBeUndefined();
+    expect(state.updated).toMatchObject({ material_id: MATERIAL_ID, material_quantity: 2 });
+  });
+
+  it("tirar o material (Nenhum) grava null e quantidade 1", async () => {
+    await updateVariant("p1", "v1", {}, form({ name: "Alça Metal", materialId: "" }));
+
+    expect(state.updated).toMatchObject({ material_id: null, material_quantity: 1 });
+  });
+
+  it("recusa material de outra loja", async () => {
+    state.product = { id: "p1" };
+    const result = await updateVariant(
+      "p1",
+      "v1",
+      {},
+      form({ name: "Alça Metal", materialId: "not-a-uuid" }),
+    );
+
+    expect(result.error).toBeTruthy();
+    expect(state.updated).toBeNull();
+  });
 });
 

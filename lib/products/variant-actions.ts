@@ -236,7 +236,10 @@ export async function updateVariant(
     // passaria pela checagem de posse do produto.
     .eq("product_id", productId);
 
-  if (error) return { error: "Não foi possível salvar a variação." };
+  if (error) {
+    console.error("[updateVariant]", error.code, error.message);
+    return { error: `Não foi possível salvar a variação. (código ${error.code ?? "desconhecido"})` };
+  }
 
   await syncGroupMultiple(supabase, productId, parsed.data.variantGroup || null, parsed.data.allowMultiple);
 
