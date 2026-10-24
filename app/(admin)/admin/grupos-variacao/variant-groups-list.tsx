@@ -32,9 +32,9 @@ export function VariantGroupsList({ groups }: { groups: VariantGroup[] }) {
   return (
     <div className="flex flex-col gap-5">
       <p className="text-xs text-muted-foreground">
-        Clique no nome para editar — salva ao sair do campo. Os grupos aparecem como sugestão ao
-        cadastrar uma variação em qualquer peça (Cor, Alça, Tamanho…), mas você pode digitar um
-        nome novo direto lá também.
+        Clique no nome para editar — salva ao sair do campo. As variações aparecem numa lista para
+        escolher ao cadastrar as opções de qualquer peça (Cor, Alça, Tamanho…), e lá você também
+        pode criar uma nova na hora.
       </p>
 
       {groups.length > 0 ? (
@@ -44,7 +44,7 @@ export function VariantGroupsList({ groups }: { groups: VariantGroup[] }) {
               <Input
                 defaultValue={group.name}
                 maxLength={30}
-                aria-label={`Nome do grupo ${group.name}`}
+                aria-label={`Nome da variação ${group.name}`}
                 disabled={isSaving}
                 onBlur={(e) => {
                   const value = e.target.value.trim();
@@ -68,13 +68,13 @@ export function VariantGroupsList({ groups }: { groups: VariantGroup[] }) {
         </div>
       ) : (
         <p className="rounded-[var(--radius)] border border-dashed border-border py-6 text-center text-xs text-muted-foreground">
-          Cor, Alça, Tamanho, Acabamento… cadastre cada eixo de variação abaixo.
+          Cor, Alça, Tamanho, Acabamento… cadastre cada variação abaixo.
         </p>
       )}
 
       <form action={formAction} className="grid gap-3 sm:grid-cols-[1fr_auto]">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="vg-name">Novo grupo</Label>
+          <Label htmlFor="vg-name">Nova variação</Label>
           <Input id="vg-name" name="name" required maxLength={30} placeholder="Alça" />
         </div>
         <Button type="submit" variant="outline" disabled={isPending} className="self-end">
@@ -89,7 +89,7 @@ export function VariantGroupsList({ groups }: { groups: VariantGroup[] }) {
         onOpenChange={(open) => {
           if (!open) setRemoving(null);
         }}
-        title={`Remover ${removing?.name ?? "grupo"}?`}
+        title={`Remover ${removing?.name ?? "variação"}?`}
         description="Ele sai desta lista. As peças que já usam esta opção continuam como estão."
         onConfirm={() => {
           if (removing) startTransition(() => archiveVariantGroup(removing.id));

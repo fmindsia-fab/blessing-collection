@@ -8,12 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
 import { VariantRow, type StoreColor, type Variant } from "./variant-row";
+import { VariationTypeField } from "./variation-type-field";
 
 type ProductVariantsProps = {
   productId: string;
   variants: Variant[];
   colors: StoreColor[];
-  /** Grupos cadastrados em Grupos de variação (/admin/grupos-variacao). */
+  /** Variações cadastradas em Variações das peças (/admin/grupos-variacao). */
   catalogGroups: string[];
 };
 
@@ -84,32 +85,11 @@ export function ProductVariants({ productId, variants, colors, catalogGroups }: 
           ) : null}
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="variant-group">Grupo</Label>
-          <Input
-            id="variant-group"
-            name="variantGroup"
-            list="variant-groups"
-            maxLength={30}
-            placeholder="Cor"
-            defaultValue="Cor"
-          />
-          {/* Sugere os grupos do catálogo (/admin/grupos-variacao) + os já
-              usados nesta peça, para não surgir "Cor" e "cores" como eixos
-              separados por diferença de digitação. Os 4 fixos abaixo cobrem o
-              catálogo vazio; o navegador ignora repetição no datalist. */}
-          <datalist id="variant-groups">
-            {existingGroups.map((group) => (
-              <option key={group} value={group} />
-            ))}
-            <option value="Cor" />
-            <option value="Alça" />
-            <option value="Tamanho" />
-            <option value="Acabamento" />
-          </datalist>
-          <span className="text-xs text-muted-foreground">
-            A cliente escolhe uma opção de cada grupo.{" "}
+          <VariationTypeField id="variant-group" options={existingGroups} defaultValue="Cor" />
+          <span className="text-sm text-muted-foreground">
+            A cliente escolhe uma opção de cada variação.{" "}
             <Link href="/admin/grupos-variacao" className="underline underline-offset-2">
-              Gerenciar grupos
+              Gerenciar variações
             </Link>
           </span>
         </div>

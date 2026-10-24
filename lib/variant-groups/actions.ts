@@ -7,7 +7,7 @@ import { getActiveStore } from "@/lib/store/get-active-store";
 import { getNotOwnerError } from "@/lib/store/ownership";
 
 const groupSchema = z.object({
-  name: z.string().trim().min(1, "Informe o nome do grupo").max(30),
+  name: z.string().trim().min(1, "Informe o nome da variação").max(30),
 });
 
 export type VariantGroupFormState = {
@@ -16,8 +16,8 @@ export type VariantGroupFormState = {
 
 function revalidate() {
   revalidatePath("/admin/grupos-variacao");
-  // A tela de edição da peça lista os grupos no datalist — precisa refletir
-  // um grupo novo/removido sem exigir reload manual.
+  // A tela de edição da peça lista as variações para escolher — precisa refletir
+  // uma variação nova/removida sem exigir reload manual.
   revalidatePath("/admin/produtos", "layout");
 }
 
@@ -46,7 +46,7 @@ export async function createVariantGroup(
 
   if (error) {
     return {
-      error: error.code === "23505" ? "Já existe um grupo com esse nome." : "Não foi possível criar o grupo.",
+      error: error.code === "23505" ? "Já existe uma variação com esse nome." : "Não foi possível criar a variação.",
     };
   }
 

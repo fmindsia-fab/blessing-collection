@@ -8,6 +8,7 @@ import {
   type VariantFormState,
 } from "@/lib/products/variant-actions";
 import { Button } from "@/components/ui/button";
+import { VariationTypeField } from "./variation-type-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -56,7 +57,7 @@ export function VariantRow({
   productId: string;
   variant: Variant;
   colors: StoreColor[];
-  /** Grupos já usados na peça, para o autocompletar. */
+  /** Variações cadastradas e já usadas na peça, para escolher na lista. */
   groups: string[];
 }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -88,26 +89,11 @@ export function VariantRow({
             />
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor={`group-${variant.id}`}>Grupo</Label>
-            <Input
-              id={`group-${variant.id}`}
-              name="variantGroup"
-              list={`groups-${variant.id}`}
-              defaultValue={variant.variant_group ?? ""}
-              maxLength={30}
-              placeholder="Cor"
-            />
-            <datalist id={`groups-${variant.id}`}>
-              {groups.map((group) => (
-                <option key={group} value={group} />
-              ))}
-              <option value="Cor" />
-              <option value="Alça" />
-              <option value="Tamanho" />
-              <option value="Acabamento" />
-            </datalist>
-          </div>
+          <VariationTypeField
+            id={`group-${variant.id}`}
+            options={groups}
+            defaultValue={variant.variant_group ?? ""}
+          />
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor={`color-${variant.id}`}>Cor</Label>
