@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   addDays,
   addMonths,
+  parseCashPeriod,
+  periodMovements,
+  resolveCashPeriod,
   splitInstallments,
   cashBalance,
   lastMonths,
@@ -154,5 +157,33 @@ describe("parcelas", () => {
     const parts = splitInstallments(100, 3, "2026-11-10");
     expect(parts.map((part) => part.amount)).toEqual([33.33, 33.33, 33.34]);
     expect(parts.map((part) => part.dueDate)).toEqual(["2026-11-10", "2026-12-10", "2027-01-10"]);
+  });
+});
+
+describe("período do fluxo de caixa", () => {
+  it("resolve os atalhos de período", () => {
+    expect(resolveCashPeriod("month", TODAY)).toEqual({ period: "month", from: "2026-10-01", to: TODAY });
+    expect(resolveCashPeriod("last-month", TODAY)).toEqual({ period: "last-month", from: "2026-09-01", to: "2026-09-30" });
+    expect(resolveCashPeriod("30d", TODAY).from).toBe("2026-09-25");
+    expect(resolveCashPeriod("year", TODAY).from).toBe("2026-01-01");
+  });
+
+  it("datas escolhidas: troca se vierem invertidas e cai em 'este mês' se forem inválidas", () => {
+    expect(resolveCashPeriod("custom", TODAY, { from: "2026-10-10", to: "2026-09-01" })).toEqual({ period: "custom", from: "2026-09-01", to: "2026-10-10" });
+    expect(resolveCashPeriod("custom", TODAY, { from: "x", to: "y" }).period).toBe("month");
+    expect(parseCashPeriod("qualquer")).toBe("month");
+  });
+
+  it("lista as movimentações do período, da mais recente para a mais antiga", () => {
+    const movements = periodMovements(
+      [
+        { date: "2026-10-02", amount: 100, label: "Sinal de pedido" },
+        { date: "2026-08-01", amount: 999 },
+      ],
+      [{ date: "2026-10-05", amount: 30, label: "Embalagem" }],
+      "2026-10-01",
+      "2026-10-31",
+    );
+    expect(movements.map((item) => [item.direction, item.amount])).toEqual([["out", 30], ["in", 100]]);
   });
 });

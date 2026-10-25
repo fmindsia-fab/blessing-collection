@@ -1,6 +1,8 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { STORE_TIME_ZONE } from "@/lib/analytics/series";
 import { addDays, type DatedAmount, type Receivable } from "./calc";
+
+export type CashEntry = DatedAmount & { label: string; href?: string };
 import type { PayableCategory } from "@/types/database.types";
 
 /** "Hoje" no horário de Brasília (e não em UTC, que vira o dia às 21h daqui), como "AAAA-MM-DD". */
@@ -98,9 +100,9 @@ export type CashIncomeRow = { id: string; description: string; amount: number; r
 export type CashFlowData = {
   opening: { amount: number; date: string | null };
   /** Dinheiro que entrou: sinais e saldos de pedidos recebidos + outras entradas. */
-  incomes: DatedAmount[];
+  incomes: CashEntry[];
   /** Dinheiro que saiu: contas pagas. */
-  expenses: DatedAmount[];
+  expenses: CashEntry[];
   /** O que falta receber dos pedidos (sinal ou saldo ainda não pago), com a data de entrega combinada. */
   receivables: Receivable[];
   /** Contas em aberto, para a projeção. */
@@ -118,7 +120,7 @@ export async function getCashFlowData(storeId: string): Promise<CashFlowData> {
       supabase.from("store_private").select("cash_opening_balance, cash_opening_date").eq("store_id", storeId).maybeSingle(),
       supabase
         .from("orders")
-        .select("deposit_amount, deposit_paid_at, balance_amount, balance_paid_at")
+        .select("id, deposit_amount, deposit_paid_at, balance_amount, balance_paid_at")
         .eq("store_id", storeId)
         .or("deposit_paid_at.not.is.null,balance_paid_at.not.is.null")
         .limit(5000),
@@ -137,7 +139,7 @@ export async function getCashFlowData(storeId: string): Promise<CashFlowData> {
         .limit(1000),
       supabase
         .from("payables")
-        .select("amount, paid_at")
+        .select("description, amount, paid_at, purchase_id")
         .eq("store_id", storeId)
         .eq("status", "active")
         .not("paid_at", "is", null)
@@ -145,16 +147,16 @@ export async function getCashFlowData(storeId: string): Promise<CashFlowData> {
       supabase.from("payables").select("amount, due_date").eq("store_id", storeId).eq("status", "active").is("paid_at", null).limit(1000),
     ]);
 
-  const incomeEntries: DatedAmount[] = [];
+  const incomeEntries: CashEntry[] = [];
   for (const order of paidOrders ?? []) {
     if (order.deposit_paid_at && Number(order.deposit_amount) > 0) {
-      incomeEntries.push({ date: order.deposit_paid_at, amount: Number(order.deposit_amount) });
+      incomeEntries.push({ date: order.deposit_paid_at, amount: Number(order.deposit_amount), label: "Sinal de pedido", href: `/admin/pedidos/${order.id}` });
     }
     if (order.balance_paid_at && Number(order.balance_amount) > 0) {
-      incomeEntries.push({ date: order.balance_paid_at, amount: Number(order.balance_amount) });
+      incomeEntries.push({ date: order.balance_paid_at, amount: Number(order.balance_amount), label: "Saldo de pedido", href: `/admin/pedidos/${order.id}` });
     }
   }
-  for (const income of incomes ?? []) incomeEntries.push({ date: income.received_at, amount: Number(income.amount) });
+  for (const income of incomes ?? []) incomeEntries.push({ date: income.received_at, amount: Number(income.amount), label: income.description });
 
   // Falta receber = total do pedido - o que já foi pago (mesma conta da tela do pedido), numa linha só
   // por pedido, na data de entrega combinada.
@@ -169,7 +171,7 @@ export async function getCashFlowData(storeId: string): Promise<CashFlowData> {
   return {
     opening: { amount: Number(priv?.cash_opening_balance ?? 0), date: priv?.cash_opening_date ?? null },
     incomes: incomeEntries,
-    expenses: (paidPayables ?? []).flatMap((row) => (row.paid_at ? [{ date: row.paid_at, amount: Number(row.amount) }] : [])),
+    expenses: (paidPayables ?? []).flatMap((row) => (row.paid_at ? [{ date: row.paid_at, amount: Number(row.amount), label: row.description, href: row.purchase_id ? `/admin/compras/${row.purchase_id}` : undefined }] : [])),
     receivables,
     openPayables: (openPayables ?? []).map((row) => ({ dueDate: row.due_date, amount: Number(row.amount) })),
     otherIncomes: (incomes ?? []).slice(0, 30).map((row) => ({

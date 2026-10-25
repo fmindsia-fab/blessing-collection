@@ -185,3 +185,78 @@ export function splitInstallments(total: number, count: number, firstDue: string
     amount: index === count - 1 ? Math.round((total - base * (count - 1)) * 100) / 100 : base,
   }));
 }
+
+// ---------- período do fluxo de caixa ----------
+
+export const CASH_PERIODS = ["month", "last-month", "30d", "90d", "year"] as const;
+export type CashPeriod = (typeof CASH_PERIODS)[number] | "custom";
+
+export const CASH_PERIOD_LABEL: Record<CashPeriod, string> = {
+  month: "Este mês",
+  "last-month": "Mês passado",
+  "30d": "Últimos 30 dias",
+  "90d": "Últimos 90 dias",
+  year: "Este ano",
+  custom: "Datas escolhidas",
+};
+
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+export function parseCashPeriod(value: string | undefined): CashPeriod {
+  return value === "custom" || (CASH_PERIODS as readonly string[]).includes(value ?? "") ? (value as CashPeriod) : "month";
+}
+
+/** Primeiro e último dia (inclusive) do período; "datas escolhidas" sem datas válidas cai em "este mês". */
+export function resolveCashPeriod(
+  period: CashPeriod,
+  today: string,
+  custom?: { from?: string; to?: string },
+): { period: CashPeriod; from: string; to: string } {
+  const firstOfMonth = `${monthKey(today)}-01`;
+
+  switch (period) {
+    case "last-month": {
+      const from = addMonths(firstOfMonth, -1);
+      return { period, from, to: addDays(firstOfMonth, -1) };
+    }
+    case "30d":
+      return { period, from: addDays(today, -29), to: today };
+    case "90d":
+      return { period, from: addDays(today, -89), to: today };
+    case "year":
+      return { period, from: `${today.slice(0, 4)}-01-01`, to: today };
+    case "custom": {
+      if (custom?.from && custom?.to && ISO_DATE.test(custom.from) && ISO_DATE.test(custom.to)) {
+        const [from, to] = custom.from <= custom.to ? [custom.from, custom.to] : [custom.to, custom.from];
+        return { period, from, to };
+      }
+      return { period: "month", from: firstOfMonth, to: today };
+    }
+    default:
+      return { period: "month", from: firstOfMonth, to: today };
+  }
+}
+
+export type Movement = { date: string; amount: number; label: string; href?: string; direction: "in" | "out" };
+
+type LabeledAmount = DatedAmount & { label?: string; href?: string };
+
+/** Entradas e saídas do período misturadas numa lista só, da mais recente para a mais antiga. */
+export function periodMovements(incomes: LabeledAmount[], expenses: LabeledAmount[], from: string, to: string): Movement[] {
+  const inRange = (item: DatedAmount) => item.date >= from && item.date <= to;
+  const toMovement = (direction: "in" | "out") => (item: LabeledAmount): Movement => ({
+    date: item.date,
+    amount: item.amount,
+    label: item.label ?? (direction === "in" ? "Entrada" : "Pagamento"),
+    href: item.href,
+    direction,
+  });
+
+  return [...incomes.filter(inRange).map(toMovement("in")), ...expenses.filter(inRange).map(toMovement("out"))].sort((a, b) =>
+    a.date === b.date ? a.label.localeCompare(b.label, "pt-BR") : b.date.localeCompare(a.date),
+  );
+}
+
+export function sumAmounts(items: { amount: number }[]): number {
+  return round2(items.reduce((sum, item) => sum + item.amount, 0));
+}
