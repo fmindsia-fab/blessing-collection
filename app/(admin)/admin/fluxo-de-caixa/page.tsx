@@ -59,7 +59,7 @@ export default async function CashFlowPage() {
             <tbody>
               {months.map((row) => (
                 <tr key={row.month} className="border-b border-border/60 last:border-0">
-                  <th scope="row" className="py-3 pr-4 font-medium capitalize">{monthLabel(row.month)}</th>
+                  <th scope="row" className="py-3 pr-4 font-medium first-letter:uppercase">{monthLabel(row.month)}</th>
                   <td className="py-3 pr-4 text-right tabular-nums">{formatMoney(row.income)}</td>
                   <td className="py-3 pr-4 text-right tabular-nums">{formatMoney(row.expense)}</td>
                   <td className={cn("py-3 text-right font-semibold tabular-nums", row.balance < 0 && "text-destructive")}>
