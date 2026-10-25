@@ -124,10 +124,9 @@ export async function getCashFlowData(storeId: string): Promise<CashFlowData> {
         .limit(5000),
       supabase
         .from("orders")
-        .select("deposit_amount, deposit_paid_at, balance_amount, balance_paid_at, expected_delivery_date")
+        .select("total_amount, deposit_amount, deposit_paid_at, balance_amount, balance_paid_at, expected_delivery_date")
         .eq("store_id", storeId)
         .in("status", ["confirmed", "in_production", "ready", "delivered"])
-        .or("deposit_paid_at.is.null,balance_paid_at.is.null")
         .limit(5000),
       supabase
         .from("cash_incomes")
@@ -157,11 +156,14 @@ export async function getCashFlowData(storeId: string): Promise<CashFlowData> {
   }
   for (const income of incomes ?? []) incomeEntries.push({ date: income.received_at, amount: Number(income.amount) });
 
+  // Falta receber = total do pedido - o que já foi pago (mesma conta da tela do pedido), numa linha só
+  // por pedido, na data de entrega combinada.
   const receivables: Receivable[] = [];
   for (const order of openOrders ?? []) {
-    const date = order.expected_delivery_date ?? null;
-    if (!order.deposit_paid_at && Number(order.deposit_amount) > 0) receivables.push({ date, amount: Number(order.deposit_amount) });
-    if (!order.balance_paid_at && Number(order.balance_amount) > 0) receivables.push({ date, amount: Number(order.balance_amount) });
+    const paid =
+      (order.deposit_paid_at ? Number(order.deposit_amount) : 0) + (order.balance_paid_at ? Number(order.balance_amount) : 0);
+    const pending = Math.round((Number(order.total_amount) - Math.min(paid, Number(order.total_amount))) * 100) / 100;
+    if (pending > 0) receivables.push({ date: order.expected_delivery_date ?? null, amount: pending });
   }
 
   return {
