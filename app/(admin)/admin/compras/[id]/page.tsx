@@ -2,12 +2,15 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { getPurchase } from "@/lib/stock/queries";
+import { listPurchasePayables, todayInStoreZone } from "@/lib/finance/queries";
+import { payableStatus } from "@/lib/finance/calc";
 import { formatDateBR, formatMoney, formatQuantity, formatUnitCost } from "@/lib/stock/format";
 import { BackLink } from "@/components/shared/back-link";
 import { PageHeading } from "@/components/admin/page-heading";
 import { PageSection } from "@/components/admin/page-section";
 import { StatusPill } from "@/components/admin/status-pill";
 import { CancelPurchaseButton } from "./cancel-purchase-button";
+import { PurchasePayablesForm } from "./purchase-payables";
 
 export default async function PurchaseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -16,6 +19,8 @@ export default async function PurchaseDetailPage({ params }: { params: Promise<{
   if (!result) notFound();
 
   const { purchase, items } = result;
+  const today = todayInStoreZone();
+  const payables = await listPurchasePayables(store.id, purchase.id);
   const cancelled = purchase.status === "cancelled";
   const itemsTotal = items.reduce((sum, item) => sum + item.totalCost, 0);
 
@@ -72,6 +77,36 @@ export default async function PurchaseDetailPage({ params }: { params: Promise<{
           <p className="mt-4 whitespace-pre-wrap rounded-xl bg-secondary/50 px-4 py-3 text-sm">{purchase.notes}</p>
         ) : null}
       </PageSection>
+
+      {cancelled ? null : (
+        <PageSection id="contas" title="Contas a pagar desta compra">
+          {payables.length === 0 ? (
+            <PurchasePayablesForm purchaseId={purchase.id} today={today} />
+          ) : (
+            <ul className="flex flex-col divide-y divide-border/70">
+              {payables.map((payable) => {
+                const status = payableStatus(payable, today);
+                return (
+                  <li key={payable.id} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-3">
+                    <div className="flex min-w-0 flex-col">
+                      <span className="text-base font-medium">{payable.description}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {status === "paid" ? `Paga em ${formatDateBR(payable.paidAt ?? payable.dueDate)}` : `Vence em ${formatDateBR(payable.dueDate)}`}
+                      </span>
+                    </div>
+                    <span className="text-base font-semibold tabular-nums">{formatMoney(payable.amount)}</span>
+                  </li>
+                );
+              })}
+              <li className="pt-3 text-sm">
+                <Link href="/admin/contas-a-pagar" className="underline underline-offset-4">
+                  Ver em Contas a pagar
+                </Link>
+              </li>
+            </ul>
+          )}
+        </PageSection>
+      )}
 
       {cancelled ? null : <CancelPurchaseButton purchaseId={purchase.id} />}
     </div>

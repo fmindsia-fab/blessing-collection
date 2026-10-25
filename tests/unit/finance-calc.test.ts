@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   addDays,
+  addMonths,
+  splitInstallments,
   cashBalance,
   lastMonths,
   monthlyCashFlow,
@@ -139,5 +141,18 @@ describe("validação dos lançamentos", () => {
     expect(purchasePaymentSchema.safeParse({ mode: "later", installments: 3 }).success).toBe(false);
     expect(purchasePaymentSchema.safeParse({ mode: "later", firstDue: "2026-11-10", installments: 3 }).success).toBe(true);
     expect(purchasePaymentSchema.safeParse({ mode: "later", firstDue: "2026-11-10", installments: 25 }).success).toBe(false);
+  });
+});
+
+describe("parcelas", () => {
+  it("soma meses sem passar do fim do mês", () => {
+    expect(addMonths("2026-01-31", 1)).toBe("2026-02-28");
+    expect(addMonths("2026-11-15", 2)).toBe("2027-01-15");
+  });
+
+  it("divide o total e a última parcela fecha a conta", () => {
+    const parts = splitInstallments(100, 3, "2026-11-10");
+    expect(parts.map((part) => part.amount)).toEqual([33.33, 33.33, 33.34]);
+    expect(parts.map((part) => part.dueDate)).toEqual(["2026-11-10", "2026-12-10", "2027-01-10"]);
   });
 });

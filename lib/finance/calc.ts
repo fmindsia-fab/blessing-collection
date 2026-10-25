@@ -169,3 +169,19 @@ export function projectCash(input: {
 
   return { steps, undatedReceivable };
 }
+
+/** Soma `months` meses a uma data "AAAA-MM-DD"; se o dia não existir no mês de destino, vai para o último dia. */
+export function addMonths(iso: string, months: number): string {
+  const [year, month, day] = iso.split("-").map(Number);
+  const lastDay = new Date(Date.UTC(year, month - 1 + months + 1, 0)).getUTCDate();
+  return new Date(Date.UTC(year, month - 1 + months, Math.min(day, lastDay))).toISOString().slice(0, 10);
+}
+
+/** Divide um total em parcelas mensais; a última leva a diferença do arredondamento (a soma fecha no total). */
+export function splitInstallments(total: number, count: number, firstDue: string): { dueDate: string; amount: number }[] {
+  const base = Math.round((total / count) * 100) / 100;
+  return Array.from({ length: count }, (_, index) => ({
+    dueDate: addMonths(firstDue, index),
+    amount: index === count - 1 ? Math.round((total - base * (count - 1)) * 100) / 100 : base,
+  }));
+}

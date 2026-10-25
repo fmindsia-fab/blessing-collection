@@ -178,3 +178,16 @@ export async function getCashFlowData(storeId: string): Promise<CashFlowData> {
     })),
   };
 }
+
+/** Contas (não canceladas) geradas por uma compra. */
+export async function listPurchasePayables(storeId: string, purchaseId: string): Promise<PayableRow[]> {
+  const supabase = await createServerSupabaseClient();
+  const { data } = await supabase
+    .from("payables")
+    .select(PAYABLE_COLUMNS)
+    .eq("store_id", storeId)
+    .eq("purchase_id", purchaseId)
+    .eq("status", "active")
+    .order("due_date", { ascending: true });
+  return (data ?? []).map(toPayableRow);
+}

@@ -5,7 +5,8 @@ import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { getNotOwnerError } from "@/lib/store/ownership";
-import { cashIncomeSchema, cashOpeningSchema, paymentDateSchema, payableSchema } from "./schema";
+import { cashIncomeSchema, cashOpeningSchema, paymentDateSchema, payableSchema, purchasePaymentSchema } from "./schema";
+import { splitInstallments } from "./calc";
 import { todayInStoreZone } from "./queries";
 
 export type FinanceFormState = { error?: string; success?: boolean };
@@ -175,5 +176,63 @@ export async function saveCashOpening(_prev: FinanceFormState, formData: FormDat
   if (error) return { error: friendlyDbError(error, "Não foi possível salvar o saldo inicial. Tente novamente.") };
 
   revalidateFinance();
+  return { success: true };
+}
+
+/** Lança as contas de uma compra que ficou sem elas (feita antes do financeiro ou esquecida). */
+export async function createPurchasePayables(purchaseId: string, _prev: FinanceFormState, formData: FormData): Promise<FinanceFormState> {
+  const payment = purchasePaymentSchema.safeParse({
+    mode: formData.get("paymentMode") || "paid",
+    firstDue: formData.get("firstDue") || undefined,
+    installments: formData.get("installments") || 1,
+  });
+  if (!payment.success) return { error: payment.error.issues[0].message };
+
+  const store = await getActiveStore();
+  const notOwnerError = await getNotOwnerError(store);
+  if (notOwnerError) return { error: notOwnerError };
+  const supabase = await createServerSupabaseClient();
+
+  const { data: purchase } = await supabase
+    .from("purchases")
+    .select("id, purchased_at, supplier, total_amount, status")
+    .eq("store_id", store.id)
+    .eq("id", purchaseId)
+    .maybeSingle();
+  if (!purchase) return { error: "Compra não encontrada." };
+  if (purchase.status === "cancelled") return { error: "Esta compra foi cancelada." };
+  const total = Number(purchase.total_amount);
+  if (total <= 0) return { error: "Esta compra não tem valor a pagar." };
+
+  const { count } = await supabase
+    .from("payables")
+    .select("id", { count: "exact", head: true })
+    .eq("store_id", store.id)
+    .eq("purchase_id", purchase.id)
+    .eq("status", "active");
+  if (count && count > 0) return { error: "Esta compra já tem contas lançadas." };
+
+  const label = purchase.supplier ? `Compra - ${purchase.supplier}` : "Compra de materiais";
+  const parts =
+    payment.data.mode === "paid"
+      ? [{ dueDate: purchase.purchased_at, amount: total, paidAt: purchase.purchased_at as string | null }]
+      : splitInstallments(total, payment.data.installments, payment.data.firstDue as string).map((part) => ({ ...part, paidAt: null }));
+
+  const { error } = await supabase.from("payables").insert(
+    parts.map((part, index) => ({
+      store_id: store.id,
+      description: `${label}${parts.length > 1 ? ` (${index + 1}/${parts.length})` : ""}`.slice(0, 120),
+      category: "supplies" as const,
+      supplier: purchase.supplier,
+      due_date: part.dueDate,
+      amount: part.amount,
+      paid_at: part.paidAt,
+      purchase_id: purchase.id,
+    })),
+  );
+  if (error) return { error: friendlyDbError(error, "Não foi possível lançar as contas. Tente novamente.") };
+
+  revalidateFinance();
+  revalidatePath(`/admin/compras/${purchaseId}`);
   return { success: true };
 }
