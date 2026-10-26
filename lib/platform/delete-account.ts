@@ -116,6 +116,17 @@ export async function deleteStoreAndAccount(
     return { error: "Não foi possível excluir os pedidos da loja. Os arquivos já foram removidos; tente novamente." };
   }
 
+  // 2b) Movimentos de estoque e compras ANTES da loja, pelo mesmo motivo: purchase_items e
+  // stock_movements referenciam materials com ON DELETE RESTRICT (migration 0044), então o
+  // cascade da loja podia tentar apagar os materiais com histórico ainda de pé e o banco recusar.
+  for (const table of ["stock_movements", "purchases"] as const) {
+    const { error: stockError } = await client.from(table).delete().eq("store_id", store.id);
+    if (stockError) {
+      console.error("[deleteStoreAndAccount]", table, stockError);
+      return { error: "Não foi possível excluir o estoque e as compras da loja. Os arquivos já foram removidos; tente novamente." };
+    }
+  }
+
   // 3) Loja: as FKs com ON DELETE CASCADE levam produtos, clientes, categorias,
   // assinatura, analytics etc.
   const { error: storeError } = await client.from("stores").delete().eq("id", store.id);

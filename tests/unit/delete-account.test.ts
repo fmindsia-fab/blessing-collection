@@ -87,7 +87,7 @@ describe("deleteStoreAndAccount — ordem das exclusões", () => {
     const result = await deleteStoreAndAccount("loja-1", "teste");
 
     expect(result).toEqual({ success: true });
-    expect(state.calls).toEqual(["delete:orders", "delete:stores", "auth.deleteUser"]);
+    expect(state.calls).toEqual(["delete:orders", "delete:stock_movements", "delete:purchases", "delete:stores", "auth.deleteUser"]);
   });
 
   it("se os pedidos não puderem ser apagados, não toca na loja nem no usuário", async () => {
