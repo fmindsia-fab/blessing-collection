@@ -21,6 +21,18 @@ function friendlyDbError(error: { code?: string; message: string }, fallback: st
   return fallback;
 }
 
+/** Cliente escolhida no formulário: só vale se for desta loja; qualquer outro valor vira "sem cliente". */
+async function resolveCustomerId(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  storeId: string,
+  formData: FormData,
+): Promise<string | null> {
+  const value = String(formData.get("customerId") ?? "");
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)) return null;
+  const { data } = await supabase.from("customers").select("id").eq("id", value).eq("store_id", storeId).maybeSingle();
+  return data?.id ?? null;
+}
+
 function parseLeadForm(formData: FormData) {
   return leadSchema.safeParse({
     name: formData.get("name"),
@@ -53,6 +65,7 @@ export async function createLead(_prev: LeadFormState, formData: FormData): Prom
       estimated_value: parsed.data.estimatedValue,
       next_followup: parsed.data.nextFollowup ?? null,
       notes: parsed.data.notes ?? null,
+      customer_id: await resolveCustomerId(supabase, store.id, formData),
     })
     .select("id")
     .single();
@@ -81,6 +94,7 @@ export async function updateLead(leadId: string, _prev: LeadFormState, formData:
       estimated_value: parsed.data.estimatedValue,
       next_followup: parsed.data.nextFollowup ?? null,
       notes: parsed.data.notes ?? null,
+      customer_id: await resolveCustomerId(supabase, store.id, formData),
     })
     .eq("id", leadId)
     .eq("store_id", store.id)

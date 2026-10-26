@@ -154,6 +154,7 @@ export const HELP_TASKS: HelpTask[] = [
       { text: 'Clique em "Registrar compra".', target: '[data-help="new-purchase"]' },
       { text: "Confira a data e, se quiser, diga onde comprou.", href: "/admin/compras/nova", target: "#purchasedAt" },
       { text: "Escolha o material, a quantidade e quanto você pagou. Se comprou por novelo ou pacote, use \"Contar por embalagem\".", target: "#material-1" },
+      { text: 'Em "Como você pagou?", marque "Já paguei" ou "Vou pagar depois" (a prazo ou parcelado: cada parcela vira uma conta a pagar com o vencimento).', target: '[aria-label="Como você pagou"]' },
       { text: 'Clique em "Registrar compra". O estoque soma sozinho e o preço fica guardado no histórico.', target: '[data-help="save"]' },
     ],
   },
@@ -165,6 +166,46 @@ export const HELP_TASKS: HelpTask[] = [
       { text: 'Abra "Estoque" no menu.', href: "/admin/estoque", target: nav("/admin/estoque") },
       { text: 'Cada material mostra quanto você tem. Para começar a controlar um material, clique em "Controlar este material" e diga quanto tem guardado.' },
       { text: 'Use "Ajustar" para acertar a quantidade depois de contar, e "Avisar quando chegar em" para ser lembrada antes de acabar.' },
+    ],
+  },
+  {
+    id: "contas-a-pagar",
+    title: "Anotar uma conta a pagar e dar baixa quando pagar",
+    keywords: ["conta a pagar", "contas a pagar", "boleto", "vencimento", "pagar conta", "anotar conta", "conta vencida", "despesa", "gasto", "embalagem", "taxa", "repetir todo mes", "marcar como paga"],
+    steps: [
+      { text: 'Abra "Contas a pagar" no menu. Em cima ficam as vencidas, as que vencem hoje e as dos próximos 7 dias.', href: "/admin/contas-a-pagar", target: nav("/admin/contas-a-pagar") },
+      { text: 'Clique em "Nova conta", diga o que é, o valor e quando vence. Marque "Repetir todo mês" para contas fixas.', target: '[data-help="new-payable"]' },
+      { text: 'Quando pagar, clique em "Marcar como paga". Se a conta repete todo mês, a do mês seguinte aparece sozinha.' },
+    ],
+  },
+  {
+    id: "fluxo-de-caixa",
+    title: "Ver quanto entrou, quanto saiu e como o caixa deve ficar",
+    keywords: ["fluxo de caixa", "caixa", "saldo", "quanto entrou", "quanto saiu", "lucro do mes", "financeiro", "entradas e saidas", "quanto tenho no caixa", "previsao", "saldo inicial"],
+    steps: [
+      { text: 'Abra "Fluxo de caixa" no menu.', href: "/admin/fluxo-de-caixa", target: nav("/admin/fluxo-de-caixa") },
+      { text: 'Escolha o período nos botões (Este mês, Mês passado…) ou digite as datas em "De" e "Até". Os cartões mostram o que entrou, saiu e sobrou.' },
+      { text: 'Para o saldo ficar certo, abra "Saldo inicial do caixa" no fim da página e diga quanto tinha numa data. Venda fora do sistema entra em "Anotar uma entrada".', target: "#ajustes" },
+    ],
+  },
+  {
+    id: "funil-contato",
+    title: "Anotar um contato de venda e acompanhar até fechar",
+    keywords: ["funil", "funil de vendas", "contato", "novo contato", "lead", "interessada", "orcamento enviado", "voltar a falar", "retorno", "perdi a venda", "acompanhar venda", "instagram", "quem chamou"],
+    steps: [
+      { text: 'Abra "Funil de vendas" no menu.', href: "/admin/funil", target: nav("/admin/funil") },
+      { text: 'Clique em "Novo contato", preencha nome, de onde veio, a peça de interesse e quando voltar a falar.', target: '[data-help="new-lead"]' },
+      { text: 'No quadro, use "Mover para…" no cartão conforme a conversa anda: Conversando, Orçamento enviado, Fechado. Para "Perdido", abra o contato e conte o motivo.' },
+    ],
+  },
+  {
+    id: "funil-virar-pedido",
+    title: "Transformar um contato do funil em pedido",
+    keywords: ["virar pedido", "contato virou pedido", "fechar venda", "transformar em pedido", "converter contato", "criar pedido do contato"],
+    steps: [
+      { text: 'Abra "Funil de vendas" no menu e clique no contato.', href: "/admin/funil", target: nav("/admin/funil") },
+      { text: 'Clique em "Virar pedido". A cliente é cadastrada (ou encontrada pelo telefone) e o novo pedido abre com ela escolhida.' },
+      { text: 'Escolha as peças e salve o pedido. O contato passa para "Fechado" sozinho.' },
     ],
   },
   {

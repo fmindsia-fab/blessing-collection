@@ -17,6 +17,8 @@ import { StatCard } from "@/components/admin/stat-card";
 import { TopProducts } from "@/components/admin/top-products";
 import { TrendChart } from "@/components/admin/trend-chart";
 import { calculateTrend } from "@/lib/analytics/series";
+import { TodayCards } from "@/components/admin/today-cards";
+import { getTodayCardsData } from "@/lib/dashboard/today";
 import { GettingStarted } from "@/components/admin/getting-started";
 import { getGettingStarted } from "@/lib/onboarding/getting-started";
 
@@ -29,12 +31,13 @@ export default async function AdminDashboardPage({
   const period = parsePeriod(periodo);
 
   const store = await getActiveStore();
-  const [totals, rankings, products, series, previous] = await Promise.all([
+  const [totals, rankings, products, series, previous, todayCards] = await Promise.all([
     getAnalyticsTotals(store.id, period),
     getProductRankings(store.id, period),
     listAllProductsForAdmin(store.id),
     getDailySeries(store.id, period),
     getPreviousPeriodTotals(store.id, period),
+    getTodayCardsData(store.id),
   ]);
 
   // Tendência só quando há período anterior com dados reais para comparar.
@@ -61,6 +64,8 @@ export default async function AdminDashboardPage({
       </div>
 
       <GettingStarted items={gettingStarted} />
+
+      <TodayCards data={todayCards} />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getActiveStore } from "@/lib/store/get-active-store";
+import { listActiveCustomers } from "@/lib/customers/queries";
 import { getLead } from "@/lib/leads/queries";
 import { todayInStoreZone } from "@/lib/finance/queries";
 import { stageLabel } from "@/lib/leads/calc";
@@ -20,6 +21,7 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
   if (!result) notFound();
 
   const { lead, events } = result;
+  const customers = await listActiveCustomers(store.id);
 
   return (
     <div className="flex max-w-3xl flex-col gap-6">
@@ -34,7 +36,11 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
         <LeadActions leadId={lead.id} hasOrder={Boolean(lead.orderId)} />
       </PageSection>
 
-      <LeadForm lead={lead} today={todayInStoreZone()} />
+      <LeadForm
+        lead={lead}
+        today={todayInStoreZone()}
+        customers={customers.map((customer) => ({ id: customer.id, name: customer.name, phone: customer.phone }))}
+      />
 
       <PageSection id="historico" title="Histórico">
         <ul className="flex flex-col divide-y divide-border/70">
