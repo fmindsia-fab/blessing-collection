@@ -3,6 +3,7 @@ import {
   CalculatorIcon,
   ChartColumnIcon,
   FolderTreeIcon,
+  FunnelIcon,
   GemIcon,
   HandCoinsIcon,
   LandmarkIcon,
@@ -62,6 +63,10 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { href: "/admin/estoque", label: "Estoque", icon: WarehouseIcon },
       { href: "/admin/compras", label: "Compras", icon: ReceiptTextIcon },
     ],
+  },
+  {
+    label: "Vendas",
+    items: [{ href: "/admin/funil", label: "Funil de vendas", icon: FunnelIcon }],
   },
   {
     label: "Financeiro",

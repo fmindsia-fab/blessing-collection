@@ -262,6 +262,21 @@ export async function createOrder(
     return { error: "Não foi possível salvar os itens do pedido." };
   }
 
+  // Pedido nascido de um contato do funil: liga os dois e marca o contato como "Fechado". Falhar
+  // aqui não desfaz o pedido (já está salvo); o contato só fica na etapa em que estava.
+  const leadId = String(formData.get("leadId") ?? "");
+  if (/^[0-9a-f-]{36}$/i.test(leadId)) {
+    const { error: leadError } = await supabase
+      .from("leads")
+      .update({ order_id: order.id, customer_id: data.customerId, stage: "won" })
+      .eq("id", leadId)
+      .eq("store_id", store.id)
+      .eq("status", "active")
+      .is("order_id", null);
+    if (leadError) console.error("createOrder (contato do funil) falhou:", leadError.message);
+    revalidatePath("/admin/funil");
+  }
+
   revalidatePath("/admin/pedidos");
   redirect(`/admin/pedidos/${order.id}`);
 }

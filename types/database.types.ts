@@ -10,6 +10,8 @@ export type StoreStatus = "active" | "suspended" | "archived";
 /** MEI não entra como percentual: o DAS é custo fixo mensal (migration 0014). */
 export type TaxRegime = "none" | "mei" | "simples" | "other";
 export type PricingMethodValue = "margin" | "markup";
+export type LeadStage = "new" | "talking" | "quoted" | "won" | "lost";
+export type LeadSource = "whatsapp" | "instagram" | "referral" | "fair" | "website" | "other";
 export type PayableCategory = "supplies" | "packaging" | "shipping" | "fees" | "marketing" | "other";
 /**
  * Valor da lista curada em `lib/store/fonts.ts`. Deixou de ser union fechada
@@ -557,6 +559,70 @@ export interface Database {
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["cash_incomes"]["Insert"]>;
+        Relationships: [];
+      };
+      /** Contatos do funil de vendas (migration 0052). */
+      leads: {
+        Row: {
+          id: string;
+          store_id: string;
+          name: string;
+          phone: string | null;
+          source: LeadSource;
+          interest: string | null;
+          stage: LeadStage;
+          estimated_value: number;
+          next_followup: string | null;
+          lost_reason: string | null;
+          notes: string | null;
+          customer_id: string | null;
+          order_id: string | null;
+          status: "active" | "archived";
+          stage_changed_at: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          store_id: string;
+          name: string;
+          phone?: string | null;
+          source?: LeadSource;
+          interest?: string | null;
+          stage?: LeadStage;
+          estimated_value?: number;
+          next_followup?: string | null;
+          lost_reason?: string | null;
+          notes?: string | null;
+          customer_id?: string | null;
+          order_id?: string | null;
+          status?: "active" | "archived";
+          stage_changed_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["leads"]["Insert"]>;
+        Relationships: [];
+      };
+      /** Histórico de etapas do funil (migration 0052): só leitura e inclusão, gravado por trigger. */
+      lead_events: {
+        Row: {
+          id: string;
+          store_id: string;
+          lead_id: string;
+          from_stage: LeadStage | null;
+          to_stage: LeadStage;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          store_id: string;
+          lead_id: string;
+          from_stage?: LeadStage | null;
+          to_stage: LeadStage;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["lead_events"]["Insert"]>;
         Relationships: [];
       };
       purchase_items: {

@@ -74,6 +74,8 @@ export function OrderForm({
   paymentMethods,
   order,
   items: initialItems,
+  defaultCustomerId,
+  leadId,
 }: {
   products: ProductOption[];
   customers: CustomerOption[];
@@ -92,6 +94,10 @@ export function OrderForm({
     balance_paid_at: string | null;
     balance_payment_method_id: string | null;
   };
+  /** Cliente já escolhida (vindo de "Virar pedido" no funil). */
+  defaultCustomerId?: string;
+  /** Contato do funil que originou o pedido: ao salvar, ele vira "Fechado". */
+  leadId?: string;
   items?: {
     product_id: string | null;
     variant_id: string | null;
@@ -107,7 +113,7 @@ export function OrderForm({
   const [state, formAction, isPending] = useActionState(action, initialState);
 
   const [customerList, setCustomerList] = useState(customers);
-  const [customerId, setCustomerId] = useState(order?.customer_id ?? "");
+  const [customerId, setCustomerId] = useState(order?.customer_id ?? defaultCustomerId ?? "");
 
   const [items, setItems] = useState<ItemRow[]>(() => {
     if (initialItems && initialItems.length > 0) {
@@ -177,6 +183,7 @@ export function OrderForm({
   return (
     <form action={formAction} className="flex flex-col gap-5">
       <input type="hidden" name="itemCount" value={items.length} />
+      {leadId ? <input type="hidden" name="leadId" value={leadId} /> : null}
 
       <section className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
         <h2 className="text-lg font-semibold tracking-tight">Cliente e datas</h2>

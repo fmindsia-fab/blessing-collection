@@ -6,7 +6,14 @@ import { PageHeading } from "@/components/admin/page-heading";
 import { BackLink } from "@/components/shared/back-link";
 import { OrderForm } from "../order-form";
 
-export default async function NewOrderPage() {
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export default async function NewOrderPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ cliente?: string; contato?: string }>;
+}) {
+  const { cliente, contato } = await searchParams;
   const store = await getActiveStore();
   const [products, customers, paymentMethods] = await Promise.all([
     listProductsForOrderPicker(store.id),
@@ -21,6 +28,8 @@ export default async function NewOrderPage() {
       <OrderForm
         products={products}
         customers={customers}
+        defaultCustomerId={cliente && UUID.test(cliente) && customers.some((customer) => customer.id === cliente) ? cliente : undefined}
+        leadId={contato && UUID.test(contato) ? contato : undefined}
         paymentMethods={paymentMethods.map((pm) => ({ id: pm.id, label: pm.label }))}
       />
     </div>
