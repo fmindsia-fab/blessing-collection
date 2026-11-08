@@ -175,6 +175,27 @@ export async function listColorsInUse(storeId: string): Promise<ColorFilterOptio
     }));
 }
 
+export type AvailabilityCounts = Record<(typeof PUBLIC_STATUSES)[number], number>;
+
+/** Quantas peças públicas há em cada disponibilidade, para os atalhos do catálogo. */
+export async function countProductsByAvailability(storeId: string): Promise<AvailabilityCounts> {
+  const supabase = await createServerSupabaseClient();
+  const results = await Promise.all(
+    PUBLIC_STATUSES.map((status) =>
+      supabase
+        .from("products")
+        .select("id", { count: "exact", head: true })
+        .eq("store_id", storeId)
+        .eq("status", status),
+    ),
+  );
+  return {
+    available: results[0].count ?? 0,
+    made_to_order: results[1].count ?? 0,
+    sold_out: results[2].count ?? 0,
+  };
+}
+
 export async function listProducts({
   storeId,
   page = 1,
@@ -225,7 +246,12 @@ export async function listProducts({
     } else if (sort === "novidades") {
       query = query.order("created_at", { ascending: false });
     } else {
-      query = query.order("sort_order", { ascending: true }).order("created_at", { ascending: false });
+      // Pronta entrega na frente: "status" é texto e 'available' < 'made_to_order' < 'sold_out',
+      // então a ordem alfabética já dá pronta entrega, sob encomenda e esgotadas por último.
+      query = query
+        .order("status", { ascending: true })
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: false });
     }
     query = query.range(from, to);
 

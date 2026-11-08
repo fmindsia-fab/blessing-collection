@@ -5,7 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronDownIcon, XIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buildFilterHref, type FilterParams } from "@/lib/catalog/filter-url";
-import type { ColorFilterOption } from "@/lib/products/queries";
+import type { AvailabilityCounts, ColorFilterOption } from "@/lib/products/queries";
+import { ShareButton } from "@/components/catalog/share-button";
 
 export const AVAILABILITY_OPTIONS = [
   { value: "available", label: "Pronta entrega" },
@@ -29,6 +30,10 @@ type CatalogFiltersProps = {
   activeSort?: string;
   /** Some da barra quando a página já é de uma categoria específica. */
   hideCategory?: boolean;
+  /** Com as contagens, a barra mostra os atalhos de disponibilidade no lugar do menu. */
+  availabilityCounts?: AvailabilityCounts;
+  /** Com título, a lista de pronta entrega ganha o botão de compartilhar. */
+  shareTitle?: string;
 };
 
 /** Amostra da cor. Composta ("Lilás - Branco") sai dividida na diagonal. */
@@ -156,6 +161,39 @@ function FilterOption({
   );
 }
 
+/** Atalho de disponibilidade: um toque, com a contagem de peças ao lado. */
+function AvailabilityPill({
+  href,
+  active,
+  highlight = false,
+  count,
+  children,
+}: {
+  href: string;
+  active: boolean;
+  highlight?: boolean;
+  count?: number;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      aria-current={active ? "true" : undefined}
+      className={cn(
+        "inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-xs tracking-wide outline-none transition-all duration-300 focus-visible:ring-2 focus-visible:ring-[var(--gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        active
+          ? "border-foreground bg-foreground text-background shadow-sm"
+          : highlight
+            ? "border-[var(--gold)] text-foreground hover:bg-secondary"
+            : "border-border text-muted-foreground hover:border-foreground hover:bg-secondary hover:text-foreground",
+      )}
+    >
+      {children}
+      {count !== undefined ? <span className="tabular-nums opacity-60">{count}</span> : null}
+    </Link>
+  );
+}
+
 /** Filtro escolhido, com o x para remover. */
 function ActiveChip({ href, children }: { href: string; children: React.ReactNode }) {
   return (
@@ -181,6 +219,8 @@ export function CatalogFilters({
   search,
   activeSort,
   hideCategory = false,
+  availabilityCounts,
+  shareTitle,
 }: CatalogFiltersProps) {
   const current: FilterParams = {
     busca: search,
@@ -199,11 +239,41 @@ export function CatalogFilters({
   // Um grupo com uma opção só não é escolha: filtrar por ele devolveria tudo.
   const showCategory = !hideCategory && categories.length > 1;
   const hasActiveFilter = Boolean(
-    activeColor || activeAvailability || activeModel || (activeCategory && !hideCategory),
+    activeColor ||
+      (activeAvailability && !availabilityCounts) ||
+      activeModel ||
+      (activeCategory && !hideCategory),
   );
 
   return (
     <div className="flex flex-col items-center gap-3 border-y border-border py-5">
+      {availabilityCounts ? (
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <AvailabilityPill
+            href={buildFilterHref(basePath, { ...current, disponibilidade: undefined })}
+            active={!activeAvailability}
+          >
+            Todas
+          </AvailabilityPill>
+          {AVAILABILITY_OPTIONS.filter(
+            (option) => availabilityCounts[option.value] > 0 || activeAvailability === option.value,
+          ).map((option) => (
+            <AvailabilityPill
+              key={option.value}
+              href={buildFilterHref(basePath, { ...current, disponibilidade: option.value })}
+              active={activeAvailability === option.value}
+              highlight={option.value === "available"}
+              count={availabilityCounts[option.value]}
+            >
+              {option.label}
+            </AvailabilityPill>
+          ))}
+          {shareTitle && activeAvailability === "available" ? (
+            <ShareButton title={shareTitle} label="Compartilhar" />
+          ) : null}
+        </div>
+      ) : null}
+
       {/* `relative` é a referência do painel no celular, onde ele ocupa a
           largura da barra em vez de se ancorar no próprio botão. */}
       <div className="relative flex flex-wrap items-center justify-center gap-2">
@@ -280,6 +350,7 @@ export function CatalogFilters({
           </FilterDropdown>
         ) : null}
 
+        {!availabilityCounts ? (
         <FilterDropdown label="Disponibilidade" activeLabel={selectedAvailability?.label}>
           {(close) =>
             AVAILABILITY_OPTIONS.map((option) => {
@@ -300,6 +371,7 @@ export function CatalogFilters({
             })
           }
         </FilterDropdown>
+        ) : null}
       </div>
 
       {/* Os filtros escolhidos ficam visíveis fora do painel: sem isso a
@@ -322,7 +394,7 @@ export function CatalogFilters({
               {selectedColor.name}
             </ActiveChip>
           ) : null}
-          {selectedAvailability ? (
+          {selectedAvailability && !availabilityCounts ? (
             <ActiveChip href={buildFilterHref(basePath, { ...current, disponibilidade: undefined })}>
               {selectedAvailability.label}
             </ActiveChip>

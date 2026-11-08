@@ -1,5 +1,5 @@
 import { getActiveStore } from "@/lib/store/get-active-store";
-import { listColorsInUse, listProducts, PAGE_SIZE } from "@/lib/products/queries";
+import { countProductsByAvailability, listColorsInUse, listProducts, PAGE_SIZE } from "@/lib/products/queries";
 import { listModelsInUse } from "@/lib/models/queries";
 import { listCategoriesInUse } from "@/lib/categories/queries";
 import { ProductCard } from "@/components/catalog/product-card";
@@ -40,10 +40,11 @@ export default async function ProductsPage({
 
   // As opções dos filtros vêm antes da listagem: os filtros chegam por slug
   // (URL legível) e a query precisa dos ids.
-  const [models, categories, colors] = await Promise.all([
+  const [models, categories, colors, availabilityCounts] = await Promise.all([
     listModelsInUse(store.id),
     listCategoriesInUse(store.id),
     listColorsInUse(store.id),
+    countProductsByAvailability(store.id),
   ]);
 
   const activeModelId = modelo ? models.find((m) => m.slug === modelo)?.id : undefined;
@@ -122,6 +123,8 @@ export default async function ProductsPage({
         activeCategory={categoria}
         search={busca}
         activeSort={sort}
+        availabilityCounts={availabilityCounts}
+        shareTitle={`Peças de pronta entrega | ${store.name}`}
       />
 
       <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 sm:justify-between">
