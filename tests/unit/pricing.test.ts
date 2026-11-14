@@ -12,6 +12,7 @@ import {
   roundToCommercialPrice,
   suggestRoundedPrices,
 } from "@/lib/pricing/calculate";
+import { isMissingFee, sumFeePercent } from "@/lib/pricing/fees";
 import {
   applyPercent,
   formatBRL,
@@ -488,5 +489,70 @@ describe("parseCurrencyInput", () => {
     expect(parseCurrencyInput("")).toBe(0);
     expect(parseCurrencyInput("abc")).toBe(0);
     expect(parseCurrencyInput("-10")).toBe(0);
+  });
+});
+
+// Números reais do banco (simulação de R$ 509,90 líquidos): soma simples de
+// "taxa por venda" + "taxa de parcelamento", repassada por inteiro ao cliente.
+describe("taxas do banco — soma simples repassada", () => {
+  const casos = [
+    { label: "Débito", admin: 0.89, parcelamento: 0, parcelas: 1, cliente: 51_448 },
+    { label: "Crédito 1x", admin: 3.09, parcelamento: 0, parcelas: 1, cliente: 52_616 },
+    { label: "Crédito 2x", admin: 2.75, parcelamento: 3.04, parcelas: 2, cliente: 54_124 },
+    { label: "Crédito 3x", admin: 2.75, parcelamento: 3.34, parcelas: 3, cliente: 54_297 },
+    { label: "Crédito 4x", admin: 2.75, parcelamento: 5.24, parcelas: 4, cliente: 55_418 },
+    { label: "Crédito 6x", admin: 2.75, parcelamento: 5.44, parcelas: 6, cliente: 55_539 },
+    { label: "Crédito 10x", admin: 2.9, parcelamento: 8.15, parcelas: 10, cliente: 57_324 },
+    { label: "Crédito 12x", admin: 2.9, parcelamento: 9.48, parcelas: 12, cliente: 58_194 },
+  ];
+
+  it.each(casos)("$label: cliente paga o mesmo que o banco calcula", (caso) => {
+    const [opcao] = calculateInstallmentOptions({
+      cashPriceCents: 50_990,
+      methods: [
+        {
+          id: caso.label,
+          label: caso.label,
+          feeBasisPoints: pct(sumFeePercent(caso.admin, caso.parcelamento)),
+          installments: caso.parcelas,
+        },
+      ],
+    });
+
+    expect(opcao.priceCents).toBe(caso.cliente);
+    expect(opcao.netReceivedCents).toBeGreaterThanOrEqual(50_990);
+  });
+
+  it("soma as taxas sem erro de ponto flutuante", () => {
+    expect(sumFeePercent(2.75, 3.34)).toBe(6.09);
+    expect(sumFeePercent(2.9, 9.48)).toBe(12.38);
+  });
+
+  // Com arredondamento comum o líquido podia cair 1 centavo abaixo do à vista.
+  it("nunca recebe menos que o à vista, qualquer valor e taxa", () => {
+    for (const taxa of [0.89, 3.09, 5.79, 8.19, 12.38]) {
+      for (let cash = 1_000; cash <= 60_000; cash += 137) {
+        const [opcao] = calculateInstallmentOptions({
+          cashPriceCents: cash,
+          methods: [{ id: "x", label: "x", feeBasisPoints: pct(taxa), installments: 1 }],
+        });
+
+        expect(opcao.netReceivedCents).toBeGreaterThanOrEqual(cash);
+      }
+    }
+  });
+});
+
+describe("isMissingFee", () => {
+  it("avisa crédito e débito sem taxa", () => {
+    expect(isMissingFee("Crédito 3x", 3, 0)).toBe(true);
+    expect(isMissingFee("Credito 1x", 1, 0)).toBe(true);
+    expect(isMissingFee("Débito", 1, 0)).toBe(true);
+  });
+
+  it("não avisa Pix, dinheiro nem forma com taxa", () => {
+    expect(isMissingFee("Pix", 1, 0)).toBe(false);
+    expect(isMissingFee("Dinheiro", 1, 0)).toBe(false);
+    expect(isMissingFee("Crédito 3x", 3, 6.09)).toBe(false);
   });
 });

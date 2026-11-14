@@ -336,6 +336,8 @@ export interface Database {
           store_id: string;
           label: string;
           fee_percent: number;
+          admin_fee_percent: number;
+          installment_fee_percent: number;
           installments: number;
           status: ArchivableStatus;
           sort_order: number;
@@ -347,6 +349,8 @@ export interface Database {
           store_id: string;
           label: string;
           fee_percent?: number;
+          admin_fee_percent?: number;
+          installment_fee_percent?: number;
           installments?: number;
           status?: ArchivableStatus;
           sort_order?: number;

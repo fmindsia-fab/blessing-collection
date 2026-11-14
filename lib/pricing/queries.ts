@@ -85,7 +85,7 @@ export async function listAllPaymentMethodsForAdmin(storeId: string) {
 
   const { data } = await supabase
     .from("payment_methods")
-    .select("id, label, fee_percent, installments, status")
+    .select("id, label, fee_percent, admin_fee_percent, installment_fee_percent, installments, status")
     .eq("store_id", storeId)
     .order("installments", { ascending: true })
     .order("sort_order", { ascending: true });

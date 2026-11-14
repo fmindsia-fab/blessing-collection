@@ -5,6 +5,7 @@ import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getActiveStore } from "@/lib/store/get-active-store";
 import { getNotOwnerError } from "@/lib/store/ownership";
+import { sumFeePercent } from "@/lib/pricing/fees";
 
 export type PricingFormState = {
   error?: string;
@@ -90,7 +91,11 @@ export async function updatePricingSettings(
 
 const paymentMethodSchema = z.object({
   label: z.string().trim().min(1, "Informe o nome da forma de pagamento").max(40),
-  feePercent: z
+  adminFeePercent: z
+    .union([z.literal(""), z.coerce.number().min(0).max(99.99)])
+    .optional()
+    .transform((value) => (value === "" || value === undefined ? 0 : value)),
+  installmentFeePercent: z
     .union([z.literal(""), z.coerce.number().min(0).max(99.99)])
     .optional()
     .transform((value) => (value === "" || value === undefined ? 0 : value)),
@@ -103,11 +108,15 @@ export async function createPaymentMethod(
 ): Promise<PricingFormState> {
   const parsed = paymentMethodSchema.safeParse({
     label: formData.get("label"),
-    feePercent: formData.get("feePercent"),
+    adminFeePercent: formData.get("adminFeePercent"),
+    installmentFeePercent: formData.get("installmentFeePercent"),
     installments: formData.get("installments"),
   });
 
   if (!parsed.success) return { error: parsed.error.issues[0].message };
+
+  const feePercent = sumFeePercent(parsed.data.adminFeePercent, parsed.data.installmentFeePercent);
+  if (feePercent >= 100) return { error: "As taxas somadas precisam ser menores que 100%." };
 
   const store = await getActiveStore();
   const notOwnerError = await getNotOwnerError(store);
@@ -122,7 +131,9 @@ export async function createPaymentMethod(
   const { error } = await supabase.from("payment_methods").insert({
     store_id: store.id,
     label: parsed.data.label,
-    fee_percent: parsed.data.feePercent,
+    fee_percent: feePercent,
+    admin_fee_percent: parsed.data.adminFeePercent,
+    installment_fee_percent: parsed.data.installmentFeePercent,
     installments: parsed.data.installments,
     sort_order: count ?? 0,
   });
@@ -133,15 +144,32 @@ export async function createPaymentMethod(
   return { success: true };
 }
 
-export async function updatePaymentMethodFee(id: string, feePercent: number) {
+/**
+ * Grava as duas partes da taxa e o total (soma simples, como o banco cobra).
+ * O total é calculado aqui, no servidor: o que o catálogo cobra do cliente
+ * nunca depende de uma conta feita no navegador.
+ */
+export async function updatePaymentMethodFees(
+  id: string,
+  adminFeePercent: number,
+  installmentFeePercent: number,
+) {
   const store = await getActiveStore();
   const supabase = await createServerSupabaseClient();
 
-  if (!Number.isFinite(feePercent) || feePercent < 0 || feePercent >= 100) return;
+  const valid = (value: number) => Number.isFinite(value) && value >= 0 && value < 100;
+  if (!valid(adminFeePercent) || !valid(installmentFeePercent)) return;
+
+  const feePercent = sumFeePercent(adminFeePercent, installmentFeePercent);
+  if (feePercent >= 100) return;
 
   await supabase
     .from("payment_methods")
-    .update({ fee_percent: feePercent })
+    .update({
+      admin_fee_percent: adminFeePercent,
+      installment_fee_percent: installmentFeePercent,
+      fee_percent: feePercent,
+    })
     .eq("id", id)
     .eq("store_id", store.id);
 

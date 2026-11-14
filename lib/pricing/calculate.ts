@@ -247,6 +247,10 @@ export type InstallmentOption = {
  * R$ 378,84; a taxa de R$ 18,94 sai e sobram exatamente os R$ 359,90. É a
  * mesma estrutura da fórmula de margem, pelo mesmo motivo.
  *
+ * Arredonda ao centavo mais próximo, como o banco, e sobe 1 centavo só quando o
+ * líquido (já com a taxa arredondada) ficaria abaixo do à vista — a promessa
+ * "recebe o mesmo em qualquer forma" nunca falha.
+ *
  * O valor líquido é idêntico em todas as modalidades: a proprietária ganha o
  * mesmo no Pix e no crédito em 12x, e quem paga a comodidade é quem a usa.
  */
@@ -269,10 +273,15 @@ export function calculateInstallmentOptions({
       // O imposto já está embutido no preço à vista pela fórmula de margem;
       // aqui repassa-se apenas a taxa da adquirente.
       const netFactor = FULL_BASIS_POINTS - method.feeBasisPoints;
-      const priceCents =
+      let priceCents =
         method.feeBasisPoints === 0
           ? cashPriceCents
           : Math.round((cashPriceCents * FULL_BASIS_POINTS) / netFactor);
+      // Igual ao banco (arredonda ao centavo mais próximo), mas só se o líquido,
+      // depois da taxa também arredondada, não ficar abaixo do à vista.
+      if (priceCents - applyPercent(priceCents, method.feeBasisPoints) < cashPriceCents) {
+        priceCents += 1;
+      }
 
       const feeCents = applyPercent(priceCents, method.feeBasisPoints);
 

@@ -1,12 +1,16 @@
 "use client";
 
-import { useActionState, useTransition } from "react";
+import { useActionState, useState, useTransition } from "react";
+import { AlertTriangleIcon } from "lucide-react";
 import {
   createPaymentMethod,
   togglePaymentMethod,
-  updatePaymentMethodFee,
+  updatePaymentMethodFees,
   type PricingFormState,
 } from "@/lib/pricing/actions";
+import { calculateInstallmentOptions } from "@/lib/pricing/calculate";
+import { isMissingFee, sumFeePercent } from "@/lib/pricing/fees";
+import { formatBRL, percentToBasisPoints } from "@/lib/pricing/money";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,92 +21,241 @@ type Method = {
   id: string;
   label: string;
   fee_percent: number;
+  admin_fee_percent: number;
+  installment_fee_percent: number;
   installments: number;
   status: ArchivableStatus;
 };
 
 const initialState: PricingFormState = {};
 
+// Peça de referência da conferência: R$ 100 à vista.
+const PREVIEW_CASH_CENTS = 10_000;
+
+const toNumber = (value: string) => Number(value.replace(",", ".")) || 0;
+const formatPercent = (value: number) =>
+  value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
 export function PaymentMethods({ methods }: { methods: Method[] }) {
   const [state, formAction, isPending] = useActionState(createPaymentMethod, initialState);
   const [isSaving, startTransition] = useTransition();
+  // O que está digitado em cada linha: o total e a conferência acompanham na hora,
+  // antes mesmo de salvar.
+  const [values, setValues] = useState<Record<string, { admin: string; installment: string }>>(() =>
+    Object.fromEntries(
+      methods.map((method) => [
+        method.id,
+        {
+          admin: method.admin_fee_percent ? String(method.admin_fee_percent) : "",
+          installment: method.installment_fee_percent ? String(method.installment_fee_percent) : "",
+        },
+      ]),
+    ),
+  );
+
+  // Forma criada depois do primeiro desenho ainda não está em `values`: cai no que veio do servidor.
+  const fieldsFor = (method: Method) =>
+    values[method.id] ?? {
+      admin: method.admin_fee_percent ? String(method.admin_fee_percent) : "",
+      installment: method.installment_fee_percent ? String(method.installment_fee_percent) : "",
+    };
+
+  const totalFor = (method: Method) => {
+    const typed = fieldsFor(method);
+    return sumFeePercent(
+      toNumber(typed.admin),
+      method.installments > 1 ? toNumber(typed.installment) : 0,
+    );
+  };
+
+  const previewOptions = calculateInstallmentOptions({
+    cashPriceCents: PREVIEW_CASH_CENTS,
+    methods: methods
+      .filter((method) => method.status === "active")
+      .map((method) => ({
+        id: method.id,
+        label: method.label,
+        feeBasisPoints: percentToBasisPoints(totalFor(method)),
+        installments: method.installments,
+      })),
+  });
+
+  function save(method: Method) {
+    const typed = fieldsFor(method);
+    const admin = toNumber(typed.admin);
+    const installment = method.installments > 1 ? toNumber(typed.installment) : 0;
+    if (admin === method.admin_fee_percent && installment === method.installment_fee_percent) return;
+    startTransition(() => updatePaymentMethodFees(method.id, admin, installment));
+  }
+
+  function setField(id: string, field: "admin" | "installment", value: string) {
+    setValues((current) => ({
+      ...current,
+      [id]: { ...fieldsFor(methods.find((m) => m.id === id)!), ...current[id], [field]: value },
+    }));
+  }
 
   return (
     <div className="flex flex-col gap-5">
       <p className="text-sm text-muted-foreground">
-        As taxas variam por maquininha e por negociação — preencha com as que você realmente paga.
-        Elas entram no cálculo do preço para que a margem não seja corroída.
+        Copie do aplicativo do seu banco ou da maquininha: <strong>taxa por venda</strong> e, nas
+        parcelas, a <strong>taxa de parcelamento</strong>. O sistema soma as duas e repassa o total
+        ao cliente, para você receber o valor à vista em qualquer forma de pagamento.
       </p>
 
       <div className="flex flex-col gap-2">
         {methods.map((method) => {
           const isArchived = method.status === "archived";
+          const total = totalFor(method);
+          const hasInstallmentFee = method.installments > 1;
+          const missing = !isArchived && isMissingFee(method.label, method.installments, total);
 
           return (
             <div
               key={method.id}
-              className={`flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-2xl border border-border bg-card px-4 py-3 shadow-sm transition-colors hover:border-[var(--gold)]/40 ${isArchived ? "opacity-70" : ""}`}
+              className={`flex flex-col gap-2 rounded-2xl border border-border bg-card px-4 py-3 shadow-sm transition-colors hover:border-[var(--gold)]/40 ${isArchived ? "opacity-70" : ""}`}
             >
-              <div className="flex min-w-0 flex-col">
-                <span className="truncate text-sm font-medium">{method.label}</span>
-                <span className="text-xs text-muted-foreground">
-                  {method.installments > 1 ? `${method.installments} parcelas` : "à vista"}
-                </span>
-              </div>
-
-              <div className="flex shrink-0 items-center gap-3">
-                {isArchived ? <StatusPill tone="muted">Oculta</StatusPill> : null}
-
-                <div className="flex items-center gap-1.5">
-                  {/* Salva ao sair do campo: evita um botão por linha. */}
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="99.99"
-                    defaultValue={method.fee_percent || ""}
-                    placeholder="0"
-                    aria-label={`Taxa de ${method.label} em porcentagem`}
-                    onBlur={(e) => {
-                      const value = Number(e.target.value) || 0;
-                      if (value === method.fee_percent) return;
-                      startTransition(() => updatePaymentMethodFee(method.id, value));
-                    }}
-                    className="w-20 text-right tabular-nums"
-                  />
-                  <span className="text-xs text-muted-foreground">%</span>
+              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                <div className="flex min-w-0 flex-col">
+                  <span className="truncate text-sm font-medium">{method.label}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {method.installments > 1 ? `${method.installments} parcelas` : "à vista"}
+                  </span>
                 </div>
 
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={isSaving}
-                  onClick={() => startTransition(() => togglePaymentMethod(method.id, method.status))}
-                >
-                  {isArchived ? "Usar" : "Ocultar"}
-                </Button>
+                <div className="flex shrink-0 flex-wrap items-end gap-3">
+                  {isArchived ? <StatusPill tone="muted">Oculta</StatusPill> : null}
+
+                  {/* Salva ao sair do campo: evita um botão por linha. */}
+                  <label className="flex flex-col gap-1 text-[11px] text-muted-foreground">
+                    Por venda
+                    <span className="flex items-center gap-1.5">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="99.99"
+                        value={fieldsFor(method).admin}
+                        placeholder="0"
+                        aria-label={`Taxa por venda de ${method.label} em porcentagem`}
+                        onChange={(e) => setField(method.id, "admin", e.target.value)}
+                        onBlur={() => save(method)}
+                        className="w-20 text-right tabular-nums"
+                      />
+                      <span className="text-xs">%</span>
+                    </span>
+                  </label>
+
+                  {hasInstallmentFee ? (
+                    <label className="flex flex-col gap-1 text-[11px] text-muted-foreground">
+                      Parcelamento
+                      <span className="flex items-center gap-1.5">
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          max="99.99"
+                          value={fieldsFor(method).installment}
+                          placeholder="0"
+                          aria-label={`Taxa de parcelamento de ${method.label} em porcentagem`}
+                          onChange={(e) => setField(method.id, "installment", e.target.value)}
+                          onBlur={() => save(method)}
+                          className="w-20 text-right tabular-nums"
+                        />
+                        <span className="text-xs">%</span>
+                      </span>
+                    </label>
+                  ) : null}
+
+                  <div className="flex w-20 flex-col gap-1 text-[11px] text-muted-foreground">
+                    Total
+                    <span className="flex h-10 items-center justify-end text-sm font-medium tabular-nums text-foreground">
+                      {formatPercent(total)}%
+                    </span>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={isSaving}
+                    onClick={() => startTransition(() => togglePaymentMethod(method.id, method.status))}
+                  >
+                    {isArchived ? "Usar" : "Ocultar"}
+                  </Button>
+                </div>
               </div>
+
+              {missing ? (
+                <p className="flex items-center gap-1.5 text-xs text-amber-700 dark:text-amber-400">
+                  <AlertTriangleIcon className="size-3.5 shrink-0" />
+                  Sem taxa: você pagaria esse custo do próprio bolso. Preencha com a taxa do banco.
+                </p>
+              ) : null}
             </div>
           );
         })}
       </div>
 
-      <form action={formAction} className="grid gap-3 sm:grid-cols-[1fr_auto_auto_auto]">
+      {previewOptions.length > 0 ? (
+        <div className="flex flex-col gap-2 rounded-2xl border border-border bg-secondary/40 px-4 py-4">
+          <p className="text-sm font-medium">Conferência: peça de {formatBRL(PREVIEW_CASH_CENTS)} à vista</p>
+          <p className="text-xs text-muted-foreground">
+            Se a coluna &ldquo;Você recebe&rdquo; mostrar {formatBRL(PREVIEW_CASH_CENTS)} em todas as
+            linhas, a taxa está sendo repassada por inteiro.
+          </p>
+          <dl className="flex flex-col divide-y divide-border text-sm">
+            {previewOptions.map((option) => (
+              <div
+                key={option.method.id}
+                className="grid grid-cols-[1fr_auto_auto] items-baseline gap-x-4 py-1.5 tabular-nums"
+              >
+                <dt>
+                  {option.method.label}
+                  {option.method.installments > 1 ? (
+                    <span className="ml-2 text-xs text-muted-foreground">
+                      {option.method.installments}× de {formatBRL(option.installmentCents)}
+                    </span>
+                  ) : null}
+                </dt>
+                <dd className="text-right">Cliente paga {formatBRL(option.priceCents)}</dd>
+                <dd className="w-36 text-right text-muted-foreground">
+                  Você recebe {formatBRL(option.netReceivedCents)}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      ) : null}
+
+      <form action={formAction} className="grid gap-3 sm:grid-cols-[1fr_auto_auto_auto_auto]">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="pm-label">Nova forma</Label>
           <Input id="pm-label" name="label" required maxLength={40} placeholder="Crédito 4x" />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="pm-fee">Taxa (%)</Label>
+          <Label htmlFor="pm-admin-fee">Por venda (%)</Label>
           <Input
-            id="pm-fee"
-            name="feePercent"
+            id="pm-admin-fee"
+            name="adminFeePercent"
             type="number"
             step="0.01"
             min="0"
             max="99.99"
             className="w-24"
+            placeholder="0"
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="pm-installment-fee">Parcelamento (%)</Label>
+          <Input
+            id="pm-installment-fee"
+            name="installmentFeePercent"
+            type="number"
+            step="0.01"
+            min="0"
+            max="99.99"
+            className="w-28"
             placeholder="0"
           />
         </div>
@@ -123,7 +276,7 @@ export function PaymentMethods({ methods }: { methods: Method[] }) {
         </Button>
 
         {state.error ? (
-          <p role="alert" className="rounded-xl bg-destructive/10 px-3 py-2.5 text-sm font-medium text-destructive sm:col-span-4">
+          <p role="alert" className="rounded-xl bg-destructive/10 px-3 py-2.5 text-sm font-medium text-destructive sm:col-span-5">
             {state.error}
           </p>
         ) : null}
