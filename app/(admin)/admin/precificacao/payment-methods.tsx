@@ -8,7 +8,7 @@ import {
   updatePaymentMethodFees,
   type PricingFormState,
 } from "@/lib/pricing/actions";
-import { calculateInstallmentOptions } from "@/lib/pricing/calculate";
+import { calculateInstallmentOptions, parseCurrencyInput } from "@/lib/pricing/calculate";
 import { isMissingFee, sumFeePercent } from "@/lib/pricing/fees";
 import { formatBRL, percentToBasisPoints } from "@/lib/pricing/money";
 import { Button } from "@/components/ui/button";
@@ -29,8 +29,8 @@ type Method = {
 
 const initialState: PricingFormState = {};
 
-// Peça de referência da conferência: R$ 100 à vista.
-const PREVIEW_CASH_CENTS = 10_000;
+// Valor inicial da conferência; a proprietária troca pelo preço da bolsa que quiser.
+const DEFAULT_PREVIEW_VALUE = "100";
 
 const toNumber = (value: string) => Number(value.replace(",", ".")) || 0;
 const formatPercent = (value: number) =>
@@ -60,6 +60,9 @@ export function PaymentMethods({ methods }: { methods: Method[] }) {
       installment: method.installment_fee_percent ? String(method.installment_fee_percent) : "",
     };
 
+  const [previewValue, setPreviewValue] = useState(DEFAULT_PREVIEW_VALUE);
+  const previewCashCents = parseCurrencyInput(previewValue);
+
   const totalFor = (method: Method) => {
     const typed = fieldsFor(method);
     return sumFeePercent(
@@ -69,7 +72,7 @@ export function PaymentMethods({ methods }: { methods: Method[] }) {
   };
 
   const previewOptions = calculateInstallmentOptions({
-    cashPriceCents: PREVIEW_CASH_CENTS,
+    cashPriceCents: previewCashCents,
     methods: methods
       .filter((method) => method.status === "active")
       .map((method) => ({
@@ -197,18 +200,38 @@ export function PaymentMethods({ methods }: { methods: Method[] }) {
         })}
       </div>
 
-      {previewOptions.length > 0 ? (
-        <div className="flex flex-col gap-2 rounded-2xl border border-border bg-secondary/40 px-4 py-4">
-          <p className="text-sm font-medium">Conferência: peça de {formatBRL(PREVIEW_CASH_CENTS)} à vista</p>
-          <p className="text-xs text-muted-foreground">
-            Se a coluna &ldquo;Você recebe&rdquo; mostrar {formatBRL(PREVIEW_CASH_CENTS)} em todas as
-            linhas, a taxa está sendo repassada por inteiro.
-          </p>
+      <div className="flex flex-col gap-3 rounded-2xl border border-border bg-secondary/40 px-4 py-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div className="flex flex-col gap-1">
+            <p className="text-sm font-medium">Conferência de valores</p>
+            <p className="text-xs text-muted-foreground">
+              Digite o preço à vista de uma peça. Se &ldquo;Você recebe&rdquo; mostrar esse mesmo
+              valor em todas as linhas, a taxa está sendo repassada por inteiro.
+            </p>
+          </div>
+          <label className="flex flex-col gap-1 text-[11px] text-muted-foreground">
+            Preço à vista
+            <span className="flex items-center gap-1.5">
+              <span className="text-xs">R$</span>
+              <Input
+                type="text"
+                inputMode="decimal"
+                value={previewValue}
+                onChange={(e) => setPreviewValue(e.target.value)}
+                placeholder="100,00"
+                aria-label="Preço à vista para conferência"
+                className="w-28 text-right tabular-nums"
+              />
+            </span>
+          </label>
+        </div>
+
+        {previewOptions.length > 0 ? (
           <dl className="flex flex-col divide-y divide-border text-sm">
             {previewOptions.map((option) => (
               <div
                 key={option.method.id}
-                className="grid grid-cols-[1fr_auto_auto] items-baseline gap-x-4 py-1.5 tabular-nums"
+                className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 py-1.5 tabular-nums"
               >
                 <dt>
                   {option.method.label}
@@ -218,15 +241,19 @@ export function PaymentMethods({ methods }: { methods: Method[] }) {
                     </span>
                   ) : null}
                 </dt>
-                <dd className="text-right">Cliente paga {formatBRL(option.priceCents)}</dd>
-                <dd className="w-36 text-right text-muted-foreground">
-                  Você recebe {formatBRL(option.netReceivedCents)}
+                <dd className="flex gap-4">
+                  <span>Cliente paga {formatBRL(option.priceCents)}</span>
+                  <span className="whitespace-nowrap text-muted-foreground">
+                    Você recebe {formatBRL(option.netReceivedCents)}
+                  </span>
                 </dd>
               </div>
             ))}
           </dl>
-        </div>
-      ) : null}
+        ) : (
+          <p className="text-xs text-muted-foreground">Informe um preço maior que zero.</p>
+        )}
+      </div>
 
       <form action={formAction} className="grid gap-3 sm:grid-cols-[1fr_auto_auto_auto_auto]">
         <div className="flex flex-col gap-1.5">
