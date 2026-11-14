@@ -68,6 +68,7 @@ export async function listPaymentMethods(storeId: string): Promise<PaymentMethod
     .select("id, label, fee_percent, installments")
     .eq("store_id", storeId)
     .eq("status", "active")
+    .order("installments", { ascending: true })
     .order("sort_order", { ascending: true });
 
   return (data ?? []).map((method) => ({
@@ -86,6 +87,7 @@ export async function listAllPaymentMethodsForAdmin(storeId: string) {
     .from("payment_methods")
     .select("id, label, fee_percent, installments, status")
     .eq("store_id", storeId)
+    .order("installments", { ascending: true })
     .order("sort_order", { ascending: true });
 
   return data ?? [];
