@@ -28,9 +28,16 @@ export default async function AdminProductsPage() {
         title="Produtos"
         description={`${products.length} ${products.length === 1 ? "peça cadastrada" : "peças cadastradas"}`}
         action={
-          <ActionLink href="/admin/produtos/novo" variant="solid" className="h-11 px-6" data-help="new-product">
-            Nova peça
-          </ActionLink>
+          <div className="flex flex-wrap items-center gap-3">
+            {products.length > 0 ? (
+              <ActionLink href="/admin/produtos/imprimir" variant="outline" className="h-11 px-6">
+                Catálogo para imprimir
+              </ActionLink>
+            ) : null}
+            <ActionLink href="/admin/produtos/novo" variant="solid" className="h-11 px-6" data-help="new-product">
+              Nova peça
+            </ActionLink>
+          </div>
         }
       />
 
