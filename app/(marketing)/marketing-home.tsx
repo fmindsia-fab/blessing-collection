@@ -1,29 +1,47 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRightIcon } from "lucide-react";
+import { ArrowRightIcon, CalculatorIcon, ClipboardListIcon } from "lucide-react";
 import { PALETTE_VARS } from "./craft-palette";
-import { YarnSkein, StitchWave, CrochetDots, YarnTangle, YarnBall, CrochetHooks } from "./craft-motifs";
+import { YarnSkein, StitchWave, YarnTangle, YarnBall, CrochetHooks } from "./craft-motifs";
 
 // Foto de uma artesã trabalhando, com o catálogo de bolsas visível no
 // laptop/tablet ao fundo — fornecida pelo usuário.
 const HERO_PHOTO_URL = "/marketing/hero-produto.jpg";
 
-// "Por dentro do AteliFácil": 6 pôsteres do catálogo real da Blessing Collection, cada
-// um mostrando uma funcionalidade da vitrine, com título e texto de apoio. As imagens
-// são verticais (9:16) e já trazem o título desenhado; o texto abaixo explica o recurso.
+// Print do catálogo real da Blessing Collection no celular. É o pôster 941x1672 de
+// "vitrine-catalogo-real.jpg"; o hero recorta só o celular (CatalogPhone).
+const HERO_PHONE_URL = "/marketing/vitrine-catalogo-real.jpg";
+
+// Rotas e oferta num lugar só: o topo, o meio, a FAQ e o rodapé repetem estes valores.
+const SIGNUP_HREF = "/cadastro";
+const REAL_CATALOG_URL = "https://blessingcollection.com.br";
+const TRIAL_CTA_LABEL = "Testar grátis por 30 dias";
+const MONTHLY_PRICE = "R$ 69,90";
+
+// "Por dentro do AteliFácil": o destaque é o catálogo no celular (print real) e, ao lado,
+// encomendas e precificação em texto curto — ainda não há prints dessas telas sem dados
+// de clientes. Os pôsteres restantes ficam recolhidos em "Ver mais da vitrine".
+const FEATURED_CATALOG = {
+  url: "/marketing/vitrine-peca.jpg",
+  alt: "Página de uma peça no celular, com galeria de fotos, nome, valor de referência e a informação de sob encomenda",
+  title: "Catálogo no celular",
+  text: "Suas peças com fotos, nome, preço e se são de pronta entrega ou sob encomenda, numa vitrine com a cara do seu ateliê.",
+};
+
+const FEATURED_TOOLS = [
+  {
+    icon: ClipboardListIcon,
+    title: "Encomendas organizadas",
+    text: "Cada pedido com prazo, personalização e sinal registrados, num quadro por etapa: orçamento, confirmado, em produção, pronto e entregue.",
+  },
+  {
+    icon: CalculatorIcon,
+    title: "Saiba quanto cobrar",
+    text: "Informe materiais, horas e custos fixos e veja o preço sugerido da peça. A taxa do cartão é repassada, então você recebe o mesmo valor no Pix e em cada parcela.",
+  },
+];
+
 const SHOWCASE_CARDS = [
-  {
-    url: "/marketing/vitrine-catalogo-real.jpg",
-    alt: "Catálogo real da Blessing Collection no celular: logo, nome da loja e a bolsa Valentina com fotos e preço",
-    title: "Seu catálogo, com a sua identidade",
-    text: "Logo, cores e fotos do seu ateliê numa vitrine elegante, como esta, que já está no ar.",
-  },
-  {
-    url: "/marketing/vitrine-peca.jpg",
-    alt: "Página de uma peça com galeria de fotos, nome, valor de referência e se é sob encomenda",
-    title: "Cada peça com fotos, nome e preço",
-    text: "Várias fotos, valor de referência e a informação de pronta entrega ou sob encomenda, tudo na página da peça.",
-  },
   {
     url: "/marketing/vitrine-categorias.jpg",
     alt: "Seção de categorias do catálogo: Bolsas, Acessórios, Organizadores e Kits e Presentes",
@@ -127,12 +145,17 @@ const FAQ_ITEMS = [
     answer: "Não é obrigatório. Muitas artesãs usam a plataforma vendendo como pessoa física.",
   },
   {
-    question: "Posso usar só o plano gratuito?",
-    answer: "Sim. Você cria sua loja e começa a vender sem precisar de cartão de crédito.",
+    question: "Quanto custa o AteliFácil depois do teste?",
+    answer: `Você pode testar o AteliFácil por 30 dias sem cadastrar cartão. Depois do teste, a assinatura custa ${MONTHLY_PRICE} por mês. Você só paga se decidir assinar.`,
+  },
+  {
+    question: "O que acontece com meu catálogo se eu não assinar?",
+    answer:
+      "Ao fim dos 30 dias, o catálogo deixa de aparecer para as clientes (quem acessar vê um aviso) e nenhuma cobrança é feita. Você continua entrando no painel, seus dados não são apagados automaticamente e o catálogo volta ao ar quando você assinar.",
   },
   {
     question: "O AteliFácil cobra comissão por venda?",
-    answer: "Não. A negociação e o pagamento acontecem direto entre você e a cliente, pelo seu WhatsApp — o que você vende é seu.",
+    answer: `Não. Você paga só a assinatura de ${MONTHLY_PRICE} por mês, depois do teste. A negociação e o pagamento acontecem direto entre você e a cliente, pelo seu WhatsApp — o que você vende é seu.`,
   },
   {
     question: "Minha cliente precisa instalar algum aplicativo?",
@@ -173,10 +196,10 @@ const FAQ_ITEMS = [
 // CTA principal — maior, com ícone de seta e leve "respiração" (animate-pulse
 // no halo), para ficar impossível de ignorar. Repetido 3x na página
 // (hero, meio, final) de propósito: cada seção reforça o convite.
-function PrimaryCta({ className, label = "Criar minha loja grátis" }: { className?: string; label?: string }) {
+function PrimaryCta({ className, label = TRIAL_CTA_LABEL }: { className?: string; label?: string }) {
   return (
     <Link
-      href="/cadastro"
+      href={SIGNUP_HREF}
       className={`group relative inline-flex h-14 items-center justify-center gap-3 overflow-hidden rounded-full bg-[var(--craft-terracotta)] px-9 text-sm font-semibold tracking-wide text-[var(--craft-bg)] shadow-lg shadow-[var(--craft-terracotta)]/25 outline-none transition-all duration-300 hover:scale-[1.03] hover:shadow-xl hover:shadow-[var(--craft-terracotta)]/35 focus-visible:ring-2 focus-visible:ring-[var(--craft-terracotta)] focus-visible:ring-offset-4 focus-visible:ring-offset-[var(--craft-bg)] ${className ?? ""}`}
     >
       <span
@@ -186,6 +209,40 @@ function PrimaryCta({ className, label = "Criar minha loja grátis" }: { classNa
       <span className="relative">{label}</span>
       <ArrowRightIcon className="relative size-4 transition-transform duration-300 group-hover:translate-x-1" />
     </Link>
+  );
+}
+
+function SecondaryCta({ className }: { className?: string }) {
+  return (
+    <Link
+      href={REAL_CATALOG_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`inline-flex h-14 items-center justify-center rounded-full border border-[var(--craft-terracotta)]/50 bg-[var(--craft-card)] px-8 text-sm font-semibold tracking-wide text-[var(--craft-terracotta)] outline-none transition-all duration-300 hover:border-[var(--craft-terracotta)] hover:bg-[var(--craft-bg-warm)] focus-visible:ring-2 focus-visible:ring-[var(--craft-terracotta)] focus-visible:ring-offset-4 focus-visible:ring-offset-[var(--craft-bg)] ${className ?? ""}`}
+    >
+      Ver catálogo real
+    </Link>
+  );
+}
+
+// Recorta só o celular do pôster 941x1672 (região x 195-905, y 255-1355), para o print
+// do catálogo ficar grande o bastante para ler o nome da loja, a peça e o preço.
+function CatalogPhone({ className }: { className?: string }) {
+  return (
+    <div
+      className={`relative aspect-[710/1100] overflow-hidden rounded-[var(--radius-image)] bg-[var(--craft-card)] shadow-2xl ring-1 ring-[var(--craft-border)] ${className ?? ""}`}
+    >
+      <Image
+        src={HERO_PHONE_URL}
+        alt="Catálogo real da Blessing Collection no celular: logo da loja, a bolsa Valentina em sob encomenda e o valor de referência de R$ 379,90"
+        width={941}
+        height={1672}
+        priority
+        sizes="(min-width: 1024px) 280px, 240px"
+        className="absolute max-w-none"
+        style={{ width: "132.54%", left: "-27.46%", top: "-23.2%" }}
+      />
+    </div>
   );
 }
 
@@ -219,10 +276,10 @@ export function MarketingHome() {
               Entrar
             </Link>
             <Link
-              href="/cadastro"
+              href={SIGNUP_HREF}
               className="inline-flex h-12 items-center justify-center rounded-full bg-[var(--craft-terracotta)] px-7 text-base font-semibold text-[var(--craft-bg)] shadow-md transition-all duration-300 hover:scale-[1.03] hover:shadow-lg focus-visible:ring-2 focus-visible:ring-[var(--craft-terracotta)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--craft-bg)]"
             >
-              Cadastre-se
+              Testar grátis
             </Link>
           </div>
         </div>
@@ -240,46 +297,50 @@ export function MarketingHome() {
 
         <div className="relative mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1fr_0.95fr] lg:gap-16">
           <div className="reveal flex flex-col items-center gap-5 text-center lg:items-start lg:text-left">
-            <span className="inline-flex items-center gap-2 rounded-full border border-[var(--craft-border)] bg-[var(--craft-card)] px-4 py-1.5 text-[0.6875rem] font-medium uppercase tracking-[0.18em] text-[var(--craft-terracotta)] shadow-sm">
-              <CrochetDots className="size-3.5" />
-              Seu ateliê, mais profissional
-            </span>
-            <h1 className="font-[family-name:var(--font-brand)] text-[2.25rem] leading-[1.05] tracking-tight sm:text-5xl lg:text-[3.25rem]">
-              Sua marca, um catálogo
+            <h1 className="font-[family-name:var(--font-brand)] text-[2rem] leading-[1.1] tracking-tight sm:text-5xl lg:text-[3rem]">
+              Mostre suas peças.
               <br />
-              <span className="italic text-[var(--craft-terracotta)]">à sua altura</span>
+              Organize suas encomendas.
+              <br />
+              <span className="italic text-[var(--craft-terracotta)]">Saiba quanto cobrar.</span>
             </h1>
             <p className="max-w-md text-pretty text-base leading-relaxed text-[var(--craft-muted)] sm:text-lg">
-              Crie seu catálogo, organize suas encomendas e receba pedidos direto no WhatsApp —
-              sem comissão por venda.
+              Crie um catálogo com a cara do seu ateliê, receba pedidos pelo WhatsApp e calcule o
+              preço das suas peças com base nos seus custos.
             </p>
-            <div className="mt-1 flex flex-col items-center gap-2 sm:items-start">
-              <PrimaryCta />
-              <span className="text-xs text-[var(--craft-muted)]">
-                Sem cartão de crédito • Configure em poucos minutos
-              </span>
+            <div className="mt-1 flex flex-col items-center gap-4 lg:items-start">
+              <div className="flex flex-col items-center gap-3 sm:flex-row">
+                <PrimaryCta />
+                <SecondaryCta />
+              </div>
+              <p className="max-w-sm text-pretty text-sm font-medium leading-relaxed text-[var(--craft-ink)] sm:max-w-none sm:text-base">
+                30 dias grátis, sem cartão. Depois, {MONTHLY_PRICE} por mês se você decidir assinar.
+              </p>
             </div>
           </div>
 
-          <div className="relative mx-auto w-full max-w-sm lg:mx-0 lg:max-w-none">
-            <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[var(--radius-image)] bg-[var(--craft-card)] shadow-xl ring-1 ring-[var(--craft-border)]">
+          {/* Celular: o print vem abaixo da foto, sem cobri-la, para ficar legível.
+              Desktop: o print se sobrepõe ao canto inferior direito da foto. */}
+          <div className="relative mx-auto flex w-full max-w-sm flex-col items-center lg:mx-0 lg:block lg:max-w-none lg:pb-10">
+            <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[var(--radius-image)] bg-[var(--craft-card)] shadow-xl ring-1 ring-[var(--craft-border)] lg:w-[88%]">
               <Image
                 src={HERO_PHOTO_URL}
                 alt="Artesã produzindo uma bolsa de crochê, com o catálogo de produtos visível no notebook"
                 fill
                 priority
                 className="object-cover"
-                sizes="(min-width: 1024px) 45vw, 90vw"
+                sizes="(min-width: 1024px) 40vw, 90vw"
               />
             </div>
+            <CatalogPhone className="relative z-10 -mt-14 w-60 lg:absolute lg:right-0 lg:bottom-0 lg:mt-0 lg:w-[280px]" />
           </div>
         </div>
       </section>
 
-      {/* Por dentro do AteliFácil — demonstração de valor com contexto:
-          cada print vira um card com título e texto, em vez de imagens
-          soltas sem explicação. */}
-      <section className="relative overflow-hidden px-6 pb-24 lg:px-10">
+      {/* Por dentro do AteliFácil — três exemplos do dia a dia: o catálogo no celular
+          (print real), encomendas e precificação (texto curto, até haver prints sem
+          dados de clientes). */}
+      <section className="relative overflow-hidden px-6 pb-16 lg:px-10">
         <CrochetHooks className="pointer-events-none absolute -top-2 right-[6%] hidden w-16 text-[var(--craft-terracotta)]/35 md:block" />
         <div className="mx-auto flex max-w-5xl flex-col gap-12">
           <div className="flex flex-col items-center gap-3 text-center">
@@ -287,34 +348,72 @@ export function MarketingHome() {
               Por dentro do AteliFácil
             </span>
             <h2 className="font-[family-name:var(--font-brand)] text-3xl tracking-tight sm:text-4xl">
-              Uma vitrine bonita, fácil de navegar e de compartilhar
+              O que você usa no dia a dia
             </h2>
             <p className="max-w-xl text-pretty text-base leading-relaxed text-[var(--craft-muted)]">
-              Veja o que suas clientes encontram quando abrem o seu catálogo, com exemplos do
-              catálogo real da Blessing Collection.
+              Um catálogo para suas clientes, as encomendas organizadas e ajuda para precificar,
+              tudo no mesmo lugar.
             </p>
           </div>
 
-          {/* Celular: carrossel deslizante (cada pôster é alto). Telas maiores: grade de 3 colunas. */}
-          <div className="-mx-6 flex snap-x snap-mandatory gap-5 overflow-x-auto px-6 pb-4 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-8 sm:overflow-visible sm:px-0 sm:pb-0">
-            {SHOWCASE_CARDS.map((card) => (
-              <div key={card.title} className="flex w-[78%] shrink-0 snap-center flex-col gap-4 sm:w-auto">
-                <div className="relative aspect-[941/1672] w-full overflow-hidden rounded-[var(--radius-image)] border border-[var(--craft-border)] bg-[var(--craft-card)] shadow-sm">
-                  <Image
-                    src={card.url}
-                    alt={card.alt}
-                    fill
-                    className="object-cover"
-                    sizes="(min-width: 640px) 30vw, 78vw"
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <h3 className="text-base font-medium">{card.title}</h3>
-                  <p className="text-sm leading-relaxed text-[var(--craft-muted)]">{card.text}</p>
-                </div>
+          <div className="grid items-center gap-8 md:grid-cols-[minmax(0,19rem)_1fr] md:gap-12">
+            <div className="mx-auto flex w-full max-w-xs flex-col gap-4 md:mx-0">
+              <div className="relative aspect-[941/1672] w-full overflow-hidden rounded-[var(--radius-image)] border border-[var(--craft-border)] bg-[var(--craft-card)] shadow-sm">
+                <Image
+                  src={FEATURED_CATALOG.url}
+                  alt={FEATURED_CATALOG.alt}
+                  fill
+                  className="object-cover"
+                  sizes="(min-width: 768px) 19rem, 80vw"
+                />
               </div>
-            ))}
+              <div className="flex flex-col gap-1.5">
+                <h3 className="text-base font-medium">{FEATURED_CATALOG.title}</h3>
+                <p className="text-sm leading-relaxed text-[var(--craft-muted)]">{FEATURED_CATALOG.text}</p>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-6">
+              {FEATURED_TOOLS.map((tool) => (
+                <div
+                  key={tool.title}
+                  className="flex flex-col gap-3 rounded-[var(--radius-image)] border border-[var(--craft-border)] bg-[var(--craft-card)] p-7 shadow-sm"
+                >
+                  <span className="inline-flex size-11 items-center justify-center rounded-full bg-[var(--craft-bg-warm)] text-[var(--craft-terracotta)]">
+                    <tool.icon className="size-5" />
+                  </span>
+                  <h3 className="text-lg font-medium">{tool.title}</h3>
+                  <p className="text-sm leading-relaxed text-[var(--craft-muted)] sm:text-base">{tool.text}</p>
+                </div>
+              ))}
+            </div>
           </div>
+
+          <details className="group mx-auto w-full">
+            <summary className="mx-auto flex w-fit cursor-pointer list-none items-center gap-2 text-sm font-medium text-[var(--craft-terracotta)] underline-offset-4 outline-none hover:underline focus-visible:underline [&::-webkit-details-marker]:hidden">
+              Ver mais da vitrine
+            </summary>
+            {/* Celular: carrossel deslizante (cada pôster é alto). Telas maiores: grade. */}
+            <div className="-mx-6 mt-8 flex snap-x snap-mandatory gap-5 overflow-x-auto px-6 pb-4 sm:mx-0 sm:grid sm:grid-cols-4 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0">
+              {SHOWCASE_CARDS.map((card) => (
+                <div key={card.title} className="flex w-[70%] shrink-0 snap-center flex-col gap-4 sm:w-auto">
+                  <div className="relative aspect-[941/1672] w-full overflow-hidden rounded-[var(--radius-image)] border border-[var(--craft-border)] bg-[var(--craft-card)] shadow-sm">
+                    <Image
+                      src={card.url}
+                      alt={card.alt}
+                      fill
+                      className="object-cover"
+                      sizes="(min-width: 640px) 22vw, 70vw"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <h3 className="text-base font-medium">{card.title}</h3>
+                    <p className="text-sm leading-relaxed text-[var(--craft-muted)]">{card.text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </details>
         </div>
       </section>
 
@@ -323,6 +422,9 @@ export function MarketingHome() {
       <section className="relative overflow-hidden border-y border-[var(--craft-border)] bg-[var(--craft-bg-warm)] px-6 py-16 lg:px-10">
         <YarnTangle className="pointer-events-none absolute -top-10 right-[8%] hidden w-28 text-[var(--craft-terracotta)]/25 md:block" />
         <div className="relative mx-auto flex max-w-2xl flex-col items-center gap-5">
+          <span className="text-[0.625rem] font-medium uppercase tracking-[0.2em] text-[var(--craft-terracotta)]">
+            Quem já usa no dia a dia
+          </span>
           <div className="relative aspect-square w-full overflow-hidden rounded-[var(--radius-image)] bg-[var(--craft-card)] shadow-md">
             <Image
               src="/marketing/blessing-depoimento-cris.png"
@@ -333,7 +435,7 @@ export function MarketingHome() {
             />
           </div>
           <Link
-            href="https://blessingcollection.com.br"
+            href={REAL_CATALOG_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm text-[var(--craft-muted)] underline underline-offset-4 outline-none transition-colors hover:text-[var(--craft-ink)] focus-visible:text-[var(--craft-ink)]"
@@ -455,7 +557,12 @@ export function MarketingHome() {
           </div>
 
           <div className="flex justify-center pt-4">
-            <PrimaryCta label="Quero minha loja também" />
+            <div className="flex flex-col items-center gap-3 text-center">
+              <PrimaryCta />
+              <p className="text-sm font-medium">
+                30 dias grátis, sem cartão. Depois, {MONTHLY_PRICE} por mês se você decidir assinar.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -505,14 +612,14 @@ export function MarketingHome() {
           <h2 className="font-[family-name:var(--font-brand)] text-3xl tracking-tight sm:text-4xl">
             Seu talento merece ser visto. E valorizado.
           </h2>
-          <p className="text-sm text-white/80 sm:text-base">
-            Crie seu catálogo gratuitamente — sem cartão de crédito, pronto em poucos minutos.
+          <p className="text-sm text-white/90 sm:text-base">
+            30 dias grátis, sem cartão. Depois, {MONTHLY_PRICE} por mês se você decidir assinar.
           </p>
           <Link
-            href="/cadastro"
+            href={SIGNUP_HREF}
             className="group inline-flex h-14 items-center justify-center gap-3 rounded-full bg-white px-9 text-sm font-semibold tracking-wide text-[var(--craft-terracotta)] shadow-lg outline-none transition-all duration-300 hover:scale-[1.03] hover:shadow-xl focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-4 focus-visible:ring-offset-[var(--craft-terracotta)]"
           >
-            Criar minha loja grátis
+            {TRIAL_CTA_LABEL}
             <ArrowRightIcon className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
           </Link>
         </div>
