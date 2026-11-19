@@ -70,6 +70,27 @@ function ProductCell({ product, stacked }: { product: PrintProduct; stacked: boo
   );
 }
 
+export type PrintClosing = {
+  /** QR do endereço do catálogo. */
+  catalog: { qrSrc: string; label: string };
+  /** QR do Pix (copia e cola) e a chave por extenso; ausente quando a loja não tem chave Pix. */
+  pix?: { qrSrc: string; keyLabel: string };
+};
+
+function QrBlock({ src, title, line, hint }: { src: string; title: string; line: string; hint: string }) {
+  return (
+    <div className="flex min-w-0 flex-1 items-center gap-[4mm]">
+      {/* eslint-disable-next-line @next/next/no-img-element -- QR em SVG embutido; <img> comum garante que saia na impressão. */}
+      <img src={src} alt={`QR Code: ${title}`} className="size-[32mm] shrink-0 rounded-[1.5mm] border bg-white p-[1mm]" style={{ borderColor: LINE }} />
+      <div className="flex min-w-0 flex-col gap-[1mm]">
+        <span className="text-[4mm] font-semibold leading-tight" style={{ color: INK }}>{title}</span>
+        <span className="break-all text-[3.2mm] font-medium leading-tight" style={{ color: INK }}>{line}</span>
+        <span className="text-[2.8mm] leading-tight" style={{ color: MUTED }}>{hint}</span>
+      </div>
+    </div>
+  );
+}
+
 export function PrintCatalogSheets({
   pages,
   perSheet,
@@ -79,6 +100,7 @@ export function PrintCatalogSheets({
   siteUrl,
   accentColor,
   dateLabel,
+  closing,
 }: {
   pages: PrintPage[];
   perSheet: PerSheet;
@@ -88,6 +110,8 @@ export function PrintCatalogSheets({
   siteUrl: string;
   accentColor: string | null;
   dateLabel: string;
+  /** QR Codes da última folha; sem ele a última folha é igual às outras. */
+  closing?: PrintClosing;
 }) {
   const accent = accentColor || DEFAULT_ACCENT;
   const gridClass = perSheet === 6 ? "grid-cols-3" : "grid-cols-2";
@@ -121,6 +145,25 @@ export function PrintCatalogSheets({
                 <ProductCell key={product.id} product={product} stacked={perSheet === 6} />
               ))}
             </div>
+
+            {closing && index === pages.length - 1 ? (
+              <div className="mt-[5mm] flex items-center gap-[6mm] border-t pt-[4mm]" style={{ borderColor: accent }}>
+                <QrBlock
+                  src={closing.catalog.qrSrc}
+                  title="Veja o catálogo completo"
+                  line={closing.catalog.label}
+                  hint="Aponte a câmera do celular para abrir."
+                />
+                {closing.pix ? (
+                  <QrBlock
+                    src={closing.pix.qrSrc}
+                    title="Pague com Pix"
+                    line={closing.pix.keyLabel}
+                    hint="Aponte no aplicativo do seu banco e informe o valor."
+                  />
+                ) : null}
+              </div>
+            ) : null}
 
             <footer
               className="mt-[4mm] flex items-end justify-between gap-[6mm] border-t pt-[3mm] text-[2.8mm]"

@@ -10,9 +10,13 @@ import {
   parsePrintAvailability,
 } from "@/lib/catalog/print-sheet";
 import { formatWhatsappBR } from "@/lib/customers/phone-mask";
+import { formatCpfCnpj } from "@/lib/br/document";
+import { getStorePrivate } from "@/lib/store/private";
+import { buildPixPayload, normalizePixKey } from "@/lib/pix/br-code";
+import { qrSvgDataUri } from "@/lib/qr/svg";
 import { PageHeading } from "@/components/admin/page-heading";
 import { PrintButton } from "@/components/admin/print-button";
-import { PrintCatalogSheets } from "@/components/admin/print-catalog-sheets";
+import { PrintCatalogSheets, type PrintClosing } from "@/components/admin/print-catalog-sheets";
 import { ActionLink } from "@/components/ui/action";
 import { cn } from "@/lib/utils";
 
@@ -23,18 +27,38 @@ const CHOICE_CLASS =
 export default async function PrintCatalogPage({
   searchParams,
 }: {
-  searchParams: Promise<{ disponibilidade?: string; porFolha?: string; categoria?: string | string[] }>;
+  searchParams: Promise<{ disponibilidade?: string; porFolha?: string; categoria?: string | string[]; semQr?: string }>;
 }) {
   const params = await searchParams;
   const availability = parsePrintAvailability(params.disponibilidade);
   const perSheet = parsePerSheet(params.porFolha);
 
   const store = await getActiveStore();
-  const [products, allCategories, siteUrl] = await Promise.all([
+  const [products, allCategories, siteUrl, storePrivate] = await Promise.all([
     listProductsForPrint(store.id),
     listAllCategoriesForAdmin(store.id),
     getSiteUrl(),
+    getStorePrivate(store.id),
   ]);
+
+  // QR Codes da última folha: o do catálogo sempre; o do Pix só se a chave for reconhecida.
+  const withQr = params.semQr !== "1";
+  let closing: PrintClosing | undefined;
+  let pixMissing = false;
+  if (withQr) {
+    const pixKey = storePrivate.pix_key ? normalizePixKey(storePrivate.pix_key) : null;
+    pixMissing = !pixKey;
+    const pixPayload = pixKey
+      ? buildPixPayload({ key: pixKey, merchantName: store.name, merchantCity: store.city })
+      : null;
+    const [catalogQr, pixQr] = await Promise.all([qrSvgDataUri(siteUrl), pixPayload ? qrSvgDataUri(pixPayload) : null]);
+    const digits = pixKey?.replace(/\D/g, "") ?? "";
+    const keyLabel = pixKey && /^\d{11}$|^\d{14}$/.test(pixKey) ? `${digits.length === 14 ? "CNPJ" : "CPF"} ${formatCpfCnpj(digits)}` : (pixKey ?? "");
+    closing = {
+      catalog: { qrSrc: catalogQr, label: siteUrl.replace(/^https?:\/\//, "") },
+      pix: pixQr ? { qrSrc: pixQr, keyLabel } : undefined,
+    };
+  }
 
   // Só tipos ativos e com peça à venda aparecem como opção; ids desconhecidos na URL são ignorados.
   const categories = allCategories
@@ -114,6 +138,19 @@ export default async function PrintCatalogPage({
             </div>
           </fieldset>
 
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-1 text-sm font-medium">QR Codes na última folha</legend>
+            <label className={CHOICE_CLASS}>
+              <input type="checkbox" name="semQr" value="1" defaultChecked={!withQr} className="sr-only" />
+              Sem QR Codes
+            </label>
+            {withQr && pixMissing ? (
+              <p className="text-sm text-muted-foreground">
+                O QR do Pix não saiu: cadastre uma chave Pix válida (CNPJ, CPF, celular, e-mail ou chave aleatória) em Configurações.
+              </p>
+            ) : null}
+          </fieldset>
+
           <div className="flex flex-wrap items-center gap-4">
             <button
               type="submit"
@@ -148,6 +185,7 @@ export default async function PrintCatalogPage({
           siteUrl={siteUrl}
           accentColor={store.color_primary}
           dateLabel={dateLabel}
+          closing={closing}
         />
       )}
     </div>
